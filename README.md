@@ -1,22 +1,32 @@
-# Agent Development Workflow
+# Codex Onboarding Workflow
 
-A public, reusable workspace for designing and maintaining **generic AI onboarding architecture**.
+A public, reusable workspace for designing and maintaining **Codex-only onboarding architecture**.
 
 This repository is focused on:
-- defining portable file structures for AI model onboarding,
-- codifying behavior and contribution rules for AI-assisted development,
-- producing templates that can be reused across projects with minimal adaptation,
-- keeping the architecture domain-agnostic (no business-specific coupling).
+- defining portable, domain-agnostic onboarding structures for Codex,
+- codifying governance and behavior rules in a layered policy model,
+- enabling safe project-level customization through overrides,
+- preparing the foundation for a VS Code extension that installs and validates this structure.
+
+## Core Principles
+- Codex-only scope (no multi-agent targeting).
+- English-only onboarding and governance artifacts.
+- Dynamic strictness based on policy risk.
+- Immutable managed core plus controlled overrides.
+
+## Repository Structure
+- `AGENTS.md`: project-level behavior and governance rules.
+- `docs/governance/`: policy hierarchy, override model, and standing agreements.
+- `docs/extension/`: architecture baseline for the VS Code extension.
+- `codex-onboarding/core/`: managed baseline artifacts (immutable by policy).
+- `codex-onboarding/overrides/`: project-specific customization path.
+- `packages/vscode-extension/`: planned extension package.
 
 ## Branching Model
-- `main`: production-ready and approved artifacts.
-- `develop`: active work branch for ongoing changes.
+- `main`: approved and protected branch.
+- `develop`: active work branch.
 
-All implementation work is pushed to `develop` first and merged into `main` only after explicit approval.
-
-## Initial Scope
-- Infrastructure and governance setup for a public repository.
-- Progressive creation of generic onboarding structure files.
+Workflow policy: changes are prepared on `develop` and merged to `main` after explicit approval.
 
 ## License
 This project is licensed under the MIT License. See [LICENSE](./LICENSE).

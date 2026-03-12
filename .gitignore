@@ -4,9 +4,6 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Local launcher/runtime artifacts
-.vsc_launcher/
-
 # >>> codex-session-isolator >>>
 # Managed by Codex Session Isolator launcher wizard.
 vsc_launcher.*
