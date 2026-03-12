@@ -1,0 +1,16 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local launcher/runtime artifacts
+.vsc_launcher/
+
+# Codex local state and credentials
+.codex/
+
+# Environment files
+.env
+.env.*
+*.local
