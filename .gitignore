@@ -19,6 +19,3 @@ vsc_launcher.*
 .env
 .env.*
 *.local
-
-# Force-ignore all Codex local data in public repos
-.codex/
