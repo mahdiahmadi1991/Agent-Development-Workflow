@@ -175,7 +175,8 @@ export async function runInstall(
         targetRootPath: target.uri.fsPath,
         bundleId: resolvedProfile.profile_id,
         bundleVersion: String(questionnaire.flow.version),
-        extensionVersion
+        extensionVersion,
+        selectedTopics: selectionPlan.selected_topics
       },
       traceLogger
     );

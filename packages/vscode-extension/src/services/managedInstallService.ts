@@ -3,6 +3,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 
 import { ManagedFileState, ManagedState } from "../contracts/managedState";
+import { SelectedTopic } from "../contracts/selection";
 import { LogLevel, LogValue } from "./outputLogger";
 import { resolveOnboardingAssetRoot } from "./onboardingAssetRootResolver";
 
@@ -16,6 +17,7 @@ interface ManagedInstallInput {
   bundleId: string;
   bundleVersion: string;
   extensionVersion: string;
+  selectedTopics: SelectedTopic[];
 }
 
 export interface ManagedInstallResult {
@@ -25,11 +27,20 @@ export interface ManagedInstallResult {
   skippedFiles: string[];
 }
 
+interface DesiredManagedFile {
+  file_id: string;
+  source_path: string;
+  relative_path: string;
+  content: string;
+  metadata_mode: "embedded" | "sidecar";
+  metadata_format: "comment_block" | "none";
+}
+
 function digestSha256(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex");
 }
 
-function renderBootstrapMetadata(
+function renderManagedMetadata(
   sourceContent: string,
   bundleId: string,
   bundleVersion: string,
@@ -68,56 +79,109 @@ function toStateMap(items: ManagedFileState[]): Map<string, ManagedFileState> {
   return new Map(items.map((item) => [item.relative_path, item]));
 }
 
-function isManagedBootstrapContent(content: string): boolean {
-  const hasArtifactId = /artifact_id:\s*core-agent-onboarding/m.test(content);
+function isManagedFileContent(content: string): boolean {
   const hasManagedTrue = /managed:\s*true/m.test(content);
-  return hasArtifactId && hasManagedTrue;
+  const hasVersionMetadata =
+    /bundle_id:\s*.+/m.test(content) &&
+    /bundle_version:\s*.+/m.test(content) &&
+    /extension_version:\s*.+/m.test(content);
+
+  return hasManagedTrue && hasVersionMetadata;
 }
 
-export async function applyManagedInstall(
-  input: ManagedInstallInput,
-  logger: ManagedInstallLogger
-): Promise<ManagedInstallResult> {
-  const assetRoot = await resolveOnboardingAssetRoot(input.extensionPath);
+function normalizeTopicSourcePath(topicPath: string): string {
+  if (topicPath.startsWith("codex-onboarding/library/topics/")) {
+    return topicPath.replace(/^codex-onboarding\/library\/topics\//, "");
+  }
+
+  if (topicPath.startsWith("library/topics/")) {
+    return topicPath.replace(/^library\/topics\//, "");
+  }
+
+  if (topicPath.startsWith("topics/")) {
+    return topicPath.replace(/^topics\//, "");
+  }
+
+  return topicPath;
+}
+
+function buildTopicDestinationRelativePath(topicPath: string): string {
+  const normalized = normalizeTopicSourcePath(topicPath);
+  return path.posix.join("codex-onboarding", "core", "topics", normalized);
+}
+
+async function buildDesiredManagedFiles(
+  assetRoot: string,
+  input: ManagedInstallInput
+): Promise<DesiredManagedFile[]> {
+  const desired: DesiredManagedFile[] = [];
+
   const sourceBootstrapPath = path.join(assetRoot, "core", "AGENT-ONBOARDING.md");
-
-  const onboardingRootPath = path.join(input.targetRootPath, "codex-onboarding");
-  const managedRootPath = path.join(onboardingRootPath, ".managed");
-  const coreRootPath = path.join(onboardingRootPath, "core");
-
-  const destinationRelativePath = "codex-onboarding/core/AGENT-ONBOARDING.md";
-  const destinationPath = path.join(input.targetRootPath, destinationRelativePath);
-  const statePath = path.join(managedRootPath, "state.json");
-
-  const sourceContent = await fs.readFile(sourceBootstrapPath, "utf8");
-  const desiredContent = renderBootstrapMetadata(
-    sourceContent,
+  const bootstrapRaw = await fs.readFile(sourceBootstrapPath, "utf8");
+  const bootstrapContent = renderManagedMetadata(
+    bootstrapRaw,
     input.bundleId,
     input.bundleVersion,
     input.extensionVersion
   );
-  const desiredDigest = digestSha256(desiredContent);
-  const desiredStateEntry: ManagedFileState = {
+
+  desired.push({
     file_id: "core-agent-onboarding",
-    relative_path: destinationRelativePath,
-    content_digest_sha256: desiredDigest,
-    sync_marker: `${input.bundleVersion}|${input.extensionVersion}`,
+    source_path: sourceBootstrapPath,
+    relative_path: "codex-onboarding/core/AGENT-ONBOARDING.md",
+    content: bootstrapContent,
     metadata_mode: "embedded",
     metadata_format: "comment_block"
-  };
+  });
 
-  const existingState = await readExistingState(statePath);
-  const managedFileMap = toStateMap(existingState?.managed_files ?? []);
+  for (const topic of input.selectedTopics) {
+    const normalizedTopicPath = normalizeTopicSourcePath(topic.path);
+    const topicSourcePath = path.join(assetRoot, "library", "topics", normalizedTopicPath);
+    const topicRaw = await fs.readFile(topicSourcePath, "utf8");
+    const topicContent = renderManagedMetadata(
+      topicRaw,
+      input.bundleId,
+      input.bundleVersion,
+      input.extensionVersion
+    );
 
-  const appliedFiles: string[] = [];
-  const skippedFiles: string[] = [];
+    desired.push({
+      file_id: topic.file_id,
+      source_path: topicSourcePath,
+      relative_path: buildTopicDestinationRelativePath(topic.path),
+      content: topicContent,
+      metadata_mode: "embedded",
+      metadata_format: "comment_block"
+    });
+  }
 
-  await fs.mkdir(coreRootPath, { recursive: true });
+  return desired;
+}
+
+async function ensureParentDirectory(targetRootPath: string, relativePath: string): Promise<void> {
+  const fullPath = path.join(targetRootPath, relativePath);
+  await fs.mkdir(path.dirname(fullPath), { recursive: true });
+}
+
+async function applySingleManagedFile(
+  targetRootPath: string,
+  desired: DesiredManagedFile,
+  stateMap: Map<string, ManagedFileState>,
+  logger: ManagedInstallLogger,
+  appliedFiles: string[],
+  skippedFiles: string[]
+): Promise<void> {
+  await ensureParentDirectory(targetRootPath, desired.relative_path);
 
   logger.log("debug", "file_checked", {
-    managed_file: destinationRelativePath,
+    managed_file: desired.relative_path,
+    source_path: desired.source_path,
     reason: "pre_write_check"
   });
+
+  const destinationPath = path.join(targetRootPath, desired.relative_path);
+  const trackedEntry = stateMap.get(desired.relative_path);
+  const desiredDigest = digestSha256(desired.content);
 
   let destinationExists = false;
   try {
@@ -127,64 +191,104 @@ export async function applyManagedInstall(
     destinationExists = false;
   }
 
-  if (destinationExists) {
-    const existingContent = await fs.readFile(destinationPath, "utf8");
-    const existingDigest = digestSha256(existingContent);
-    const trackedEntry = managedFileMap.get(destinationRelativePath);
-
-    if (trackedEntry) {
-      if (trackedEntry.content_digest_sha256 !== existingDigest) {
-        logger.log("error", "drift_detected", {
-          managed_file: destinationRelativePath,
-          reason: "managed_file_modified"
-        });
-
-        throw new Error(`Managed drift detected for '${destinationRelativePath}'.`);
-      }
-
-      if (existingDigest !== desiredDigest) {
-        await fs.writeFile(destinationPath, desiredContent, "utf8");
-        appliedFiles.push(destinationRelativePath);
-
-        logger.log("debug", "file_applied", {
-          managed_file: destinationRelativePath,
-          reason: "managed_file_synced",
-          content_digest_sha256: desiredDigest
-        });
-      } else {
-        logger.log("debug", "file_checked", {
-          managed_file: destinationRelativePath,
-          reason: "managed_file_up_to_date"
-        });
-      }
-
-      managedFileMap.set(destinationRelativePath, desiredStateEntry);
-    } else if (isManagedBootstrapContent(existingContent)) {
-      logger.log("error", "operation_blocked", {
-        managed_file: destinationRelativePath,
-        reason: "managed_file_untracked"
-      });
-
-      throw new Error(
-        `Managed bootstrap file exists but is not tracked in state. Run repair before install.`
-      );
-    } else {
-      skippedFiles.push(destinationRelativePath);
-      logger.log("warning", "file_skipped", {
-        managed_file: destinationRelativePath,
-        reason: "already_exists_non_destructive"
-      });
-    }
-  } else {
-    await fs.writeFile(destinationPath, desiredContent, "utf8");
-
-    managedFileMap.set(destinationRelativePath, desiredStateEntry);
-    appliedFiles.push(destinationRelativePath);
+  if (!destinationExists) {
+    await fs.writeFile(destinationPath, desired.content, "utf8");
+    appliedFiles.push(desired.relative_path);
 
     logger.log("debug", "file_applied", {
-      managed_file: destinationRelativePath,
+      managed_file: desired.relative_path,
       reason: "new_managed_file",
       content_digest_sha256: desiredDigest
+    });
+
+    return;
+  }
+
+  const existingContent = await fs.readFile(destinationPath, "utf8");
+  const existingDigest = digestSha256(existingContent);
+
+  if (trackedEntry) {
+    if (trackedEntry.content_digest_sha256 !== existingDigest) {
+      logger.log("error", "drift_detected", {
+        managed_file: desired.relative_path,
+        reason: "managed_file_modified"
+      });
+
+      throw new Error(`Managed drift detected for '${desired.relative_path}'.`);
+    }
+
+    if (existingDigest !== desiredDigest) {
+      await fs.writeFile(destinationPath, desired.content, "utf8");
+      appliedFiles.push(desired.relative_path);
+
+      logger.log("debug", "file_applied", {
+        managed_file: desired.relative_path,
+        reason: "managed_file_synced",
+        content_digest_sha256: desiredDigest
+      });
+    } else {
+      logger.log("debug", "file_checked", {
+        managed_file: desired.relative_path,
+        reason: "managed_file_up_to_date"
+      });
+    }
+
+    return;
+  }
+
+  if (isManagedFileContent(existingContent)) {
+    logger.log("error", "operation_blocked", {
+      managed_file: desired.relative_path,
+      reason: "managed_file_untracked"
+    });
+
+    throw new Error(
+      `Managed file '${desired.relative_path}' exists but is not tracked in state. Run repair before install.`
+    );
+  }
+
+  skippedFiles.push(desired.relative_path);
+  logger.log("warning", "file_skipped", {
+    managed_file: desired.relative_path,
+    reason: "already_exists_non_destructive"
+  });
+}
+
+export async function applyManagedInstall(
+  input: ManagedInstallInput,
+  logger: ManagedInstallLogger
+): Promise<ManagedInstallResult> {
+  const assetRoot = await resolveOnboardingAssetRoot(input.extensionPath);
+
+  const onboardingRootPath = path.join(input.targetRootPath, "codex-onboarding");
+  const managedRootPath = path.join(onboardingRootPath, ".managed");
+  const statePath = path.join(managedRootPath, "state.json");
+
+  const existingState = await readExistingState(statePath);
+  const managedFileMap = toStateMap(existingState?.managed_files ?? []);
+
+  const appliedFiles: string[] = [];
+  const skippedFiles: string[] = [];
+
+  const desiredFiles = await buildDesiredManagedFiles(assetRoot, input);
+
+  for (const file of desiredFiles) {
+    await applySingleManagedFile(
+      input.targetRootPath,
+      file,
+      managedFileMap,
+      logger,
+      appliedFiles,
+      skippedFiles
+    );
+
+    managedFileMap.set(file.relative_path, {
+      file_id: file.file_id,
+      relative_path: file.relative_path,
+      content_digest_sha256: digestSha256(file.content),
+      sync_marker: `${input.bundleVersion}|${input.extensionVersion}`,
+      metadata_mode: file.metadata_mode,
+      metadata_format: file.metadata_format
     });
   }
 
