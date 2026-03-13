@@ -26,6 +26,10 @@ export const window = {
   }
 };
 
+export const workspace = {
+  workspaceFolders: undefined as unknown
+};
+
 export const commands = {
   registerCommand() {
     return {

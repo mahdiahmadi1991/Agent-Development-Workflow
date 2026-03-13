@@ -379,4 +379,58 @@ describe("scenario-matrix smoke", () => {
       fs.readFile(path.join(fixture.targetRoot, "codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
     ).resolves.toContain("managed: true");
   });
+
+  it("S-15: safe downgrade rewrites managed metadata when integrity checks pass", async () => {
+    const fixture = await createFixturePaths("scenario-safe-downgrade");
+    cleanups.push(fixture.tempRoot);
+
+    await seedSmokeAssets(fixture.assetRoot);
+
+    const { questionnaire, profile, plan } = await resolveSelection(fixture.extensionPath);
+
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: profile.profile_id,
+        bundleVersion: "2",
+        extensionVersion: "2.0.0",
+        selectedTopics: plan.selected_topics
+      },
+      { log: vi.fn() }
+    );
+
+    const downgraded = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: profile.profile_id,
+        bundleVersion: String(questionnaire.flow.version),
+        extensionVersion: "1.0.0",
+        selectedTopics: plan.selected_topics
+      },
+      { log: vi.fn() }
+    );
+
+    expect(downgraded.appliedFiles).toEqual(
+      expect.arrayContaining([
+        "codex-onboarding/core/AGENT-ONBOARDING.md",
+        "codex-onboarding/core/topics/cross-cutting/base-topic.md",
+        "codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
+      ])
+    );
+
+    const stateRaw = await fs.readFile(downgraded.statePath, "utf8");
+    const state = JSON.parse(stateRaw) as {
+      bundle_version: string;
+      extension_version: string;
+    };
+
+    expect(state.bundle_version).toBe(String(questionnaire.flow.version));
+    expect(state.extension_version).toBe("1.0.0");
+
+    await expect(
+      fs.readFile(path.join(fixture.targetRoot, "codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
+    ).resolves.toContain("extension_version: 1.0.0");
+  });
 });

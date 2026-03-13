@@ -48,3 +48,12 @@ jobs:
 
       - name: Compile TypeScript
         run: npm run compile
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension-coverage-${{ matrix.os }}
+          path: packages/vscode-extension/coverage
+          if-no-files-found: error
+          retention-days: 14
