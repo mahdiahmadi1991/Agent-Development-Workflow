@@ -3,7 +3,7 @@
 VS Code extension package for applying managed Codex onboarding artifacts to consumer projects.
 
 ## Current Implementation Status
-Step 7 is implemented:
+Step 8 is implemented:
 - command surface registered (`Install`, `Remove`, `Repair`)
 - output logger service (`debug`, `warning`, `error`)
 - per-operation trace logger with unique `.jsonl` log file creation
@@ -18,11 +18,10 @@ Step 7 is implemented:
 - managed install applies bootstrap + selected topic files to managed core paths
 - managed state generation in `codex-onboarding/.managed/state.json`
 - tracked and unchanged managed files are synchronized on install; drift blocks update
+- stale managed files from previous selection are removed only when integrity checks pass
 - remove command removes only unchanged managed files, preserves modified managed files, and clears state
 - repair command reconstructs managed state and restores eligible managed files via repair mode
 - post-install guidance page opening in VS Code
 
 ## Next Steps
-- implement version-aware update transitions for changed profile/topic selections
 - add tests for install/remove/repair state transitions and drift cases
-- tighten edge-case handling for stale managed entries and profile switch reconciliation

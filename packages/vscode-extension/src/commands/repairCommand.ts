@@ -171,6 +171,7 @@ export async function runRepair(
       `Applied or synchronized files: ${result.appliedFiles.length}`,
       `Recovered tracked files: ${result.recoveredTrackedFiles.length}`,
       `Skipped files: ${result.skippedFiles.length}`,
+      `Removed stale managed files: ${result.removedStaleFiles.length}`,
       `Managed state: ${result.statePath}`,
       `Operation log: ${traceLogger.logFilePath}`
     ].join("\n");
@@ -181,7 +182,8 @@ export async function runRepair(
       target_profile: resolvedProfile.profile_id,
       applied_count: result.appliedFiles.length,
       recovered_count: result.recoveredTrackedFiles.length,
-      skipped_count: result.skippedFiles.length
+      skipped_count: result.skippedFiles.length,
+      removed_stale_count: result.removedStaleFiles.length
     });
 
     traceLogger.log("debug", "operation_completed", {

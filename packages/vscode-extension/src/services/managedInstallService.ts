@@ -29,6 +29,7 @@ export interface ManagedInstallResult {
   appliedFiles: string[];
   skippedFiles: string[];
   recoveredTrackedFiles: string[];
+  removedStaleFiles: string[];
 }
 
 interface DesiredManagedFile {
@@ -167,6 +168,25 @@ async function ensureParentDirectory(targetRootPath: string, relativePath: strin
   await fs.mkdir(path.dirname(fullPath), { recursive: true });
 }
 
+async function removeEmptyParentDirs(targetRootPath: string, relativePath: string): Promise<void> {
+  const stopAt = path.join(targetRootPath, "codex-onboarding");
+  let current = path.dirname(path.join(targetRootPath, relativePath));
+
+  while (current.startsWith(stopAt)) {
+    try {
+      await fs.rmdir(current);
+    } catch {
+      break;
+    }
+
+    if (current === stopAt) {
+      break;
+    }
+
+    current = path.dirname(current);
+  }
+}
+
 async function applySingleManagedFile(
   targetRootPath: string,
   desired: DesiredManagedFile,
@@ -269,6 +289,66 @@ async function applySingleManagedFile(
   });
 }
 
+async function reconcileStaleManagedFiles(
+  targetRootPath: string,
+  desiredRelativePaths: Set<string>,
+  stateMap: Map<string, ManagedFileState>,
+  logger: ManagedInstallLogger,
+  mode: ManagedApplyMode,
+  removedStaleFiles: string[]
+): Promise<void> {
+  const entries = Array.from(stateMap.entries());
+
+  for (const [relativePath, trackedEntry] of entries) {
+    if (desiredRelativePaths.has(relativePath)) {
+      continue;
+    }
+
+    const fullPath = path.join(targetRootPath, relativePath);
+
+    logger.log("debug", "file_checked", {
+      managed_file: relativePath,
+      reason: "stale_managed_precheck"
+    });
+
+    let content: string;
+    try {
+      content = await fs.readFile(fullPath, "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        logger.log("error", "drift_detected", {
+          managed_file: relativePath,
+          reason: "stale_managed_missing"
+        });
+
+        throw new Error(`Stale managed file '${relativePath}' is missing.`);
+      }
+
+      throw error;
+    }
+
+    const digest = digestSha256(content);
+    if (digest !== trackedEntry.content_digest_sha256) {
+      logger.log("error", "drift_detected", {
+        managed_file: relativePath,
+        reason: "stale_managed_modified"
+      });
+
+      throw new Error(`Stale managed file '${relativePath}' was modified.`);
+    }
+
+    await fs.unlink(fullPath);
+    await removeEmptyParentDirs(targetRootPath, relativePath);
+    stateMap.delete(relativePath);
+    removedStaleFiles.push(relativePath);
+
+    logger.log("debug", mode === "repair" ? "repair_action" : "file_removed", {
+      managed_file: relativePath,
+      reason: "stale_managed_removed"
+    });
+  }
+}
+
 export async function applyManagedInstall(
   input: ManagedInstallInput,
   logger: ManagedInstallLogger
@@ -286,8 +366,10 @@ export async function applyManagedInstall(
   const appliedFiles: string[] = [];
   const skippedFiles: string[] = [];
   const recoveredTrackedFiles: string[] = [];
+  const removedStaleFiles: string[] = [];
 
   const desiredFiles = await buildDesiredManagedFiles(assetRoot, input);
+  const desiredRelativePaths = new Set(desiredFiles.map((item) => item.relative_path));
 
   for (const file of desiredFiles) {
     await applySingleManagedFile(
@@ -311,6 +393,15 @@ export async function applyManagedInstall(
     });
   }
 
+  await reconcileStaleManagedFiles(
+    input.targetRootPath,
+    desiredRelativePaths,
+    managedFileMap,
+    logger,
+    mode,
+    removedStaleFiles
+  );
+
   await fs.mkdir(managedRootPath, { recursive: true });
 
   const state: ManagedState = {
@@ -333,6 +424,7 @@ export async function applyManagedInstall(
     managedRootPath,
     appliedFiles,
     skippedFiles,
-    recoveredTrackedFiles
+    recoveredTrackedFiles,
+    removedStaleFiles
   };
 }

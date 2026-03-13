@@ -189,6 +189,7 @@ export async function runInstall(
       `Selected topics (resolver): ${selectionPlan.selected_topics.length}`,
       `Applied files: ${installResult.appliedFiles.length}`,
       `Skipped files: ${installResult.skippedFiles.length}`,
+      `Removed stale managed files: ${installResult.removedStaleFiles.length}`,
       `Managed state: ${installResult.statePath}`,
       `Operation log: ${traceLogger.logFilePath}`
     ].join("\n");
@@ -198,7 +199,8 @@ export async function runInstall(
       target_profile: resolvedProfile.profile_id,
       selected_topic_count: selectionPlan.selected_topics.length,
       applied_count: installResult.appliedFiles.length,
-      skipped_count: installResult.skippedFiles.length
+      skipped_count: installResult.skippedFiles.length,
+      removed_stale_count: installResult.removedStaleFiles.length
     });
 
     await openPostInstallGuidancePage({

@@ -4,6 +4,7 @@
 - Project type: Codex onboarding architecture and governance repository.
 - Scope: Codex-only. This repository does not target other AI agents.
 - Language policy: English-only for all governance and onboarding artifacts.
+- Conversation policy: Assistant replies to the user should follow the user's preferred language; this does not change artifact language rules.
 
 ## Mission
 Create reusable, domain-agnostic onboarding structures that can be applied to any software project to guide Codex behavior safely and consistently.
