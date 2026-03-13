@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { GroupASelections } from "../contracts/questionnaire";
 import { OutputLogger } from "../services/outputLogger";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
+import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 function createOperationId(): string {
@@ -69,15 +70,31 @@ export async function runInstall(
       flow_path: questionnaire.flowPath
     });
 
+    const groupB = await runDynamicQuestionFlow(questionnaire.flow, logger, operationId);
+    if (!groupB) {
+      logger.log("warning", "operation_blocked", {
+        operation_id: operationId,
+        reason: "group_b_cancelled"
+      });
+      return;
+    }
+
+    const selectedProfile = groupB.answers.root ?? "unknown";
+
     const summary = [
-      `Install baseline completed (foundation step).`,
+      "Install foundation step completed.",
       `Target root: ${target.uri.fsPath}`,
-      `Git mode: ${groupA.gitMode}`,
+      `Git mode (Group A): ${groupA.gitMode}`,
+      `Selected profile (Group B): ${selectedProfile}`,
       `Question flow family: ${questionnaire.family}`
     ].join("\n");
 
     void vscode.window.showInformationMessage(summary, { modal: false });
-    logger.log("debug", "operation_completed", { operation_id: operationId, result_code: "foundation_completed" });
+    logger.log("debug", "operation_completed", {
+      operation_id: operationId,
+      result_code: "foundation_completed",
+      profile: selectedProfile
+    });
   } catch (error) {
     logger.log("error", "operation_completed", {
       operation_id: operationId,

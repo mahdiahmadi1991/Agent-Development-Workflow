@@ -38,6 +38,9 @@
     "compile": "npm run clean && tsc -p .",
     "watch": "tsc -watch -p ."
   },
+  "dependencies": {
+    "yaml": "^2.8.1"
+  },
   "devDependencies": {
     "@types/node": "^22.15.3",
     "@types/vscode": "^1.90.0",

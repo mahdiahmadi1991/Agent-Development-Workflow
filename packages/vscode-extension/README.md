@@ -3,12 +3,13 @@
 VS Code extension package for applying managed Codex onboarding artifacts to consumer projects.
 
 ## Current Implementation Status
-Step 1 scaffold is implemented:
+Step 2 is implemented:
 - command surface registered (`Install`, `Remove`, `Repair`)
 - output logger service (`debug`, `warning`, `error`)
 - workspace root resolver (single-root auto-select, multi-root prompt)
 - Group A operational question prompt (Git mode)
-- Group B dynamic questionnaire asset loading from file system paths
+- Group B dynamic questionnaire loading + parsing from file system
+- Group B dynamic question runner from questionnaire node graph
 
 ## Next Steps
 - implement managed install file application flow
