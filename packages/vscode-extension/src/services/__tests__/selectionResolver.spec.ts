@@ -335,4 +335,163 @@ describe("profile + selection resolution", () => {
       )
     ).rejects.toThrow("Required conflict detected");
   });
+
+  it("continues when dependency is missing and policy is non-fail", async () => {
+    const fixture = await createFixturePaths("selection-missing-dep-nonfail");
+    cleanups.push(fixture.tempRoot);
+
+    await writeAssetFile(
+      fixture.assetRoot,
+      "library/rules/selector-rules.yaml",
+      [
+        "version: 1",
+        "resolver:",
+        "  deterministic_sort:",
+        "    - required",
+        "    - category",
+        "    - file_id",
+        "  conflict_resolution:",
+        "    strategy: fail_on_required_conflict",
+        "    optional_topic_policy: drop_optional_conflicts",
+        "  dependency_policy:",
+        "    missing_dependency: ignore"
+      ].join("\n")
+    );
+
+    await writeAssetFile(
+      fixture.assetRoot,
+      "library/indexes/topics.index.yaml",
+      [
+        "version: 1",
+        "topics:",
+        "  - file_id: only-topic",
+        "    path: topics/cross-cutting/only-topic.md",
+        "    category: core",
+        "    severity: normal",
+        "    required: false",
+        "    tags: []",
+        "    applicability: {}",
+        "    requires: [missing-topic]",
+        "    conflicts_with: []"
+      ].join("\n")
+    );
+
+    const logger = { log: vi.fn() };
+
+    const plan = await resolveSelectionPlan(
+      {
+        extensionPath: fixture.extensionPath,
+        family: "dotnet-csharp",
+        profileId: "x",
+        baselineTopicIds: [],
+        defaultCapabilities: [],
+        questionAnswers: {}
+      },
+      logger
+    );
+
+    expect(plan.selected_topics.map((item) => item.file_id)).toContain("only-topic");
+  });
+
+  it("drops optional conflict when required topic is processed first", async () => {
+    const fixture = await createFixturePaths("selection-required-drops-optional");
+    cleanups.push(fixture.tempRoot);
+
+    await writeAssetFile(
+      fixture.assetRoot,
+      "library/rules/selector-rules.yaml",
+      buildRulesYaml()
+    );
+
+    await writeAssetFile(
+      fixture.assetRoot,
+      "library/indexes/topics.index.yaml",
+      [
+        "version: 1",
+        "topics:",
+        "  - file_id: required-topic",
+        "    path: topics/cross-cutting/required-topic.md",
+        "    category: 00-core",
+        "    severity: normal",
+        "    required: true",
+        "    tags: [answer.root.web_api_simple]",
+        "    applicability: {}",
+        "    requires: []",
+        "    conflicts_with: [optional-topic]",
+        "  - file_id: optional-topic",
+        "    path: topics/cross-cutting/optional-topic.md",
+        "    category: 20-optional",
+        "    severity: normal",
+        "    required: false",
+        "    tags: [answer.root.web_api_simple]",
+        "    applicability: {}",
+        "    requires: []",
+        "    conflicts_with: [required-topic]"
+      ].join("\n")
+    );
+
+    const logger = { log: vi.fn() };
+
+    const plan = await resolveSelectionPlan(
+      {
+        extensionPath: fixture.extensionPath,
+        family: "dotnet-csharp",
+        profileId: "x",
+        baselineTopicIds: [],
+        defaultCapabilities: [],
+        questionAnswers: { root: "web_api_simple" }
+      },
+      logger
+    );
+
+    const ids = plan.selected_topics.map((item) => item.file_id);
+    expect(ids).toContain("required-topic");
+    expect(ids).not.toContain("optional-topic");
+  });
+
+  it("treats non-array applicability families as compatible", async () => {
+    const fixture = await createFixturePaths("selection-applicability-non-array");
+    cleanups.push(fixture.tempRoot);
+
+    await writeAssetFile(
+      fixture.assetRoot,
+      "library/rules/selector-rules.yaml",
+      buildRulesYaml()
+    );
+
+    await writeAssetFile(
+      fixture.assetRoot,
+      "library/indexes/topics.index.yaml",
+      [
+        "version: 1",
+        "topics:",
+        "  - file_id: odd-applicability-topic",
+        "    path: topics/cross-cutting/odd.md",
+        "    category: core",
+        "    severity: normal",
+        "    required: false",
+        "    tags: []",
+        "    applicability:",
+        "      families: unexpected",
+        "    requires: []",
+        "    conflicts_with: []"
+      ].join("\n")
+    );
+
+    const logger = { log: vi.fn() };
+
+    const plan = await resolveSelectionPlan(
+      {
+        extensionPath: fixture.extensionPath,
+        family: "dotnet-csharp",
+        profileId: "x",
+        baselineTopicIds: [],
+        defaultCapabilities: [],
+        questionAnswers: {}
+      },
+      logger
+    );
+
+    expect(plan.selected_topics.map((item) => item.file_id)).toContain("odd-applicability-topic");
+  });
 });
