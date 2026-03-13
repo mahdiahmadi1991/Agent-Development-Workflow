@@ -1,16 +1,44 @@
 {
   "name": "codex-onboarding-vscode-extension",
   "displayName": "Codex Onboarding",
-  "description": "Applies managed Codex onboarding artifacts to the current workspace.",
+  "description": "Install managed Codex onboarding artifacts with safe install, repair, and remove lifecycles.",
   "version": "0.0.1",
-  "private": true,
   "publisher": "2ma",
+  "preview": true,
+  "license": "MIT",
+  "author": {
+    "name": "Mehdi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow.git",
+    "directory": "packages/vscode-extension"
+  },
+  "homepage": "https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow/tree/develop/packages/vscode-extension",
+  "bugs": {
+    "url": "https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow/issues"
+  },
+  "qna": false,
+  "markdown": "github",
   "engines": {
     "vscode": "^1.90.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "codex",
+    "onboarding",
+    "agent",
+    "instructions",
+    "governance",
+    "dotnet",
+    "csharp"
+  ],
+  "galleryBanner": {
+    "color": "#0f172a",
+    "theme": "dark"
+  },
   "main": "./out/extension.js",
   "activationEvents": [
     "onCommand:codexOnboarding.install",
@@ -21,18 +49,52 @@
     "commands": [
       {
         "command": "codexOnboarding.install",
-        "title": "Codex Onboarding: Install"
+        "title": "Codex Onboarding: Install",
+        "category": "Codex Onboarding"
       },
       {
         "command": "codexOnboarding.remove",
-        "title": "Codex Onboarding: Remove"
+        "title": "Codex Onboarding: Remove",
+        "category": "Codex Onboarding"
       },
       {
         "command": "codexOnboarding.repair",
-        "title": "Codex Onboarding: Repair"
+        "title": "Codex Onboarding: Repair",
+        "category": "Codex Onboarding"
       }
-    ]
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "codexOnboarding.install"
+        },
+        {
+          "command": "codexOnboarding.remove"
+        },
+        {
+          "command": "codexOnboarding.repair"
+        }
+      ]
+    }
   },
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "Requires a writable filesystem for managed onboarding files."
+    },
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Requires trusted workspace access to apply or modify managed files."
+    }
+  },
+  "files": [
+    "out/**",
+    "README.md",
+    "package.json"
+  ],
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\"",
     "compile": "npm run clean && tsc -p .",
