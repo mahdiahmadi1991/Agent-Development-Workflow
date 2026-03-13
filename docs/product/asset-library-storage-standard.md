@@ -7,11 +7,11 @@ Approved (locked standard)
 Define a clean, scalable, and enforceable storage layout for onboarding assets inside this repository.
 
 ## Canonical Library Root
-- `codex-onboarding/library/`
+- `.codex-onboarding/library/`
 
 ## Canonical Layout
 ```text
-codex-onboarding/library/
+.codex-onboarding/library/
   topics/
     cross-cutting/
     dotnet/

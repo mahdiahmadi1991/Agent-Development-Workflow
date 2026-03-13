@@ -6,8 +6,8 @@ Version: `0.1.0`
 Define a stable contract for how Codex onboarding assets are structured and resolved in consumer projects.
 
 ## Required Paths
-- `codex-onboarding/core/` (managed baseline)
-- `codex-onboarding/overrides/` (consumer customization)
+- `.codex-onboarding/core/` (managed baseline)
+- `.codex-onboarding/overrides/` (consumer customization)
 
 ## Resolution Order
 1. Core baseline

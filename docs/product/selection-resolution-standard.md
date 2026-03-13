@@ -27,8 +27,8 @@ Select the minimal, correct onboarding file set for a consumer project from a la
 11. Require user confirmation and then apply.
 
 ## Questionnaire Source Contract
-- Registry: `codex-onboarding/library/questionnaires/index.yaml`
-- Flow file pattern: `codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
+- Registry: `.codex-onboarding/library/questionnaires/index.yaml`
+- Flow file pattern: `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
 - Missing required questionnaire definition is a blocking error.
 
 ## Explainability Requirement

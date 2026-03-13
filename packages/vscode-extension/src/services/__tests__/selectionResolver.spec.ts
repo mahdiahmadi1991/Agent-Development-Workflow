@@ -31,7 +31,7 @@ function buildProfileYaml(params: {
     `profile_id: ${params.profileId}`,
     `family: ${params.family}`,
     params.inherits ? `inherits: ${params.inherits}` : "",
-    "questionnaire_ref: codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml",
+    "questionnaire_ref: .codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml",
     `baseline_topics: [${params.baselineTopics.join(", ")}]`,
     `default_capabilities: [${params.capabilities.join(", ")}]`
   ]

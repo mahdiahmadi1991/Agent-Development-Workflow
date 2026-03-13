@@ -4,6 +4,7 @@ import * as path from "node:path";
 function buildCandidateRoots(extensionPath: string): string[] {
   return [
     path.join(extensionPath, "onboarding-assets"),
+    path.resolve(extensionPath, "..", "..", ".codex-onboarding"),
     path.resolve(extensionPath, "..", "..", "codex-onboarding")
   ];
 }

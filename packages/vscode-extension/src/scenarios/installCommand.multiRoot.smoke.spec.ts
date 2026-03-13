@@ -104,9 +104,9 @@ describe("install command multi-root smoke", () => {
     });
 
     vi.mocked(applyManagedInstall).mockResolvedValue({
-      statePath: "/workspace/app-b/codex-onboarding/.managed/state.json",
-      managedRootPath: "/workspace/app-b/codex-onboarding/.managed",
-      appliedFiles: ["codex-onboarding/core/AGENT-ONBOARDING.md"],
+      statePath: "/workspace/app-b/.codex-onboarding/.managed/state.json",
+      managedRootPath: "/workspace/app-b/.codex-onboarding/.managed",
+      appliedFiles: [".codex-onboarding/core/AGENT-ONBOARDING.md"],
       skippedFiles: [],
       recoveredTrackedFiles: [],
       removedStaleFiles: []

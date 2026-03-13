@@ -68,11 +68,11 @@ describe("applyManagedInstall", () => {
 
     const bootstrapPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/AGENT-ONBOARDING.md"
+      ".codex-onboarding/core/AGENT-ONBOARDING.md"
     );
     const topicPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
     );
 
     await expect(fs.readFile(bootstrapPath, "utf8")).resolves.toContain("bundle_id: dotnet-csharp-web-api-simple");
@@ -84,8 +84,8 @@ describe("applyManagedInstall", () => {
     };
 
     expect(state.managed_files.map((item) => item.relative_path).sort()).toEqual([
-      "codex-onboarding/core/AGENT-ONBOARDING.md",
-      "codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+      ".codex-onboarding/core/AGENT-ONBOARDING.md",
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
     ]);
   });
 
@@ -98,7 +98,7 @@ describe("applyManagedInstall", () => {
 
     const destinationPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
     );
 
     await fs.mkdir(path.dirname(destinationPath), { recursive: true });
@@ -118,8 +118,8 @@ describe("applyManagedInstall", () => {
       logger
     );
 
-    expect(result.skippedFiles).toContain("codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
-    expect(result.appliedFiles).toContain("codex-onboarding/core/AGENT-ONBOARDING.md");
+    expect(result.skippedFiles).toContain(".codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
+    expect(result.appliedFiles).toContain(".codex-onboarding/core/AGENT-ONBOARDING.md");
     await expect(fs.readFile(destinationPath, "utf8")).resolves.toContain("consumer owned file");
   });
 
@@ -158,12 +158,12 @@ describe("applyManagedInstall", () => {
     );
 
     expect(second.removedStaleFiles).toContain(
-      "codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
+      ".codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
     );
 
     const stalePath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
+      ".codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
     );
 
     await expect(fs.readFile(stalePath, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
@@ -193,7 +193,7 @@ describe("applyManagedInstall", () => {
 
     const stalePath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
+      ".codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
     );
     await fs.unlink(stalePath);
 
@@ -236,7 +236,7 @@ describe("applyManagedInstall", () => {
 
     const stalePath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
+      ".codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
     );
 
     await fs.appendFile(stalePath, "\n# user change\n", "utf8");
@@ -294,8 +294,8 @@ describe("applyManagedInstall", () => {
 
     expect(repaired.recoveredTrackedFiles).toEqual(
       expect.arrayContaining([
-        "codex-onboarding/core/AGENT-ONBOARDING.md",
-        "codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+        ".codex-onboarding/core/AGENT-ONBOARDING.md",
+        ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
       ])
     );
   });
@@ -325,7 +325,7 @@ describe("applyManagedInstall", () => {
 
     const managedTopicPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
     );
 
     await fs.appendFile(managedTopicPath, "\n# edited\n", "utf8");
@@ -369,7 +369,7 @@ describe("applyManagedInstall", () => {
 
     const managedPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
     );
 
     await fs.appendFile(managedPath, "\n# local drift\n", "utf8");
@@ -434,7 +434,7 @@ describe("applyManagedInstall", () => {
     await writeBootstrap(fixture.assetRoot);
     await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
 
-    const managedRoot = path.join(fixture.targetRoot, "codex-onboarding", ".managed");
+    const managedRoot = path.join(fixture.targetRoot, ".codex-onboarding", ".managed");
     await fs.mkdir(managedRoot, { recursive: true });
     await fs.writeFile(
       path.join(managedRoot, "state.json"),
@@ -500,13 +500,13 @@ describe("applyManagedInstall", () => {
       logger
     );
 
-    expect(result.appliedFiles).toContain("codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
+    expect(result.appliedFiles).toContain(".codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
 
     await expect(
       fs.readFile(
         path.join(
           fixture.targetRoot,
-          "codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+          ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
         ),
         "utf8"
       )

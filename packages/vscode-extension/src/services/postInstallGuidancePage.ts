@@ -7,7 +7,7 @@ interface PostInstallGuidanceInput {
 }
 
 function buildGuidanceMarkdown(input: PostInstallGuidanceInput): string {
-  const onboardingRoot = `${input.targetRootPath}/codex-onboarding`;
+  const onboardingRoot = `${input.targetRootPath}/.codex-onboarding`;
 
   return [
     "# Codex Onboarding Installed",
@@ -21,13 +21,13 @@ function buildGuidanceMarkdown(input: PostInstallGuidanceInput): string {
     `- Operation log: \`${input.logFilePath}\``,
     "",
     "## Quick Start Prompts For Codex",
-    "- `Read codex-onboarding/core/AGENT-ONBOARDING.md and summarize the active policy boundaries.`",
+    "- `Read .codex-onboarding/core/AGENT-ONBOARDING.md and summarize the active policy boundaries.`",
     "- `Before coding, explain which onboarding constraints apply to this task.`",
     "- `If there is any conflict with project needs, propose an override plan instead of editing managed core files.`",
     "",
     "## Notes",
     "- Managed core files are extension-owned.",
-    "- Use `codex-onboarding/overrides/` for project-specific exceptions.",
+    "- Use `.codex-onboarding/overrides/` for project-specific exceptions.",
     "- Existing consumer files are not overwritten by default."
   ].join("\n");
 }

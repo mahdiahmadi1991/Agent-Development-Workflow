@@ -3,8 +3,8 @@ bundle_version: <bundle-version>
 extension_version: <extension-version>
 paths:
   root: codex-onboarding
-  core: codex-onboarding/core
-  overrides: codex-onboarding/overrides
+  core: .codex-onboarding/core
+  overrides: .codex-onboarding/overrides
 topics: []
 profiles: []
 update_policy:

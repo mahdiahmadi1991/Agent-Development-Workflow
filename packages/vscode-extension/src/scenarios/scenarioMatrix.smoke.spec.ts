@@ -81,7 +81,7 @@ async function seedSmokeAssets(assetRoot: string): Promise<void> {
       "version: 1",
       "profile_id: dotnet-csharp-baseline",
       "family: dotnet-csharp",
-      "questionnaire_ref: codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml",
+      "questionnaire_ref: .codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml",
       "baseline_topics: [base-topic]",
       "default_capabilities: [cap.base]"
     ].join("\n")
@@ -95,7 +95,7 @@ async function seedSmokeAssets(assetRoot: string): Promise<void> {
       "profile_id: dotnet-csharp-web-api-simple",
       "family: dotnet-csharp",
       "inherits: dotnet-csharp-baseline",
-      "questionnaire_ref: codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml",
+      "questionnaire_ref: .codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml",
       "baseline_topics: [webapi-topic]",
       "default_capabilities: [cap.webapi]"
     ].join("\n")
@@ -233,9 +233,9 @@ describe("scenario-matrix smoke", () => {
 
     expect(result.appliedFiles).toEqual(
       expect.arrayContaining([
-        "codex-onboarding/core/AGENT-ONBOARDING.md",
-        "codex-onboarding/core/topics/cross-cutting/base-topic.md",
-        "codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
+        ".codex-onboarding/core/AGENT-ONBOARDING.md",
+        ".codex-onboarding/core/topics/cross-cutting/base-topic.md",
+        ".codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
       ])
     );
 
@@ -245,11 +245,11 @@ describe("scenario-matrix smoke", () => {
     };
 
     expect(state.managed_files.map((item) => item.relative_path)).toContain(
-      "codex-onboarding/core/AGENT-ONBOARDING.md"
+      ".codex-onboarding/core/AGENT-ONBOARDING.md"
     );
 
     await expect(
-      fs.readFile(path.join(fixture.targetRoot, "codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
+      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
     ).resolves.toContain("bundle_id: dotnet-csharp-web-api-simple");
   });
 
@@ -275,7 +275,7 @@ describe("scenario-matrix smoke", () => {
 
     const driftedPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/cross-cutting/base-topic.md"
+      ".codex-onboarding/core/topics/cross-cutting/base-topic.md"
     );
     await fs.appendFile(driftedPath, "\n# consumer drift\n", "utf8");
 
@@ -316,15 +316,15 @@ describe("scenario-matrix smoke", () => {
 
     const modifiedPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
+      ".codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
     );
     await fs.appendFile(modifiedPath, "\n# consumer edit\n", "utf8");
 
     const removed = await removeManagedOnboarding(fixture.targetRoot, { log: vi.fn() });
 
-    expect(removed.removedFiles).toContain("codex-onboarding/core/AGENT-ONBOARDING.md");
+    expect(removed.removedFiles).toContain(".codex-onboarding/core/AGENT-ONBOARDING.md");
     expect(removed.preservedModifiedFiles).toContain(
-      "codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
+      ".codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
     );
 
     await expect(fs.readFile(installed.statePath, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
@@ -354,7 +354,7 @@ describe("scenario-matrix smoke", () => {
 
     const missingPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/cross-cutting/base-topic.md"
+      ".codex-onboarding/core/topics/cross-cutting/base-topic.md"
     );
     await fs.unlink(missingPath);
 
@@ -371,12 +371,12 @@ describe("scenario-matrix smoke", () => {
       { log: vi.fn() }
     );
 
-    expect(repaired.appliedFiles).toContain("codex-onboarding/core/topics/cross-cutting/base-topic.md");
-    expect(repaired.recoveredTrackedFiles).toContain("codex-onboarding/core/AGENT-ONBOARDING.md");
+    expect(repaired.appliedFiles).toContain(".codex-onboarding/core/topics/cross-cutting/base-topic.md");
+    expect(repaired.recoveredTrackedFiles).toContain(".codex-onboarding/core/AGENT-ONBOARDING.md");
 
     await expect(fs.readFile(installed.statePath, "utf8")).resolves.toContain("managed_files");
     await expect(
-      fs.readFile(path.join(fixture.targetRoot, "codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
+      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
     ).resolves.toContain("managed: true");
   });
 
@@ -414,9 +414,9 @@ describe("scenario-matrix smoke", () => {
 
     expect(downgraded.appliedFiles).toEqual(
       expect.arrayContaining([
-        "codex-onboarding/core/AGENT-ONBOARDING.md",
-        "codex-onboarding/core/topics/cross-cutting/base-topic.md",
-        "codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
+        ".codex-onboarding/core/AGENT-ONBOARDING.md",
+        ".codex-onboarding/core/topics/cross-cutting/base-topic.md",
+        ".codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
       ])
     );
 
@@ -430,7 +430,7 @@ describe("scenario-matrix smoke", () => {
     expect(state.extension_version).toBe("1.0.0");
 
     await expect(
-      fs.readFile(path.join(fixture.targetRoot, "codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
+      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
     ).resolves.toContain("extension_version: 1.0.0");
   });
 });

@@ -54,11 +54,11 @@ describe("runRemove", () => {
     } as unknown as vscode.WorkspaceFolder);
 
     vi.mocked(removeManagedOnboarding).mockResolvedValue({
-      statePath: "/workspace/project/codex-onboarding/.managed/state.json",
+      statePath: "/workspace/project/.codex-onboarding/.managed/state.json",
       hadState: true,
       stateCleared: true,
       stateCorrupt: false,
-      removedFiles: ["codex-onboarding/core/AGENT-ONBOARDING.md"],
+      removedFiles: [".codex-onboarding/core/AGENT-ONBOARDING.md"],
       preservedModifiedFiles: [],
       missingManagedFiles: []
     });

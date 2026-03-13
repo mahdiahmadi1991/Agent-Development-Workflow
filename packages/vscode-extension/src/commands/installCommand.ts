@@ -47,7 +47,7 @@ async function askPreInstallAcknowledgement(input: {
   const detail = [
     "The install operation applies extension-managed onboarding artifacts.",
     "Existing files are not overwritten (non-destructive mode).",
-    "Managed state will be written to codex-onboarding/.managed/state.json.",
+    "Managed state will be written to .codex-onboarding/.managed/state.json.",
     `Target root: ${input.targetRootPath}`,
     `Selected profile: ${input.selectedProfile}`,
     `Git mode: ${input.gitMode}`,

@@ -45,8 +45,8 @@ Catalog design principles:
   - Operational Questions: extension behavior/runtime choices.
   - Profile Selection Questions: data-driven selection questions for profile/topic composition.
 - Profile Selection Questions question definitions are loaded dynamically from:
-  - `codex-onboarding/library/questionnaires/index.yaml`
-  - `codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
+  - `.codex-onboarding/library/questionnaires/index.yaml`
+  - `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
 - Profile Selection Questions must not be hardcoded in extension command handlers.
 
 ## Instruction Asset Model
@@ -68,20 +68,20 @@ Examples of applicability intent:
 - Resolver must provide a deterministic `why-selected` preview before apply.
 
 ## Asset Library Storage Model
-- Onboarding source assets are stored under `codex-onboarding/library/`.
+- Onboarding source assets are stored under `.codex-onboarding/library/`.
 - Storage is split into: `topics/`, `profiles/`, `questionnaires/`, `rules/`, `indexes/`.
 - `indexes/topics.index.yaml` is the single source of truth for selectable topic assets.
 - Topic files not present in index are invalid (orphan).
 - Index entries pointing to missing files are invalid (broken index).
 
 ## Target Paths in Consumer Projects
-- Baseline onboarding root: `codex-onboarding/`
-- Managed core path: `codex-onboarding/core/`
-- Project override path: `codex-onboarding/overrides/`
+- Baseline onboarding root: `.codex-onboarding/`
+- Managed core path: `.codex-onboarding/core/`
+- Project override path: `.codex-onboarding/overrides/`
 
 ## Static Bootstrap Artifact
 - A mandatory static onboarding file is always installed:
-  - `codex-onboarding/core/AGENT-ONBOARDING.md`
+  - `.codex-onboarding/core/AGENT-ONBOARDING.md`
 - Purpose: generic Codex onboarding orientation for any selected target.
 - The file is business-neutral and target-independent.
 - Root `AGENTS.md` must not be auto-modified if already present.

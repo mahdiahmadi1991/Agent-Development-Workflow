@@ -4,8 +4,8 @@
   "agent": "codex",
   "language": "en",
   "paths": {
-    "core": "codex-onboarding/core",
-    "overrides": "codex-onboarding/overrides"
+    "core": ".codex-onboarding/core",
+    "overrides": ".codex-onboarding/overrides"
   },
   "resolutionOrder": ["core", "overrides"],
   "integrity": {

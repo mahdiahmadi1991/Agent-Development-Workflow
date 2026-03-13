@@ -2,12 +2,12 @@
 set -euo pipefail
 
 required_paths=(
-  "codex-onboarding/templates/topic-instruction.template.md"
-  "codex-onboarding/templates/topic-override.template.md"
-  "codex-onboarding/templates/bundle-manifest.template.yaml"
-  "codex-onboarding/library/indexes/topics.index.yaml"
-  "codex-onboarding/library/rules/selector-rules.yaml"
-  "codex-onboarding/library/questionnaires/index.yaml"
+  ".codex-onboarding/templates/topic-instruction.template.md"
+  ".codex-onboarding/templates/topic-override.template.md"
+  ".codex-onboarding/templates/bundle-manifest.template.yaml"
+  ".codex-onboarding/library/indexes/topics.index.yaml"
+  ".codex-onboarding/library/rules/selector-rules.yaml"
+  ".codex-onboarding/library/questionnaires/index.yaml"
 )
 
 missing=0

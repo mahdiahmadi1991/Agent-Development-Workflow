@@ -7,8 +7,8 @@ Consumer projects need flexibility, but editing managed core onboarding files ca
 Use a dedicated override path with deterministic precedence.
 
 ## Paths
-- Managed core: `codex-onboarding/core/`
-- Consumer overrides: `codex-onboarding/overrides/`
+- Managed core: `.codex-onboarding/core/`
+- Consumer overrides: `.codex-onboarding/overrides/`
 
 ## Rules
 1. Core files are treated as immutable by policy.

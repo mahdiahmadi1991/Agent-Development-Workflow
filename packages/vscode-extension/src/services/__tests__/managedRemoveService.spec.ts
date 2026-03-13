@@ -65,7 +65,7 @@ describe("removeManagedOnboarding", () => {
 
     const modifiedPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
+      ".codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
     );
 
     await fs.appendFile(modifiedPath, "\n# changed by consumer\n", "utf8");
@@ -73,9 +73,9 @@ describe("removeManagedOnboarding", () => {
     const removed = await removeManagedOnboarding(fixture.targetRoot, logger);
 
     expect(removed.stateCleared).toBe(true);
-    expect(removed.removedFiles).toContain("codex-onboarding/core/AGENT-ONBOARDING.md");
+    expect(removed.removedFiles).toContain(".codex-onboarding/core/AGENT-ONBOARDING.md");
     expect(removed.preservedModifiedFiles).toContain(
-      "codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
+      ".codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
     );
 
     await expect(fs.readFile(installed.statePath, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
@@ -105,20 +105,20 @@ describe("removeManagedOnboarding", () => {
 
     const topicPath = path.join(
       fixture.targetRoot,
-      "codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
     );
     await fs.unlink(topicPath);
 
     const removed = await removeManagedOnboarding(fixture.targetRoot, logger);
 
-    expect(removed.missingManagedFiles).toContain("codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
+    expect(removed.missingManagedFiles).toContain(".codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
   });
 
   it("treats invalid managed state shape as corrupt", async () => {
     const fixture = await createFixturePaths("managed-remove-invalid-shape");
     cleanups.push(fixture.tempRoot);
 
-    const managedRoot = path.join(fixture.targetRoot, "codex-onboarding", ".managed");
+    const managedRoot = path.join(fixture.targetRoot, ".codex-onboarding", ".managed");
     await fs.mkdir(managedRoot, { recursive: true });
 
     const statePath = path.join(managedRoot, "state.json");
@@ -139,7 +139,7 @@ describe("removeManagedOnboarding", () => {
 
     await writeBootstrap(fixture.assetRoot);
 
-    const managedRoot = path.join(fixture.targetRoot, "codex-onboarding", ".managed");
+    const managedRoot = path.join(fixture.targetRoot, ".codex-onboarding", ".managed");
     await fs.mkdir(managedRoot, { recursive: true });
 
     const statePath = path.join(managedRoot, "state.json");

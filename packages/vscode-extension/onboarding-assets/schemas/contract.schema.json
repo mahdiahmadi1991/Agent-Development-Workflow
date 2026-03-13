@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/codex-onboarding/contract.schema.json",
+  "$id": "https://example.org/.codex-onboarding/contract.schema.json",
   "title": "Codex Onboarding Contract",
   "type": "object",
   "required": [

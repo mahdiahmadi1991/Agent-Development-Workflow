@@ -95,8 +95,8 @@ function isManagedFileContent(content: string): boolean {
 }
 
 function normalizeTopicSourcePath(topicPath: string): string {
-  if (topicPath.startsWith("codex-onboarding/library/topics/")) {
-    return topicPath.replace(/^codex-onboarding\/library\/topics\//, "");
+  if (topicPath.startsWith(".codex-onboarding/library/topics/")) {
+    return topicPath.replace(/^\.?codex-onboarding\/library\/topics\//, "");
   }
 
   if (topicPath.startsWith("library/topics/")) {
@@ -112,7 +112,7 @@ function normalizeTopicSourcePath(topicPath: string): string {
 
 function buildTopicDestinationRelativePath(topicPath: string): string {
   const normalized = normalizeTopicSourcePath(topicPath);
-  return path.posix.join("codex-onboarding", "core", "topics", normalized);
+  return path.posix.join(".codex-onboarding", "core", "topics", normalized);
 }
 
 async function buildDesiredManagedFiles(
@@ -133,7 +133,7 @@ async function buildDesiredManagedFiles(
   desired.push({
     file_id: "core-agent-onboarding",
     source_path: sourceBootstrapPath,
-    relative_path: "codex-onboarding/core/AGENT-ONBOARDING.md",
+    relative_path: ".codex-onboarding/core/AGENT-ONBOARDING.md",
     content: bootstrapContent,
     metadata_mode: "embedded",
     metadata_format: "comment_block"
@@ -169,7 +169,7 @@ async function ensureParentDirectory(targetRootPath: string, relativePath: strin
 }
 
 async function removeEmptyParentDirs(targetRootPath: string, relativePath: string): Promise<void> {
-  const stopAt = path.join(targetRootPath, "codex-onboarding");
+  const stopAt = path.join(targetRootPath, ".codex-onboarding");
   let current = path.dirname(path.join(targetRootPath, relativePath));
 
   while (current.startsWith(stopAt)) {
@@ -356,7 +356,7 @@ export async function applyManagedInstall(
   const mode = input.mode ?? "install";
   const assetRoot = await resolveOnboardingAssetRoot(input.extensionPath);
 
-  const onboardingRootPath = path.join(input.targetRootPath, "codex-onboarding");
+  const onboardingRootPath = path.join(input.targetRootPath, ".codex-onboarding");
   const managedRootPath = path.join(onboardingRootPath, ".managed");
   const statePath = path.join(managedRootPath, "state.json");
 

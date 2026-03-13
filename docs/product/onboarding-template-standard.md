@@ -13,9 +13,9 @@ Define a fixed structural contract for onboarding assets so newly generated file
 - Library storage/index integration points
 
 ## Canonical Template Files
-- `codex-onboarding/templates/topic-instruction.template.md`
-- `codex-onboarding/templates/topic-override.template.md`
-- `codex-onboarding/templates/bundle-manifest.template.yaml`
+- `.codex-onboarding/templates/topic-instruction.template.md`
+- `.codex-onboarding/templates/topic-override.template.md`
+- `.codex-onboarding/templates/bundle-manifest.template.yaml`
 
 ## Related Standards
 - `docs/product/asset-library-storage-standard.md`

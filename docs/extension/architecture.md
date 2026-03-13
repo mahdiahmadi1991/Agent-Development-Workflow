@@ -10,7 +10,7 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 4. Extension resolves selected target.
 5. Extension presents pre-install behavior summary and receives explicit acknowledgement.
 6. Extension offers Git tracking mode choice for managed paths.
-7. Extension applies predefined onboarding files into `codex-onboarding/` paths.
+7. Extension applies predefined onboarding files into `.codex-onboarding/` paths.
 8. Extension follows non-destructive apply mode (no overwrite of existing files).
 9. Extension reports success, applied files, and skipped files summary.
 10. Extension opens a dedicated post-install guidance page with quick-start usage tips.
@@ -43,19 +43,19 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
   - target-specific topics
   - cross-cutting shared topics
   - mandatory baseline topics
-- Source topics are loaded from `codex-onboarding/library/` with `topics.index.yaml` as authoritative index.
+- Source topics are loaded from `.codex-onboarding/library/` with `topics.index.yaml` as authoritative index.
 - Resolver must produce deterministic output with explainability preview (`why-selected`).
 
 ## Question System
 - Operational questions are extension-defined.
 - Profile Selection questions are file-driven and dynamic.
 - Profile Selection Questions source files:
-  - `codex-onboarding/library/questionnaires/index.yaml`
-  - `codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
+  - `.codex-onboarding/library/questionnaires/index.yaml`
+  - `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
 - Profile Selection question flows must not be hardcoded in extension command logic.
 
 ## Static Bootstrap Artifact
-- Every install/repair must include `codex-onboarding/core/AGENT-ONBOARDING.md`.
+- Every install/repair must include `.codex-onboarding/core/AGENT-ONBOARDING.md`.
 - The artifact content is generic and target-independent.
 - Existing consumer root `AGENTS.md` must not be auto-modified.
 

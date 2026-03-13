@@ -4,7 +4,7 @@ const path = require('path');
 
 const packageRoot = path.resolve(__dirname, '..');
 const repoRoot = path.resolve(packageRoot, '..', '..');
-const sourceRoot = path.join(repoRoot, 'codex-onboarding');
+const sourceRoot = path.join(repoRoot, '.codex-onboarding');
 const targetRoot = path.join(packageRoot, 'onboarding-assets');
 
 if (!fs.existsSync(sourceRoot)) {

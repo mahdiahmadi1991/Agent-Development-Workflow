@@ -4,9 +4,9 @@
 This extension applies Codex onboarding files into your project. Review this summary before install/update so behavior is predictable.
 
 ## What the Extension Manages
-- Only extension-owned files under `codex-onboarding/` managed paths.
+- Only extension-owned files under `.codex-onboarding/` managed paths.
 - It does not modify unrelated project files.
-- A static bootstrap onboarding file is always included: `codex-onboarding/core/AGENT-ONBOARDING.md`.
+- A static bootstrap onboarding file is always included: `.codex-onboarding/core/AGENT-ONBOARDING.md`.
 
 ## Lifecycle Commands
 - `Install Onboarding`

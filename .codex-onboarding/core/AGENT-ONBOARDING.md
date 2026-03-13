@@ -14,11 +14,11 @@ This file introduces Codex to the onboarding model applied in this project.
 
 ## Scope
 - This onboarding system targets Codex behavior only.
-- Managed artifacts are installed under `codex-onboarding/`.
+- Managed artifacts are installed under `.codex-onboarding/`.
 
 ## Ownership Model
-- Managed baseline path: `codex-onboarding/core/`
-- Consumer customization path: `codex-onboarding/overrides/`
+- Managed baseline path: `.codex-onboarding/core/`
+- Consumer customization path: `.codex-onboarding/overrides/`
 - Managed baseline files must not be edited directly.
 
 ## Policy Resolution

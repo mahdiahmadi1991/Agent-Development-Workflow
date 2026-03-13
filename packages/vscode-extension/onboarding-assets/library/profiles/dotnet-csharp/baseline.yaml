@@ -1,6 +1,6 @@
 version: 1
 profile_id: dotnet-csharp-baseline
 family: dotnet-csharp
-questionnaire_ref: codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml
+questionnaire_ref: .codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml
 baseline_topics: []
 default_capabilities: []

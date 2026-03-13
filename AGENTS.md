@@ -37,8 +37,8 @@ Policy precedence is deterministic. Higher level wins on conflict.
 Detailed hierarchy is documented in `docs/governance/policy-hierarchy.md`.
 
 ## Override Model
-- Core path (managed): `codex-onboarding/core/`
-- Override path (consumer-controlled): `codex-onboarding/overrides/`
+- Core path (managed): `.codex-onboarding/core/`
+- Override path (consumer-controlled): `.codex-onboarding/overrides/`
 - Resolution: override files augment or replace allowed sections without modifying core originals.
 
 Detailed model is documented in `docs/governance/override-model.md`.
@@ -52,14 +52,14 @@ Detailed model is documented in `docs/governance/override-model.md`.
 - Context boundary map: `docs/governance/context-boundary-map.yaml`
 
 ## Artifact Boundary
-- Files under `codex-onboarding/library/`, `codex-onboarding/templates/`, `codex-onboarding/core/`, and `codex-onboarding/overrides/` are extension artifacts.
+- Files under `.codex-onboarding/library/`, `.codex-onboarding/templates/`, `.codex-onboarding/core/`, and `.codex-onboarding/overrides/` are extension artifacts.
 - These artifact roots must not be treated as governance policy sources for agent behavior decisions.
 - For governance decisions, use only sources listed in `docs/governance/context-boundary-map.yaml`.
 
 ## Dynamic Question Model
 - Operational Questions: extension runtime/operation questions (root selection, Git mode, safety choices).
 - Profile Selection Questions: dynamic questions loaded from questionnaire definition files.
-- Profile Selection Questions must be driven by data from `codex-onboarding/library/questionnaires/` and not hardcoded in extension logic.
+- Profile Selection Questions must be driven by data from `.codex-onboarding/library/questionnaires/` and not hardcoded in extension logic.
 
 ## Change Management
 - Use ADR-style documentation for architecture decisions.

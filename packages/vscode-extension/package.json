@@ -1,13 +1,12 @@
 {
-  "name": "codex-onboarding-vscode-extension",
+  "name": "codex-onboarding",
   "displayName": "Codex Onboarding",
   "description": "Apply managed Codex onboarding artifacts with safe install, repair, and remove workflows.",
   "version": "0.0.1",
   "publisher": "2ma",
-  "preview": true,
   "license": "MIT",
   "author": {
-    "name": "Mehdi"
+    "name": "Mohammad Mahdi Ahmadi"
   },
   "repository": {
     "type": "git",
@@ -123,5 +122,6 @@
     "typescript": "^5.8.3",
     "vitest": "^4.1.0"
   },
-  "icon": "assets/branding/icon-128.png"
+  "icon": "assets/branding/icon-128.png",
+  "publisherDisplayName": "Mohammad Mahdi Ahmadi"
 }

@@ -47,7 +47,7 @@ async function tryReadState(statePath: string): Promise<{ state?: ManagedState; 
 }
 
 async function removeEmptyParentDirs(targetRootPath: string, relativePath: string): Promise<void> {
-  const stopAt = path.join(targetRootPath, "codex-onboarding");
+  const stopAt = path.join(targetRootPath, ".codex-onboarding");
   let current = path.dirname(path.join(targetRootPath, relativePath));
 
   while (current.startsWith(stopAt)) {
@@ -69,7 +69,7 @@ export async function removeManagedOnboarding(
   targetRootPath: string,
   logger: ManagedRemoveLogger
 ): Promise<ManagedRemoveResult> {
-  const statePath = path.join(targetRootPath, "codex-onboarding", ".managed", "state.json");
+  const statePath = path.join(targetRootPath, ".codex-onboarding", ".managed", "state.json");
 
   const removedFiles: string[] = [];
   const preservedModifiedFiles: string[] = [];

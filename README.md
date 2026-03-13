@@ -67,9 +67,9 @@ This repository is focused on:
 - `scripts/scaffold-release-note.sh`: release-note scaffold generator from changelog + decision references.
 - `scripts/rehearse-release-local.sh`: local pre-publish release rehearsal pipeline.
 - `docs/extension/`: architecture baseline for the VS Code extension.
-- `codex-onboarding/library/`: source onboarding asset library for profile-based selection.
-- `codex-onboarding/core/`: managed baseline artifacts (immutable by policy).
-- `codex-onboarding/overrides/`: project-specific customization path.
+- `.codex-onboarding/library/`: source onboarding asset library for profile-based selection.
+- `.codex-onboarding/core/`: managed baseline artifacts (immutable by policy).
+- `.codex-onboarding/overrides/`: project-specific customization path.
 - `packages/vscode-extension/`: VS Code extension package implementation.
 
 ## Branching Model

@@ -14,7 +14,7 @@ This file records accepted planning decisions and open decisions.
 | D-007 | Final product is a VS Code extension that applies onboarding files based on selected project type. | Accepted | Target behavior locked for planning. |
 | D-008 | Extension options must be dynamic; | Accepted | Future targets can be added via catalog. |
 | D-009 | Option taxonomy is standards-driven and behavior-based, not biased by ad-hoc examples. | Accepted | Merge equivalent project types to reduce complexity. |
-| D-010 | Consumer destination root is `codex-onboarding/`. | Accepted | Includes `core/` and `overrides/` paths. |
+| D-010 | Consumer destination root is `.codex-onboarding/`. | Accepted | Includes `core/` and `overrides/` paths. |
 | D-011 | File application policy is non-destructive by default. | Accepted | No overwrite of existing consumer files. |
 | D-012 | Instruction files are modular: one file per technical topic. | Accepted | Topic-level granularity is required. |
 | D-013 | Applicability metadata determines where each topic file is used. | Accepted | Enables target-specific and shared-topic composition. |
@@ -25,7 +25,7 @@ This file records accepted planning decisions and open decisions.
 | D-018 | Extension update scope is limited to extension-owned managed files. | Accepted | Ownership boundary is strict. |
 | D-019 | File-attribute read-only protection is optional hardening, not primary integrity control. | Accepted | Digest-based integrity remains source of truth. |
 | D-020 | On extension version upgrade, all managed files must be synchronized, even if semantic content is unchanged. | Accepted | Version sync is explicit and mandatory. |
-| D-021 | Managed state in `codex-onboarding/.managed/state.json` is the authoritative update-control record. | Accepted | Includes file ownership and digest tracking. |
+| D-021 | Managed state in `.codex-onboarding/.managed/state.json` is the authoritative update-control record. | Accepted | Includes file ownership and digest tracking. |
 | D-022 | File-level metadata markers are preferred for managed text files; state remains authoritative. | Accepted | Embedded markers plus state traceability. |
 | D-023 | CI/CD must validate contracts, scenario behavior, and release integrity before publishing. | Accepted | Pipeline is a first-class requirement. |
 | D-024 | Extension branding assets (logo, icon, description copy) are part of product infrastructure scope. | Accepted | Must be planned before release readiness. |
@@ -60,7 +60,7 @@ This file records accepted planning decisions and open decisions.
 | D-053 | Selection resolver must be deterministic and explainable (`why-selected` preview). | Accepted | Same inputs must produce same ordered output set. |
 | D-054 | Selection pipeline must use profile baseline + questionnaire capabilities + dependency/conflict resolution. | Accepted | Supports minimal required file-set composition. |
 | D-055 | Library storage and selection contracts are validator-enforced in local and CI checks. | Accepted | Non-compliant layout or metadata blocks validation. |
-| D-056 | A mandatory static bootstrap onboarding file must be installed in every target project. | Accepted | Canonical path: `codex-onboarding/core/AGENT-ONBOARDING.md`. |
+| D-056 | A mandatory static bootstrap onboarding file must be installed in every target project. | Accepted | Canonical path: `.codex-onboarding/core/AGENT-ONBOARDING.md`. |
 | D-057 | Static bootstrap onboarding content must remain generic and target-independent. | Accepted | No project-type-specific content in this artifact. |
 | D-058 | Extension must not auto-modify an existing root `AGENTS.md`; AGENTS integration is user-controlled. | Accepted | Non-destructive ownership boundary preserved. |
 | D-059 | Onboarding conflict reporting must use explicit user-controlled issue escalation only. | Accepted | No silent automatic external issue creation. |

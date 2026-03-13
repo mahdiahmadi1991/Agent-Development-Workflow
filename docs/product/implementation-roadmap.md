@@ -65,10 +65,10 @@ Reference: `docs/product/onboarding-template-standard.md`
 Reference: `docs/product/bootstrap-onboarding-file-contract.md`
 
 ### Phase 2: File Layout Contract
-- Finalize folder layout under `codex-onboarding/`.
+- Finalize folder layout under `.codex-onboarding/`.
 - Define placement rules for managed and override files.
 - Define generated state/lock locations.
-- Lock library storage taxonomy under `codex-onboarding/library/`.
+- Lock library storage taxonomy under `.codex-onboarding/library/`.
 - Define index and profile/questionnaire/rules file contracts.
 
 Exit criteria:

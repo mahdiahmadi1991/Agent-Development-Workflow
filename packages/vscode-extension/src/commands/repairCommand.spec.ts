@@ -116,9 +116,9 @@ describe("runRepair", () => {
     });
 
     vi.mocked(applyManagedInstall).mockResolvedValue({
-      statePath: "/workspace/project/codex-onboarding/.managed/state.json",
-      managedRootPath: "/workspace/project/codex-onboarding/.managed",
-      appliedFiles: ["codex-onboarding/core/AGENT-ONBOARDING.md"],
+      statePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      managedRootPath: "/workspace/project/.codex-onboarding/.managed",
+      appliedFiles: [".codex-onboarding/core/AGENT-ONBOARDING.md"],
       skippedFiles: [],
       recoveredTrackedFiles: [],
       removedStaleFiles: []

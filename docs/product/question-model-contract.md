@@ -15,8 +15,8 @@ Define a stable and scalable question system for install/repair flows without ha
 - Source: questionnaire files loaded dynamically by selected profile family.
 
 ## Dynamic Source Contract (Profile Selection Questions)
-- Registry file: `codex-onboarding/library/questionnaires/index.yaml`
-- Family flow file pattern: `codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
+- Registry file: `.codex-onboarding/library/questionnaires/index.yaml`
+- Family flow file pattern: `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
 - Extension must resolve flow definitions from registry/paths, not hardcoded switch logic.
 
 ## Runtime Requirements

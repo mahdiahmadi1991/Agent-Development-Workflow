@@ -14,11 +14,11 @@ required_paths=(
   "docs/product/living-spec.md"
   "docs/product/decision-log.md"
   "docs/product/question-model-contract.md"
-  "codex-onboarding/core/README.md"
-  "codex-onboarding/core/AGENT-ONBOARDING.md"
-  "codex-onboarding/overrides/README.md"
-  "codex-onboarding/contract.json"
-  "codex-onboarding/schemas/contract.schema.json"
+  ".codex-onboarding/core/README.md"
+  ".codex-onboarding/core/AGENT-ONBOARDING.md"
+  ".codex-onboarding/overrides/README.md"
+  ".codex-onboarding/contract.json"
+  ".codex-onboarding/schemas/contract.schema.json"
 )
 
 missing=0

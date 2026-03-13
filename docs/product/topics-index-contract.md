@@ -4,7 +4,7 @@
 Approved (locked standard)
 
 ## Canonical File
-- `codex-onboarding/library/indexes/topics.index.yaml`
+- `.codex-onboarding/library/indexes/topics.index.yaml`
 
 ## Purpose
 Provide a single authoritative index for all selectable onboarding topic assets.
@@ -27,7 +27,7 @@ Each topic entry must include:
 
 ## Integrity Rules
 1. `file_id` must be unique across all entries.
-2. `path` must point to an existing file under `codex-onboarding/library/topics/`.
+2. `path` must point to an existing file under `.codex-onboarding/library/topics/`.
 3. Every indexed topic must comply with onboarding template structure.
 4. Every topic file under library topics must be present in this index.
 

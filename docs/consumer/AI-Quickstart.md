@@ -3,10 +3,10 @@
 Use these examples to onboard your AI model quickly with installed onboarding assets.
 
 ## Prompt 1: Baseline Context Load
-"Read the onboarding files under `codex-onboarding/` and summarize the active constraints, coding standards, and safety rules you must follow in this project."
+"Read the onboarding files under `.codex-onboarding/` and summarize the active constraints, coding standards, and safety rules you must follow in this project."
 
 ## Prompt 2: Task Planning with Onboarding Rules
-"Before coding, create a short implementation plan and explicitly map each step to the relevant onboarding rules from `codex-onboarding/`."
+"Before coding, create a short implementation plan and explicitly map each step to the relevant onboarding rules from `.codex-onboarding/`."
 
 ## Prompt 3: Change Validation Against Rules
 "Review this proposed change against the onboarding policies. List any conflicts, missing checks, or required tests before implementation."

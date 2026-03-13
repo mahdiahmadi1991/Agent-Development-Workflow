@@ -20,10 +20,10 @@ governance_sources=(
 )
 
 artifact_roots=(
-  "codex-onboarding/library/"
-  "codex-onboarding/templates/"
-  "codex-onboarding/core/"
-  "codex-onboarding/overrides/"
+  ".codex-onboarding/library/"
+  ".codex-onboarding/templates/"
+  ".codex-onboarding/core/"
+  ".codex-onboarding/overrides/"
 )
 
 for p in "${governance_sources[@]}"; do
@@ -31,7 +31,7 @@ for p in "${governance_sources[@]}"; do
     echo "Missing governance source: $p"
     missing=1
   fi
-  if [[ "$p" == codex-onboarding/* ]]; then
+  if [[ "$p" == .codex-onboarding/* ]]; then
     echo "Invalid governance source under artifact root: $p"
     missing=1
   fi

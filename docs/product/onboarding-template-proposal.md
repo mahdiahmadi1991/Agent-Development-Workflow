@@ -31,9 +31,9 @@ Define a fixed template contract for onboarding files so structure remains stabl
 This proposal defines structure only, not topic content.
 
 ## Draft Artifacts
-- `codex-onboarding/templates/topic-instruction.template.md`
-- `codex-onboarding/templates/topic-override.template.md`
-- `codex-onboarding/templates/bundle-manifest.template.yaml`
+- `.codex-onboarding/templates/topic-instruction.template.md`
+- `.codex-onboarding/templates/topic-override.template.md`
+- `.codex-onboarding/templates/bundle-manifest.template.yaml`
 
 ## Resolution
 This proposal has been accepted and converted into the fixed standard document.

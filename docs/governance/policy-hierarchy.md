@@ -3,8 +3,8 @@
 This project uses a layered policy model to keep baseline behavior stable while allowing controlled customization.
 
 ## Layers (Highest to Lowest Priority)
-1. Core managed policies (`codex-onboarding/core/`)
-2. Consumer overrides (`codex-onboarding/overrides/`)
+1. Core managed policies (`.codex-onboarding/core/`)
+2. Consumer overrides (`.codex-onboarding/overrides/`)
 3. Local task notes or temporary instructions
 
 ## Merge Semantics

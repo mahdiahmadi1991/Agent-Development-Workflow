@@ -1,45 +1,81 @@
-# vscode-extension
+# Codex Onboarding
 
-![Codex Onboarding Extension Banner](assets/branding/banner-extension.png)
+![Codex Onboarding Extension Banner](https://raw.githubusercontent.com/mahdiahmadi1991/Codex-Onboarding-Workflow/main/packages/vscode-extension/assets/branding/banner-extension.png)
 
-VS Code extension package for applying managed Codex onboarding artifacts to consumer projects.
+Codex Onboarding is a VS Code extension that applies a managed onboarding layer to your current project.
 
-## Current Implementation Status
-Step 13 is implemented:
-- command surface registered (`Install`, `Remove`, `Repair`)
-- output logger service (`debug`, `warning`, `error`)
-- per-operation trace logger with unique `.jsonl` log file creation
-- workspace root resolver (single-root auto-select, multi-root prompt)
-- Operational question prompt (Git mode)
-- Profile Selection Questions dynamic questionnaire loading + parsing from file system
-- Profile Selection Questions dynamic question runner from questionnaire node graph
-- pre-install behavior acknowledgement gate (`Apply` confirmation)
-- profile resolution from dynamic profile assets (`library/profiles/<family>/`)
-- deterministic selection resolver from `topics.index.yaml` + `selector-rules.yaml`
-- resolver-driven topic preview in pre-install acknowledgement
-- managed install applies bootstrap + selected topic files to managed core paths
-- managed state generation in `codex-onboarding/.managed/state.json`
-- tracked and unchanged managed files are synchronized on install; drift blocks update
-- stale managed files from previous selection are removed only when integrity checks pass
-- remove command removes only unchanged managed files, preserves modified managed files, and clears state
-- repair command reconstructs managed state and restores eligible managed files via repair mode
-- post-install guidance page opening in VS Code
-- high-coverage automated tests for command lifecycle, activation wiring, trace logger behavior, and edge/recovery flows
-- scenario-matrix smoke tests for install/update drift/remove/repair/downgrade lifecycle paths
-- command-level smoke coverage for multi-root install target selection
-- workspace root resolver tests for no-root, single-root, multi-root, and cancel flows
-- GitHub CI workflow gates for tests, coverage thresholds, compile checks, VSIX packaging smoke, and artifact upload
-- optional dedicated WSL validation lane in CI (self-hosted opt-in)
-- release tag validation workflow with changelog/release-note consistency and package-version alignment checks
-- manual release-publish workflow with optional marketplace publish and optional GitHub release creation
-- deterministic release artifact checksum generation (`.vsix` + `.sha256`)
-- VSIX runtime self-containment fix: packaged onboarding assets + runtime `yaml` dependency
-- release-note scaffold generator from changelog with decision-reference section
-- publisher-side release runbook aligned with workflow inputs, secrets, and failure handling
-- branding baseline assets packaged for Marketplace (`assets/branding/icon-128.png`, `icon-64.png`, `icon-mark.svg`)
-- marketplace metadata checklist and icon wiring in package manifest
-- local end-to-end release rehearsal script and passing rehearsal evidence report
+It is designed for safe, non-destructive onboarding flows where extension-managed artifacts are kept separate from user-owned project files.
 
-## Next Steps
-- finalize first public release execution checklist sign-off
-- execute first public publish run via release workflows
+## What It Does
+
+- installs a managed onboarding baseline into `.codex-onboarding/`
+- supports `Install`, `Repair`, and `Remove` lifecycle commands
+- prevents unsafe overwrite of existing user-owned files
+- blocks updates when managed-file drift is detected
+- writes deterministic operation trace logs for debugging
+
+## Command Surface
+
+- `Codex Onboarding: Install`
+- `Codex Onboarding: Repair`
+- `Codex Onboarding: Remove`
+
+The extension intentionally keeps command surface minimal.
+
+## Managed Paths
+
+- managed core: `.codex-onboarding/core/`
+- user overrides: `.codex-onboarding/overrides/`
+- managed state: `.codex-onboarding/.managed/state.json`
+
+## Safety Model
+
+- non-destructive by default
+- managed ownership boundary is strict
+- extension updates only extension-owned managed files
+- drift detection is fail-fast
+- up-to-date runs skip unnecessary writes
+
+## Dynamic Selection Model
+
+Install/repair flow is split into two groups:
+
+1. Operational Questions
+2. Profile Selection Questions (dynamic, file-driven)
+
+Questionnaire and selection assets are loaded from extension-bundled onboarding assets.
+
+## Logging
+
+Each lifecycle run creates a dedicated trace log file with structured events and severity levels.
+
+Severity categories:
+
+- `debug`
+- `warning`
+- `error`
+
+## Supported Environments
+
+- Windows
+- WSL
+- Linux
+- macOS
+
+For current tested matrix details, see project docs:
+
+- `docs/product/environment-support-matrix.md`
+
+## Release and Update Transparency
+
+Before applying updates, users should be able to review:
+
+- `CHANGELOG.md`
+- `docs/releases/v<version>.md`
+
+## Source and Governance
+
+- repository: `https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow`
+- publisher: `2ma`
+
+Extension behavior and governance contracts are maintained in repository docs and synced with release workflow gates.

@@ -4,7 +4,7 @@
 Define a mandatory, generic, always-installed bootstrap artifact that introduces Codex to the onboarding system in consumer projects.
 
 ## Mandatory Artifact
-- Path: `codex-onboarding/core/AGENT-ONBOARDING.md`
+- Path: `.codex-onboarding/core/AGENT-ONBOARDING.md`
 - Type: managed core artifact.
 - Install policy: always included in every install/repair composition.
 - Content policy: generic and project-type independent.

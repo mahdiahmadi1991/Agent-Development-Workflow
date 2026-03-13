@@ -4,7 +4,7 @@
 Define a deterministic contract for extension-owned file tracking, update safety, and version synchronization.
 
 ## State File Location
-- `codex-onboarding/.managed/state.json`
+- `.codex-onboarding/.managed/state.json`
 - This file is generated in consumer projects at runtime and is not a repository-managed source artifact.
 
 ## Authoritative Fields

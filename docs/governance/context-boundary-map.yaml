@@ -9,10 +9,10 @@ governance_sources:
   - docs/product/living-spec.md
 
 artifact_roots_excluded_from_agent_onboarding:
-  - codex-onboarding/library/
-  - codex-onboarding/templates/
-  - codex-onboarding/core/
-  - codex-onboarding/overrides/
+  - .codex-onboarding/library/
+  - .codex-onboarding/templates/
+  - .codex-onboarding/core/
+  - .codex-onboarding/overrides/
 
 note: >
   Artifact roots are implementation assets for extension output and must not be

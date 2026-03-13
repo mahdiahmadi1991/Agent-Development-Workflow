@@ -123,7 +123,7 @@ Define expected behavior for installation and update scenarios.
 ### S-17 Bootstrap Artifact Mandatory Inclusion
 - Preconditions: Install or repair command runs successfully.
 - Expected:
-  - `codex-onboarding/core/AGENT-ONBOARDING.md` exists after operation.
+  - `.codex-onboarding/core/AGENT-ONBOARDING.md` exists after operation.
   - Artifact is tracked in managed ownership state.
 
 ### S-18 Issue Escalation Direct Submission
