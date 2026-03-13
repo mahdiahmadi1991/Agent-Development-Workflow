@@ -97,7 +97,9 @@
     "assets/**",
     "README.md",
     "LICENSE",
-    "package.json"
+    "package.json",
+    "onboarding-assets/**",
+    "node_modules/yaml/**"
   ],
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\"",
@@ -105,7 +107,10 @@
     "watch": "tsc -watch -p tsconfig.build.json",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
-    "package:ci": "node -e \"require('fs').mkdirSync('artifacts',{recursive:true})\" && npx vsce package --no-yarn --out artifacts/codex-onboarding.vsix"
+    "package:ci": "node -e \"require('fs').mkdirSync('artifacts',{recursive:true})\" && npx vsce package --no-yarn --out artifacts/codex-onboarding.vsix",
+    "sync:onboarding-assets": "node ./scripts/sync-onboarding-assets.js",
+    "precompile": "npm run sync:onboarding-assets",
+    "prepackage:ci": "npm run sync:onboarding-assets"
   },
   "dependencies": {
     "yaml": "^2.8.1"

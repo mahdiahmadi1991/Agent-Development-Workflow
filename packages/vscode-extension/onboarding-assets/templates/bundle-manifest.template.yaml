@@ -1,0 +1,13 @@
+bundle_id: <bundle-id>
+bundle_version: <bundle-version>
+extension_version: <extension-version>
+paths:
+  root: codex-onboarding
+  core: codex-onboarding/core
+  overrides: codex-onboarding/overrides
+topics: []
+profiles: []
+update_policy:
+  mode: managed-state
+logging_policy:
+  level: trace

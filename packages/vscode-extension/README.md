@@ -33,6 +33,7 @@ Step 13 is implemented:
 - release tag validation workflow with changelog/release-note consistency and package-version alignment checks
 - manual release-publish workflow with optional marketplace publish and optional GitHub release creation
 - deterministic release artifact checksum generation (`.vsix` + `.sha256`)
+- VSIX runtime self-containment fix: packaged onboarding assets + runtime `yaml` dependency
 - release-note scaffold generator from changelog with decision-reference section
 - publisher-side release runbook aligned with workflow inputs, secrets, and failure handling
 - branding baseline assets packaged for Marketplace (`assets/branding/icon-128.png`, `icon-64.png`, `icon-mark.svg`)

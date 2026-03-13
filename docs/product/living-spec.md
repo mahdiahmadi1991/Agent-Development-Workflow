@@ -176,6 +176,7 @@ Downgrade behavior:
 - Release flow stages are mandatory: validate/package first, then optional publish actions.
 - Release-note authoring uses scaffolded template with decision-reference section.
 - Local release rehearsal evidence is required before first public publish sign-off.
+- Published VSIX must include onboarding assets and runtime YAML dependency to remain self-contained.
 - Post-install guidance page is mandatory after successful install.
 - Onboarding file structure is locked by template standard and validator gate.
 - Library storage and selection contracts are locked by validator gate.

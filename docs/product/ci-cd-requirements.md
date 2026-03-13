@@ -28,6 +28,7 @@ Define non-negotiable pipeline gates before any extension release.
 - Release artifact verification before publish.
 - Validate release tag/input version equals extension package version.
 - Store `.vsix` and `.sha256` as immutable workflow artifacts before any publish step.
+- Verify VSIX contains bundled onboarding assets and required runtime dependencies.
 
 5. Quality checks
 - Lint and static analysis.
