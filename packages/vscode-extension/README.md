@@ -1,11 +1,16 @@
-# vscode-extension (planned)
+# vscode-extension
 
-This package will contain the VS Code extension responsible for applying Codex onboarding structures to consumer projects.
+VS Code extension package for applying managed Codex onboarding artifacts to consumer projects.
 
-## Planned Scope
-- Install baseline onboarding assets
-- Maintain upgrade-safe core files
-- Support project overrides
-- Validate policy integrity
+## Current Implementation Status
+Step 1 scaffold is implemented:
+- command surface registered (`Install`, `Remove`, `Repair`)
+- output logger service (`debug`, `warning`, `error`)
+- workspace root resolver (single-root auto-select, multi-root prompt)
+- Group A operational question prompt (Git mode)
+- Group B dynamic questionnaire asset loading from file system paths
 
-Implementation will start after governance files and onboarding contract are finalized.
+## Next Steps
+- implement managed install file application flow
+- implement remove/repair managed ownership logic
+- implement managed state handling and drift-safe update behavior

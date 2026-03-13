@@ -12,7 +12,7 @@ This file records accepted planning decisions and open decisions.
 | D-005 | Current phase focuses on project structure and onboarding architecture. | Superseded | Replaced by D-062. |
 | D-006 | Versioning is out of scope in current phase. | Superseded | Replaced by managed-file versioning scope in D-015. |
 | D-007 | Final product is a VS Code extension that applies onboarding files based on selected project type. | Accepted | Target behavior locked for planning. |
-| D-008 | Extension options must be dynamic; current active target is `.NET/C#`. | Accepted | Future targets can be added via catalog. |
+| D-008 | Extension options must be dynamic; | Accepted | Future targets can be added via catalog. |
 | D-009 | Option taxonomy is standards-driven and behavior-based, not biased by ad-hoc examples. | Accepted | Merge equivalent project types to reduce complexity. |
 | D-010 | Consumer destination root is `codex-onboarding/`. | Accepted | Includes `core/` and `overrides/` paths. |
 | D-011 | File application policy is non-destructive by default. | Accepted | No overwrite of existing consumer files. |
@@ -72,8 +72,4 @@ This file records accepted planning decisions and open decisions.
 | D-065 | Documentation drift control is mandatory via source-of-truth ownership + validator gates + coverage parity checks. | Accepted | Defined in `docs/governance/drift-control.md`. |
 | D-066 | Idea approval is not implementation approval; implementation requires explicit execution command from user. | Accepted | Violating this gate is a process failure. |
 | D-067 | Governance-to-artifact boundary is mandatory: extension artifact roots are excluded as policy sources for agent onboarding decisions. | Accepted | Enforced by boundary map and boundary validator gate. |
-
-## Open Decisions
-| ID | Question | Status |
-|---|---|---|
-| O-001 | Criteria to split `.NET/C#` into multiple sub-options in later phases | Open |
+| D-068 | Implementation proceeds in review-gated step cycles: implement one step, stop for review, then commit only after approval before next step. | Accepted | Mandatory process guard for all future execution turns. |

@@ -7,6 +7,9 @@ Provide an operational, decision-aligned roadmap to ensure implementation stays 
 - No implementation starts without explicit user approval.
 - Idea validation alone is insufficient; explicit user execution command is required.
 - No commit/push without explicit user approval.
+- After each implementation step, stop for user review.
+- Do not commit implementation changes until that step is explicitly approved.
+- Commit approved step before starting the next implementation step.
 - Every phase ends with a decision check before moving forward.
 - If a new requirement conflicts with current decisions, stop and update living docs first.
 

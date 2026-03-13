@@ -7,7 +7,7 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 1. User triggers extension command.
 2. Extension asks Group A operational questions required for runtime behavior.
 3. Extension loads Group B profile/topic question flow dynamically from questionnaire files.
-4. Extension resolves selected target (current active family: `.NET/C#`).
+4. Extension resolves selected target.
 5. Extension presents pre-install behavior summary and receives explicit acknowledgement.
 6. Extension offers Git tracking mode choice for managed paths.
 7. Extension applies predefined onboarding files into `codex-onboarding/` paths.

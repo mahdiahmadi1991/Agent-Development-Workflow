@@ -23,6 +23,9 @@ Reduce policy duplication and keep one canonical location per decision type.
 ## Execution Gate Rule
 - Idea discussion must never be treated as implementation approval.
 - Implementation starts only after explicit user execution command.
+- After each implementation step, stop for user review.
+- Commit is allowed only after explicit approval of that step.
+- Approved step must be committed before next step starts.
 
 ## De-duplication Rule
 - Do not replicate full behavioral rule lists across multiple files.

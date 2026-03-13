@@ -40,10 +40,6 @@ Catalog design principles:
 - Merge project-type options when Codex behavior requirements are equivalent.
 - Split options only when behavioral policy differences are real and meaningful.
 
-Current default entry strategy:
-- Start with one active `.NET/C#` baseline option.
-- Add more `.NET` sub-options only when they require distinct onboarding behavior.
-
 ## Question System Model
 - Question flow is split into two groups:
   - Group A (Operational): extension behavior/runtime choices.
@@ -167,7 +163,6 @@ Downgrade behavior:
 ## Current Active Scope
 - Codex-only onboarding.
 - English-only artifacts.
-- Active target family: `.NET/C#`.
 - Current phase: extension infrastructure and behavior implementation planning.
 - Cross-platform support is required (Windows, WSL, Linux, macOS).
 - Root resolution is smart: single-root auto-select, multi-root prompt, no workspace file requirement.
@@ -181,11 +176,11 @@ Downgrade behavior:
 - Conflict-report escalation path is optional and fully user-controlled.
 - Dynamic two-group question model is mandatory for install/repair flow behavior.
 - Execution gate is strict: no implementation action without explicit user execution command.
+- Implementation cadence is review-gated: one step per cycle, then stop for review and approval before commit and next step.
 - Governance decisions must ignore extension artifact roots as policy sources.
 
 ## Deferred Scope
 - Onboarding topic content authoring.
-- Multi-target rollout execution beyond `.NET/C#`.
 - Release and distribution strategy details beyond managed-file update logic.
 - Concurrent operation locking, unless conflict evidence requires prioritization.
 

@@ -13,18 +13,21 @@ This file records standing rules agreed in this project.
 2. No commit/push without explicit user approval.
 3. No implementation step without explicit user approval.
 4. Idea discussion does not grant implementation permission; explicit execution command is mandatory.
-5. Current phase is extension infrastructure and behavior development; onboarding topic content authoring is deferred.
-6. Non-destructive apply and strict managed-file ownership boundaries are mandatory.
-7. Overrides are the only allowed customization mechanism for consumer exceptions.
-8. Dynamic strictness must be applied by risk level.
-9. Command surface must remain minimal (`install`, `remove`, `repair`).
-10. Dynamic question model is mandatory:
+5. After each implementation step, execution must stop for user review.
+6. No implementation commit is allowed until the user explicitly approves that step.
+7. After approval, the approved step must be committed before the next implementation step starts.
+8. Current phase is extension infrastructure and behavior development; onboarding topic content authoring is deferred.
+9. Non-destructive apply and strict managed-file ownership boundaries are mandatory.
+10. Overrides are the only allowed customization mechanism for consumer exceptions.
+11. Dynamic strictness must be applied by risk level.
+12. Command surface must remain minimal (`install`, `remove`, `repair`).
+13. Dynamic question model is mandatory:
 - Group A operational questions are extension-controlled.
 - Group B profile/topic questions are data-driven from questionnaire files.
-11. Governance decisions must ignore extension artifact roots as behavior-policy sources.
-12. Trace-level diagnostics and local-first privacy model are mandatory.
-13. Cross-platform behavior and test coverage are mandatory (Windows, WSL, Linux, macOS).
-14. Release documentation (`release notes` + `CHANGELOG.md`) is mandatory.
+14. Governance decisions must ignore extension artifact roots as behavior-policy sources.
+15. Trace-level diagnostics and local-first privacy model are mandatory.
+16. Cross-platform behavior and test coverage are mandatory (Windows, WSL, Linux, macOS).
+17. Release documentation (`release notes` + `CHANGELOG.md`) is mandatory.
 
 ## Source-of-Truth Map
 - Product behavior: `docs/product/decision-log.md`

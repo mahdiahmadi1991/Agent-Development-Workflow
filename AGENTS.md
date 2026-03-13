@@ -3,7 +3,6 @@
 ## Project Identity
 - Project type: Codex onboarding architecture and governance repository.
 - Scope: Codex-only. This repository does not target other AI agents.
-- Current technology scope: onboarding structure for `.NET/C#` projects.
 - Language policy: English-only for all governance and onboarding artifacts.
 
 ## Mission
@@ -17,12 +16,15 @@ Create reusable, domain-agnostic onboarding structures that can be applied to an
 1. No commit/push without explicit user approval.
 2. No implementation step starts without explicit user approval.
 3. Idea discussion does not imply implementation permission; wait for explicit execution command.
-4. Managed core files in consumer projects must not be edited directly.
-5. Consumer customization must happen through override paths.
-6. Apply strictness dynamically based on risk (strict for critical domains, flexible for style/workflow).
-7. Consumer-project apply/update behavior must remain non-destructive by default.
-8. Upstream issue escalation must stay explicit and user-controlled.
-9. All behavior-impact changes must be synchronized in the same cycle.
+4. After each implementation step, stop and wait for user review before continuing.
+5. Do not commit implementation changes until user explicitly approves that step.
+6. After approval, commit the approved step before starting the next implementation step.
+7. Managed core files in consumer projects must not be edited directly.
+8. Consumer customization must happen through override paths.
+9. Apply strictness dynamically based on risk (strict for critical domains, flexible for style/workflow).
+10. Consumer-project apply/update behavior must remain non-destructive by default.
+11. Upstream issue escalation must stay explicit and user-controlled.
+12. All behavior-impact changes must be synchronized in the same cycle.
 
 ## Policy Hierarchy
 Policy precedence is deterministic. Higher level wins on conflict.

@@ -22,6 +22,9 @@ Minimize drift between planned behavior, governance rules, and repository struct
 6. Execution-gate drift
 - Implementation starts from idea discussion without explicit execution approval.
 
+7. Step-cycle drift
+- Implementation continues across multiple steps without review stop and approval commit boundary.
+
 ## Controls
 1. Canonical source ownership
 - Enforce source-of-truth mapping from `docs/governance/sources-of-truth.md`.
@@ -34,6 +37,7 @@ Minimize drift between planned behavior, governance rules, and repository struct
 
 3. Validation gates
 - `scripts/validate-governance.sh`
+- `scripts/validate-boundaries.sh`
 - `scripts/validate-onboarding-assets.sh`
 
 4. Coverage parity check
@@ -44,10 +48,14 @@ Minimize drift between planned behavior, governance rules, and repository struct
 
 5. Boundary enforcement
 - Enforce context boundary map from `docs/governance/context-boundary-map.yaml`.
-- Validate boundary controls with `scripts/validate-boundaries.sh`.
 
 6. Execution-gate enforcement
 - Treat missing explicit execution command as hard stop for implementation actions.
+
+7. Step-cycle enforcement
+- Stop after each implementation step for user review.
+- Commit only approved steps.
+- Commit approved step before starting next step.
 
 ## Repository Rule
 No implementation starts unless high-risk drift findings are resolved or explicitly accepted.

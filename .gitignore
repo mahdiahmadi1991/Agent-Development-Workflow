@@ -16,3 +16,8 @@ vsc_launcher.*
 .env
 .env.*
 *.local
+
+# Node / TypeScript
+node_modules/
+**/node_modules/
+packages/vscode-extension/out/

@@ -3,7 +3,6 @@
 A public, reusable workspace for designing and maintaining **Codex-only onboarding architecture**.
 
 This repository is focused on:
-- defining portable onboarding structures for Codex in `.NET/C#` projects,
 - codifying governance and behavior rules in a layered policy model,
 - enabling safe project-level customization through overrides,
 - preparing the foundation for a VS Code extension that installs and validates this structure.
@@ -11,7 +10,6 @@ This repository is focused on:
 ## Core Principles
 - Codex-only scope (no multi-agent targeting).
 - English-only onboarding and governance artifacts.
-- `.NET/C#` onboarding scope for target projects.
 - Dynamic strictness based on policy risk.
 - Immutable managed core plus controlled overrides.
 - Non-destructive application in consumer projects (no overwrite by default).

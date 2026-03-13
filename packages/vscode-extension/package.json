@@ -1,0 +1,46 @@
+{
+  "name": "codex-onboarding-vscode-extension",
+  "displayName": "Codex Onboarding",
+  "description": "Applies managed Codex onboarding artifacts to the current workspace.",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "2ma",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCommand:codexOnboarding.install",
+    "onCommand:codexOnboarding.remove",
+    "onCommand:codexOnboarding.repair"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "codexOnboarding.install",
+        "title": "Codex Onboarding: Install"
+      },
+      {
+        "command": "codexOnboarding.remove",
+        "title": "Codex Onboarding: Remove"
+      },
+      {
+        "command": "codexOnboarding.repair",
+        "title": "Codex Onboarding: Repair"
+      }
+    ]
+  },
+  "scripts": {
+    "clean": "rm -rf out",
+    "compile": "npm run clean && tsc -p .",
+    "watch": "tsc -watch -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.8.3"
+  }
+}
