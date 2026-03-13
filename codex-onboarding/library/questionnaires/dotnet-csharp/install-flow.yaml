@@ -1,0 +1,29 @@
+version: 1
+family: dotnet-csharp
+entrypoint: root
+
+nodes:
+  - id: root
+    type: select
+    question: Choose the target .NET/C# project profile.
+    options:
+      - id: baseline
+        label: Baseline
+        next: git_mode
+      - id: web_api_simple
+        label: Web API (Simple)
+        next: git_mode
+
+  - id: git_mode
+    type: select
+    question: Choose Git handling for managed onboarding files.
+    options:
+      - id: track
+        label: Track managed files
+        next: done
+      - id: ignore
+        label: Add managed paths to .gitignore
+        next: done
+
+  - id: done
+    type: end

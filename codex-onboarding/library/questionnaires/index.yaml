@@ -1,0 +1,4 @@
+version: 1
+families:
+  dotnet-csharp:
+    install_flow: codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml

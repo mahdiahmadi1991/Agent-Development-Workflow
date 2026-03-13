@@ -1,0 +1,19 @@
+version: 1
+
+governance_sources:
+  - AGENTS.md
+  - docs/governance/working-agreement.md
+  - docs/governance/sources-of-truth.md
+  - docs/governance/drift-control.md
+  - docs/product/decision-log.md
+  - docs/product/living-spec.md
+
+artifact_roots_excluded_from_agent_onboarding:
+  - codex-onboarding/library/
+  - codex-onboarding/templates/
+  - codex-onboarding/core/
+  - codex-onboarding/overrides/
+
+note: >
+  Artifact roots are implementation assets for extension output and must not be
+  treated as governance policy sources for agent behavior decisions.

@@ -3,19 +3,26 @@
 ## Project Identity
 - Project type: Codex onboarding architecture and governance repository.
 - Scope: Codex-only. This repository does not target other AI agents.
+- Current technology scope: onboarding structure for `.NET/C#` projects.
 - Language policy: English-only for all governance and onboarding artifacts.
 
 ## Mission
 Create reusable, domain-agnostic onboarding structures that can be applied to any software project to guide Codex behavior safely and consistently.
 
-## Non-Negotiable Rules
-1. Never edit managed core onboarding files in consumer projects directly.
-2. Customization must happen through a dedicated override path.
-3. Keep templates and policies business-neutral and portable.
-4. Apply strictness dynamically based on risk:
-   - Critical areas (security, compliance, data safety): strict.
-   - Workflow/style areas: flexible by policy.
-5. In this repository workflow: no commit or push without explicit user approval.
+## Active Phase
+- Current phase is extension infrastructure and behavior implementation planning.
+- Content authoring of onboarding topics is deferred to a separate phase/thread.
+
+## Non-Negotiable Workflow Rules
+1. No commit/push without explicit user approval.
+2. No implementation step starts without explicit user approval.
+3. Idea discussion does not imply implementation permission; wait for explicit execution command.
+4. Managed core files in consumer projects must not be edited directly.
+5. Consumer customization must happen through override paths.
+6. Apply strictness dynamically based on risk (strict for critical domains, flexible for style/workflow).
+7. Consumer-project apply/update behavior must remain non-destructive by default.
+8. Upstream issue escalation must stay explicit and user-controlled.
+9. All behavior-impact changes must be synchronized in the same cycle.
 
 ## Policy Hierarchy
 Policy precedence is deterministic. Higher level wins on conflict.
@@ -33,7 +40,28 @@ Detailed hierarchy is documented in `docs/governance/policy-hierarchy.md`.
 
 Detailed model is documented in `docs/governance/override-model.md`.
 
+## Source of Truth
+- Product behavior decisions: `docs/product/decision-log.md`
+- Living behavior summary: `docs/product/living-spec.md`
+- Governance process and update protocol: `docs/governance/working-agreement.md`
+- De-duplication and ownership map: `docs/governance/sources-of-truth.md`
+- Drift mitigation controls: `docs/governance/drift-control.md`
+- Context boundary map: `docs/governance/context-boundary-map.yaml`
+
+## Artifact Boundary
+- Files under `codex-onboarding/library/`, `codex-onboarding/templates/`, `codex-onboarding/core/`, and `codex-onboarding/overrides/` are extension artifacts.
+- These artifact roots must not be treated as governance policy sources for agent behavior decisions.
+- For governance decisions, use only sources listed in `docs/governance/context-boundary-map.yaml`.
+
+## Dynamic Question Model
+- Group A (Operational): extension runtime/operation questions (root selection, Git mode, safety choices).
+- Group B (Profile/Topic): dynamic questions loaded from questionnaire definition files.
+- Group B must be driven by data from `codex-onboarding/library/questionnaires/` and not hardcoded in extension logic.
+
 ## Change Management
 - Use ADR-style documentation for architecture decisions.
 - Keep governance changes small and reviewable.
-- Record every new permanent rule in `docs/governance/working-agreement.md`.
+- Update canonical source first, then dependent summary docs.
+- Keep `docs/product/living-spec.md` and `docs/product/decision-log.md` synchronized after each decision change.
+- Keep consumer-facing docs synchronized with behavior-impact changes.
+- Keep validator scripts synchronized with contract/layout/template changes.

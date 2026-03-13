@@ -1,23 +1,80 @@
-# VS Code Extension Architecture (Baseline)
+# VS Code Extension Architecture (Planning Baseline)
 
 ## Goal
-Build a VS Code extension that installs and updates Codex onboarding structure into target projects.
+Define the planned behavior for a VS Code extension that applies Codex onboarding structures into target projects.
 
-## MVP Responsibilities
-1. Scaffold `codex-onboarding/` structure in a selected project.
-2. Install managed core files.
-3. Create override path for project-specific customization.
-4. Validate that core files were not edited directly.
+## Product-Level Behavior
+1. User triggers extension command.
+2. Extension asks Group A operational questions required for runtime behavior.
+3. Extension loads Group B profile/topic question flow dynamically from questionnaire files.
+4. Extension resolves selected target (current active family: `.NET/C#`).
+5. Extension presents pre-install behavior summary and receives explicit acknowledgement.
+6. Extension offers Git tracking mode choice for managed paths.
+7. Extension applies predefined onboarding files into `codex-onboarding/` paths.
+8. Extension follows non-destructive apply mode (no overwrite of existing files).
+9. Extension reports success, applied files, and skipped files summary.
+10. Extension opens a dedicated post-install guidance page with quick-start usage tips.
+11. Extension offers optional user-controlled issue escalation actions for onboarding conflicts.
 
-## Proposed Components
-- `installer`: writes or updates onboarding files.
-- `validator`: checks core integrity and override schema compliance.
-- `resolver`: computes effective policy from core + overrides.
-- `diagnostics`: reports violations in editor.
+## Command Surface
+- `Install Onboarding`
+- `Remove Onboarding`
+- `Repair Onboarding`
+- `Remove` clears managed state and removes only unchanged managed files.
 
-## Non-Goals (initial phase)
-- Multi-agent support.
-- Business-domain specific templates.
+## Managed Update Behavior
+- Extension manages only extension-owned onboarding files.
+- Managed state tracks bundle and file digest data.
+- Update operation is fail-fast on managed-file drift.
+- On extension version upgrade, managed files are synchronized even when semantic content is unchanged.
+- Update requires explicit user confirmation after release-note/changelog visibility.
+- If bundle and extension version are already synchronized, update exits without rewriting files.
+- Update never modifies unrelated files in the consumer project.
 
-## Future Integration
-- Optional GitHub integration for release assets and versioned onboarding bundles.
+## Option Taxonomy Principles
+- Taxonomy is standards-driven and behavior-based.
+- Behaviorally equivalent project types should be merged.
+- New sub-options are introduced only for meaningful behavior differences.
+
+## Instruction Selection Principles
+- Instruction content is topic-based (one file per technical topic).
+- Each topic file carries applicability constraints.
+- Resolver composes final output by combining:
+  - target-specific topics
+  - cross-cutting shared topics
+  - mandatory baseline topics
+- Source topics are loaded from `codex-onboarding/library/` with `topics.index.yaml` as authoritative index.
+- Resolver must produce deterministic output with explainability preview (`why-selected`).
+
+## Question System
+- Group A operational questions are extension-defined.
+- Group B profile/topic questions are file-driven and dynamic.
+- Group B source files:
+  - `codex-onboarding/library/questionnaires/index.yaml`
+  - `codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
+- Group B flows must not be hardcoded in extension command logic.
+
+## Static Bootstrap Artifact
+- Every install/repair must include `codex-onboarding/core/AGENT-ONBOARDING.md`.
+- The artifact content is generic and target-independent.
+- Existing consumer root `AGENTS.md` must not be auto-modified.
+
+## Conflict Escalation Principle
+- Escalation to upstream issue reporting is optional and user-controlled.
+- No silent automatic external issue creation is allowed.
+- If explicit confirmation is granted and required permissions exist, Codex may submit issue directly.
+- If direct submission is unavailable, extension must provide a manual-submit fallback with prepared draft.
+
+## Planning Constraints
+- Current phase focuses on extension infrastructure and behavior implementation planning.
+- Managed-file versioning for extension-owned assets is in scope.
+- Onboarding topic content authoring is deferred.
+
+## Cross-Platform Requirement
+- Behavior must be consistent in VS Code on Windows, WSL, Linux, and macOS.
+- Extension must work when no `.code-workspace` file is present.
+- Root resolution must auto-select single-root and prompt on multi-root.
+
+## Quality Requirement
+- Test strategy must include unit, integration, scenario, and cross-platform lanes.
+- Install/remove/repair flows must emit trace-level structured logs for diagnostics with `debug`/`warning`/`error` severities.
