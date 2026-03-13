@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 - Ongoing extension hardening and release pipeline improvements.
+- Added release-note scaffold automation with decision-reference extraction.
 
 ## [0.0.1] - 2026-03-13
 ### Added

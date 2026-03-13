@@ -8,11 +8,12 @@ Ensure every release communicates behavior-impact changes clearly and consistent
 - Summary of changes
 - Behavior-impact highlights
 - Migration/update guidance
+- Decision references (`D-xxx`) when linked in changelog
 - Canonical path: `docs/releases/v<version>.md`
 
 2. Changelog update
 - Version entry with categorized changes
-- Links to decision IDs where applicable
+- Decision links where applicable
 - Canonical file: `CHANGELOG.md`
 
 ## Mandatory Quality Checks
@@ -20,6 +21,13 @@ Ensure every release communicates behavior-impact changes clearly and consistent
 - Release version must match extension package version in `packages/vscode-extension/package.json`.
 - User-facing pre-install transparency summary must be synchronized with release behavior.
 - Release flow is two-stage: validation/packaging first, publish actions only after successful artifact gate.
+- Release notes must contain required sections validated by `scripts/validate-release-docs.sh`.
+
+## Standard Authoring Flow
+1. Update `CHANGELOG.md` for target version.
+2. Run `scripts/scaffold-release-note.sh <version>`.
+3. Review and refine generated release note content.
+4. Run `scripts/validate-release-docs.sh <version>`.
 
 ## Governance Rule
 No release is valid without release notes and changelog updates.

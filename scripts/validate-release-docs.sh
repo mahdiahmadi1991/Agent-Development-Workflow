@@ -52,6 +52,7 @@ required_sections=(
   "Summary"
   "Behavior Impact"
   "Migration Guidance"
+  "Decision References"
 )
 
 for section in "${required_sections[@]}"; do

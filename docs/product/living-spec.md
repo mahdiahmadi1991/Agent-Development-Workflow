@@ -171,6 +171,7 @@ Downgrade behavior:
 - Release notes and changelog are mandatory for each release.
 - Release version must align with extension package version before publish.
 - Release flow stages are mandatory: validate/package first, then optional publish actions.
+- Release-note authoring uses scaffolded template with decision-reference section.
 - Post-install guidance page is mandatory after successful install.
 - Onboarding file structure is locked by template standard and validator gate.
 - Library storage and selection contracts are locked by validator gate.

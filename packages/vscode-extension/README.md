@@ -3,7 +3,7 @@
 VS Code extension package for applying managed Codex onboarding artifacts to consumer projects.
 
 ## Current Implementation Status
-Step 9 is implemented:
+Step 10 is implemented:
 - command surface registered (`Install`, `Remove`, `Repair`)
 - output logger service (`debug`, `warning`, `error`)
 - per-operation trace logger with unique `.jsonl` log file creation
@@ -31,8 +31,9 @@ Step 9 is implemented:
 - release tag validation workflow with changelog/release-note consistency and package-version alignment checks
 - manual release-publish workflow with optional marketplace publish and optional GitHub release creation
 - deterministic release artifact checksum generation (`.vsix` + `.sha256`)
+- release-note scaffold generator from changelog with decision-reference section
 - marketplace-ready package manifest metadata coverage and reproducible build config (`tsconfig.build.json`)
 
 ## Next Steps
-- add release-note template scaffolding from decision-linked changes
 - complete branding assets (icon/logo variants) and marketplace visual readiness checks
+- add publisher-side release runbook for Marketplace + GitHub release operation

@@ -74,3 +74,4 @@ This file records accepted planning decisions and open decisions.
 | D-067 | Governance-to-artifact boundary is mandatory: extension artifact roots are excluded as policy sources for agent onboarding decisions. | Accepted | Enforced by boundary map and boundary validator gate. |
 | D-068 | Implementation proceeds in review-gated step cycles: implement one step, stop for review, then commit only after approval before next step. | Accepted | Mandatory process guard for all future execution turns. |
 | D-069 | Release publishing is gated by release-doc validation, package-version parity, and artifact checksum generation before any optional publish action. | Accepted | Enforced by release validation and publish workflows. |
+| D-070 | Release-note authoring is scaffolded from changelog into a fixed template that includes decision references. | Accepted | Enforced by release-doc section validation and scaffold script workflow. |

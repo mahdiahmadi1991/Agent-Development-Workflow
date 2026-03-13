@@ -59,6 +59,7 @@ This repository is focused on:
 - `scripts/validate-governance.sh`: governance baseline validator.
 - `scripts/validate-release-docs.sh`: release docs validator (`CHANGELOG.md` + `docs/releases/`).
 - `scripts/validate-vscode-extension-version.sh`: release/package version alignment validator.
+- `scripts/scaffold-release-note.sh`: release-note scaffold generator from changelog + decision references.
 - `docs/extension/`: architecture baseline for the VS Code extension.
 - `codex-onboarding/library/`: source onboarding asset library for profile-based selection.
 - `codex-onboarding/core/`: managed baseline artifacts (immutable by policy).
