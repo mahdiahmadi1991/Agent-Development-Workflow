@@ -77,3 +77,4 @@ This file records accepted planning decisions and open decisions.
 | D-070 | Release-note authoring is scaffolded from changelog into a fixed template that includes decision references. | Accepted | Enforced by release-doc section validation and scaffold script workflow. |
 | D-071 | Publisher-side release operations must follow a maintained runbook aligned with release workflows and secret requirements. | Accepted | Canonical runbook: `docs/product/publisher-release-runbook.md`. |
 | D-072 | Branding baseline is locked with packaged icon assets and marketplace-readiness checklist gates. | Accepted | Icon assets are versioned under `packages/vscode-extension/assets/branding/`. |
+| D-073 | A local end-to-end release rehearsal script and evidence report are required before first public publish sign-off. | Accepted | Script: `scripts/rehearse-release-local.sh`; reports under `docs/releases/rehearsals/`. |

@@ -86,6 +86,10 @@ Behavior:
 4. `CHANGELOG.md` and `docs/releases/v<version>.md` are consistent.
 
 ## Local Operator Commands (Optional)
+- Full local release rehearsal: `scripts/rehearse-release-local.sh <version>`
 - Validate release docs: `scripts/validate-release-docs.sh <version>`
 - Validate package version: `scripts/validate-vscode-extension-version.sh <version>`
 - Generate release note scaffold: `scripts/scaffold-release-note.sh <version>`
+
+## Rehearsal Evidence
+- Local rehearsal reports must be stored under `docs/releases/rehearsals/`.

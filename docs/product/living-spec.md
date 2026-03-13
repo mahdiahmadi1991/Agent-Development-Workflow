@@ -161,6 +161,7 @@ Downgrade behavior:
 - Release documentation policy: `docs/product/release-documentation-policy.md`
 - Publisher release runbook: `docs/product/publisher-release-runbook.md`
 - Marketplace readiness checklist: `docs/product/marketplace-readiness-checklist.md`
+- Release rehearsal reports: `docs/releases/rehearsals/README.md`
 
 ## Current Active Scope
 - Codex-only onboarding.
@@ -174,6 +175,7 @@ Downgrade behavior:
 - Release version must align with extension package version before publish.
 - Release flow stages are mandatory: validate/package first, then optional publish actions.
 - Release-note authoring uses scaffolded template with decision-reference section.
+- Local release rehearsal evidence is required before first public publish sign-off.
 - Post-install guidance page is mandatory after successful install.
 - Onboarding file structure is locked by template standard and validator gate.
 - Library storage and selection contracts are locked by validator gate.

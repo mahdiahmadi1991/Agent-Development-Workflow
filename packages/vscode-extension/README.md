@@ -5,7 +5,7 @@
 VS Code extension package for applying managed Codex onboarding artifacts to consumer projects.
 
 ## Current Implementation Status
-Step 12 is implemented:
+Step 13 is implemented:
 - command surface registered (`Install`, `Remove`, `Repair`)
 - output logger service (`debug`, `warning`, `error`)
 - per-operation trace logger with unique `.jsonl` log file creation
@@ -37,7 +37,8 @@ Step 12 is implemented:
 - publisher-side release runbook aligned with workflow inputs, secrets, and failure handling
 - branding baseline assets packaged for Marketplace (`assets/branding/icon-128.png`, `icon-64.png`, `icon-mark.svg`)
 - marketplace metadata checklist and icon wiring in package manifest
+- local end-to-end release rehearsal script and passing rehearsal evidence report
 
 ## Next Steps
-- perform end-to-end manual release rehearsal with a pre-release tag
 - finalize first public release execution checklist sign-off
+- execute first public publish run via release workflows

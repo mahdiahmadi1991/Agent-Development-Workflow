@@ -57,6 +57,7 @@ This repository is focused on:
 - `docs/product/publisher-release-runbook.md`: operator runbook for Marketplace and GitHub release publishing.
 - `docs/product/marketplace-readiness-checklist.md`: pre-publish metadata and packaging checklist for Marketplace readiness.
 - `docs/releases/`: per-version release notes (`v<version>.md`).
+- `docs/releases/rehearsals/`: local pre-publish rehearsal reports.
 - `docs/consumer/README.md`: consumer-facing behavior and impact summary.
 - `docs/consumer/AI-Quickstart.md`: consumer-facing AI interaction quick-start prompts.
 - `scripts/validate-onboarding-assets.sh`: onboarding template compliance validator.
@@ -64,6 +65,7 @@ This repository is focused on:
 - `scripts/validate-release-docs.sh`: release docs validator (`CHANGELOG.md` + `docs/releases/`).
 - `scripts/validate-vscode-extension-version.sh`: release/package version alignment validator.
 - `scripts/scaffold-release-note.sh`: release-note scaffold generator from changelog + decision references.
+- `scripts/rehearse-release-local.sh`: local pre-publish release rehearsal pipeline.
 - `docs/extension/`: architecture baseline for the VS Code extension.
 - `codex-onboarding/library/`: source onboarding asset library for profile-based selection.
 - `codex-onboarding/core/`: managed baseline artifacts (immutable by policy).
