@@ -49,11 +49,24 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
 
+      - name: Package VSIX smoke (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run package:ci
+
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vscode-extension-coverage-${{ matrix.os }}
           path: packages/vscode-extension/coverage
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload VSIX artifact (ubuntu)
+        if: matrix.os == 'ubuntu-latest' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension-vsix-${{ matrix.os }}
+          path: packages/vscode-extension/artifacts/*.vsix
           if-no-files-found: error
           retention-days: 14

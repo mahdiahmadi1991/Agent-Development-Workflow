@@ -21,3 +21,5 @@ vsc_launcher.*
 node_modules/
 **/node_modules/
 packages/vscode-extension/out/
+packages/vscode-extension/coverage/
+packages/vscode-extension/artifacts/

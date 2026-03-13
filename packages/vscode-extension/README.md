@@ -24,9 +24,11 @@ Step 8 is implemented:
 - post-install guidance page opening in VS Code
 - high-coverage automated tests for command lifecycle, activation wiring, trace logger behavior, and edge/recovery flows
 - scenario-matrix smoke tests for install/update drift/remove/repair/downgrade lifecycle paths
+- command-level smoke coverage for multi-root install target selection
 - workspace root resolver tests for no-root, single-root, multi-root, and cancel flows
-- GitHub CI workflow gates for tests, coverage thresholds, compile checks, and coverage artifact upload on PR/push
+- GitHub CI workflow gates for tests, coverage thresholds, compile checks, VSIX packaging smoke, and artifact upload
+- marketplace-ready package manifest metadata coverage and reproducible build config (`tsconfig.build.json`)
 
 ## Next Steps
-- expand scenario matrix smoke coverage for command-level multi-root execution flow
-- add release packaging validation step (VSIX build smoke) to CI
+- add dedicated WSL validation lane to CI
+- add release tagging workflow with changelog/release-note consistency checks

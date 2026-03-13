@@ -93,14 +93,16 @@
   "files": [
     "out/**",
     "README.md",
+    "LICENSE",
     "package.json"
   ],
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\"",
-    "compile": "npm run clean && tsc -p .",
-    "watch": "tsc -watch -p .",
+    "compile": "npm run clean && tsc -p tsconfig.build.json",
+    "watch": "tsc -watch -p tsconfig.build.json",
     "test": "vitest run --coverage",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "package:ci": "node -e \"require('fs').mkdirSync('artifacts',{recursive:true})\" && npx vsce package --no-yarn --out artifacts/codex-onboarding.vsix"
   },
   "dependencies": {
     "yaml": "^2.8.1"
@@ -109,6 +111,7 @@
     "@types/node": "^22.15.3",
     "@types/vscode": "^1.90.0",
     "@vitest/coverage-v8": "^4.1.0",
+    "@vscode/vsce": "^3.6.0",
     "typescript": "^5.8.3",
     "vitest": "^4.1.0"
   }
