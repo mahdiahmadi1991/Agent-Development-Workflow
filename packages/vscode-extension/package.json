@@ -1,7 +1,7 @@
 {
   "name": "codex-onboarding-vscode-extension",
   "displayName": "Codex Onboarding",
-  "description": "Install managed Codex onboarding artifacts with safe install, repair, and remove lifecycles.",
+  "description": "Apply managed Codex onboarding artifacts with safe install, repair, and remove workflows.",
   "version": "0.0.1",
   "publisher": "2ma",
   "preview": true,
@@ -32,11 +32,13 @@
     "agent",
     "instructions",
     "governance",
+    "managed-files",
+    "safe-updates",
     "dotnet",
     "csharp"
   ],
   "galleryBanner": {
-    "color": "#0f172a",
+    "color": "#0a0a0a",
     "theme": "dark"
   },
   "main": "./out/extension.js",
@@ -92,6 +94,7 @@
   },
   "files": [
     "out/**",
+    "assets/**",
     "README.md",
     "LICENSE",
     "package.json"
@@ -114,5 +117,6 @@
     "@vscode/vsce": "^3.6.0",
     "typescript": "^5.8.3",
     "vitest": "^4.1.0"
-  }
+  },
+  "icon": "assets/branding/icon-128.png"
 }

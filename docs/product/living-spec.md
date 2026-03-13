@@ -160,6 +160,7 @@ Downgrade behavior:
 - Git tracking option policy: `docs/product/git-tracking-option.md`
 - Release documentation policy: `docs/product/release-documentation-policy.md`
 - Publisher release runbook: `docs/product/publisher-release-runbook.md`
+- Marketplace readiness checklist: `docs/product/marketplace-readiness-checklist.md`
 
 ## Current Active Scope
 - Codex-only onboarding.

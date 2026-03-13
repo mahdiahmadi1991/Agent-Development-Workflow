@@ -1,5 +1,7 @@
 # Codex Onboarding Workflow
 
+![Codex Onboarding Workflow Banner](docs/assets/branding/banner-github.svg)
+
 A public, reusable workspace for designing and maintaining **Codex-only onboarding architecture**.
 
 This repository is focused on:
@@ -53,6 +55,7 @@ This repository is focused on:
 - `docs/product/git-tracking-option.md`: Git ignore tracking-mode policy.
 - `docs/product/release-documentation-policy.md`: release notes + changelog requirements.
 - `docs/product/publisher-release-runbook.md`: operator runbook for Marketplace and GitHub release publishing.
+- `docs/product/marketplace-readiness-checklist.md`: pre-publish metadata and packaging checklist for Marketplace readiness.
 - `docs/releases/`: per-version release notes (`v<version>.md`).
 - `docs/consumer/README.md`: consumer-facing behavior and impact summary.
 - `docs/consumer/AI-Quickstart.md`: consumer-facing AI interaction quick-start prompts.

@@ -1,9 +1,11 @@
 # vscode-extension
 
+![Codex Onboarding Extension Banner](assets/branding/banner-extension.png)
+
 VS Code extension package for applying managed Codex onboarding artifacts to consumer projects.
 
 ## Current Implementation Status
-Step 11 is implemented:
+Step 12 is implemented:
 - command surface registered (`Install`, `Remove`, `Repair`)
 - output logger service (`debug`, `warning`, `error`)
 - per-operation trace logger with unique `.jsonl` log file creation
@@ -33,8 +35,9 @@ Step 11 is implemented:
 - deterministic release artifact checksum generation (`.vsix` + `.sha256`)
 - release-note scaffold generator from changelog with decision-reference section
 - publisher-side release runbook aligned with workflow inputs, secrets, and failure handling
-- marketplace-ready package manifest metadata coverage and reproducible build config (`tsconfig.build.json`)
+- branding baseline assets packaged for Marketplace (`assets/branding/icon-128.png`, `icon-64.png`, `icon-mark.svg`)
+- marketplace metadata checklist and icon wiring in package manifest
 
 ## Next Steps
-- complete branding assets (icon/logo variants) and marketplace visual readiness checks
 - perform end-to-end manual release rehearsal with a pre-release tag
+- finalize first public release execution checklist sign-off
