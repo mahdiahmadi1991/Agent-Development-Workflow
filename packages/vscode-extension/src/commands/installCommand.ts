@@ -1,8 +1,10 @@
 import * as vscode from "vscode";
 
 import { OperationalSelections } from "../contracts/questionnaire";
+import { applyManagedInstall } from "../services/managedInstallService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
+import { openPostInstallGuidancePage } from "../services/postInstallGuidancePage";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
@@ -28,6 +30,32 @@ async function askOperationalSelections(): Promise<OperationalSelections | undef
   }
 
   return { gitMode: gitMode.value };
+}
+
+async function askPreInstallAcknowledgement(input: {
+  targetRootPath: string;
+  selectedProfile: string;
+  gitMode: "track" | "ignore";
+}): Promise<boolean> {
+  const detail = [
+    "The install operation applies extension-managed onboarding artifacts.",
+    "Existing files are not overwritten (non-destructive mode).",
+    "Managed state will be written to codex-onboarding/.managed/state.json.",
+    `Target root: ${input.targetRootPath}`,
+    `Selected profile: ${input.selectedProfile}`,
+    `Git mode: ${input.gitMode}`
+  ].join("\n");
+
+  const decision = await vscode.window.showInformationMessage(
+    "Review and confirm onboarding install behavior before apply.",
+    {
+      modal: true,
+      detail
+    },
+    "Apply"
+  );
+
+  return decision === "Apply";
 }
 
 export async function runInstall(
@@ -91,22 +119,65 @@ export async function runInstall(
 
     const selectedProfile = profileSelectionAnswers.answers.root ?? "unknown";
 
+    const acknowledged = await askPreInstallAcknowledgement({
+      targetRootPath: target.uri.fsPath,
+      selectedProfile,
+      gitMode: operationalSelections.gitMode
+    });
+
+    if (!acknowledged) {
+      traceLogger.log("warning", "operation_blocked", {
+        reason: "pre_install_acknowledgement_declined"
+      });
+      return;
+    }
+
+    const extensionVersion =
+      typeof context.extension.packageJSON?.version === "string"
+        ? context.extension.packageJSON.version
+        : "0.0.0";
+
+    const installResult = await applyManagedInstall(
+      {
+        extensionPath: context.extensionPath,
+        targetRootPath: target.uri.fsPath,
+        bundleId: `dotnet-csharp-${selectedProfile}`,
+        bundleVersion: String(questionnaire.flow.version),
+        extensionVersion
+      },
+      traceLogger
+    );
+
     const summary = [
       "Install foundation step completed.",
       `Target root: ${target.uri.fsPath}`,
       `Git mode (Operational Questions): ${operationalSelections.gitMode}`,
       `Selected profile (Profile Selection Questions): ${selectedProfile}`,
-      `Question flow family: ${questionnaire.family}`,
+      `Applied files: ${installResult.appliedFiles.length}`,
+      `Skipped files: ${installResult.skippedFiles.length}`,
+      `Managed state: ${installResult.statePath}`,
       `Operation log: ${traceLogger.logFilePath}`
     ].join("\n");
 
     void vscode.window.showInformationMessage(summary, { modal: false });
     traceLogger.log("debug", "success_notification_shown", {
+      target_profile: selectedProfile,
+      applied_count: installResult.appliedFiles.length,
+      skipped_count: installResult.skippedFiles.length
+    });
+
+    await openPostInstallGuidancePage({
+      targetRootPath: target.uri.fsPath,
+      selectedProfile,
+      logFilePath: traceLogger.logFilePath
+    });
+
+    traceLogger.log("debug", "post_install_page_opened", {
       target_profile: selectedProfile
     });
 
     traceLogger.log("debug", "operation_completed", {
-      result_code: "foundation_completed",
+      result_code: installResult.appliedFiles.length > 0 ? "applied" : "completed_with_skips",
       target_profile: selectedProfile
     });
   } catch (error) {

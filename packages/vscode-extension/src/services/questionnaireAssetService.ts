@@ -10,28 +10,7 @@ import {
   QuestionnaireOption,
   QuestionnaireSelectNode
 } from "../contracts/questionnaire";
-
-function buildCandidateRoots(extensionPath: string): string[] {
-  return [
-    path.join(extensionPath, "onboarding-assets"),
-    path.resolve(extensionPath, "..", "..", "codex-onboarding")
-  ];
-}
-
-async function findAssetRoot(extensionPath: string): Promise<string> {
-  const candidates = buildCandidateRoots(extensionPath);
-
-  for (const root of candidates) {
-    try {
-      await fs.access(root);
-      return root;
-    } catch {
-      // Try next candidate root.
-    }
-  }
-
-  throw new Error("Unable to find onboarding asset root from extension path.");
-}
+import { resolveOnboardingAssetRoot } from "./onboardingAssetRootResolver";
 
 function isString(value: unknown): value is string {
   return typeof value === "string";
@@ -113,7 +92,7 @@ export async function loadQuestionnaireAssets(
   extensionPath: string,
   family: string
 ): Promise<QuestionnaireAssetLoad> {
-  const assetRoot = await findAssetRoot(extensionPath);
+  const assetRoot = await resolveOnboardingAssetRoot(extensionPath);
 
   const indexPath = path.join(assetRoot, "library", "questionnaires", "index.yaml");
   const flowPath = path.join(assetRoot, "library", "questionnaires", family, "install-flow.yaml");
