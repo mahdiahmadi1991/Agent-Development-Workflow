@@ -32,7 +32,7 @@ Provide an operational, decision-aligned roadmap to ensure implementation stays 
 16. Successful install must show completion summary and open guidance page with quick-start usage tips.
 17. Every install/repair result must include the static bootstrap onboarding artifact.
 18. Conflict escalation to upstream issues must remain optional and user-controlled.
-19. Question flow must use two groups: operational (Group A) and dynamic profile/topic (Group B).
+19. Question flow must use two groups: Operational Questions and dynamic Profile Selection Questions.
 
 ## Phase Plan
 
@@ -81,7 +81,7 @@ Reference: `docs/product/topics-index-contract.md`
 - Specify merge/precedence of baseline, shared, and target-specific topics.
 - Specify deterministic ordering and conflict handling.
 - Specify questionnaire-to-capability mapping rules.
-- Specify dynamic Group B questionnaire loading contract from questionnaire registry.
+- Specify dynamic Profile Selection Questions questionnaire loading contract from questionnaire registry.
 - Specify dependency and conflict resolution semantics.
 - Specify explainability output (`why-selected`) before apply.
 

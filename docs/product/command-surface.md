@@ -26,5 +26,5 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - No broad option explosion in command palette.
 - Update behavior is lifecycle logic under install/repair flows, not a separate user command.
 - Issue escalation actions are optional UI quick actions, not additional command-palette commands.
-- Group B project/topic questions are dynamic data-driven flows, not separate commands.
+- Profile Selection Questions project/topic questions are dynamic data-driven flows, not separate commands.
 - All commands must produce deterministic operation reports.

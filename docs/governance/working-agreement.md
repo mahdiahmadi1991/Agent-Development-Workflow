@@ -22,8 +22,8 @@ This file records standing rules agreed in this project.
 11. Dynamic strictness must be applied by risk level.
 12. Command surface must remain minimal (`install`, `remove`, `repair`).
 13. Dynamic question model is mandatory:
-- Group A operational questions are extension-controlled.
-- Group B profile/topic questions are data-driven from questionnaire files.
+- Operational questions are extension-controlled.
+- Profile Selection questions are data-driven from questionnaire files.
 14. Governance decisions must ignore extension artifact roots as behavior-policy sources.
 15. Trace-level diagnostics and local-first privacy model are mandatory.
 16. Cross-platform behavior and test coverage are mandatory (Windows, WSL, Linux, macOS).

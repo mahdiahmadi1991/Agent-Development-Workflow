@@ -17,7 +17,7 @@ Ensure users can review extension behavior and impact before onboarding files ar
 - Mandatory static bootstrap onboarding artifact path and role.
 - Conflict-escalation path (optional upstream issue reporting as user-controlled action).
 - Issue-submission modes: permission-aware direct submit (with explicit confirmation) and manual fallback.
-- Question model visibility: Group A operational questions vs Group B dynamic profile/topic questions.
+- Question model visibility: Operational questions vs Profile Selection questions.
 
 ## Required Documentation Artifact
 - A concise, consumer-facing summary must be maintained and synced with current behavior.

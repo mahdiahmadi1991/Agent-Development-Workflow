@@ -8,15 +8,15 @@ Select the minimal, correct onboarding file set for a consumer project from a la
 
 ## Input Sources
 1. Selected profile (e.g., `.NET/C# baseline`).
-2. Group A operational answers (extension behavior context).
-3. Group B profile/topic questionnaire answers (dynamic file-driven).
+2. Operational answers (extension behavior context).
+3. Profile Selection questionnaire answers (dynamic file-driven).
 4. Topics index metadata.
 5. Selector rules.
 
 ## Resolution Pipeline
-1. Resolve operation context from Group A answers.
-2. Load Group B flow definition dynamically from questionnaire registry.
-3. Ask Group B questions and map answers to capability tags.
+1. Resolve operation context from Operational Questions answers.
+2. Load Profile Selection Questions flow definition dynamically from questionnaire registry.
+3. Ask Profile Selection Questions questions and map answers to capability tags.
 4. Load profile baseline includes.
 5. Select candidate topics from `topics.index.yaml` by applicability and capability tags.
 6. Add required dependencies (`requires`).

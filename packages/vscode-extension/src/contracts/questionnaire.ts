@@ -1,4 +1,4 @@
-export interface GroupASelections {
+export interface OperationalSelections {
   gitMode: "track" | "ignore";
 }
 
@@ -36,6 +36,6 @@ export interface QuestionnaireAssetLoad {
   flow: QuestionnaireFlow;
 }
 
-export interface GroupBSelections {
+export interface ProfileSelectionAnswers {
   answers: Record<string, string>;
 }

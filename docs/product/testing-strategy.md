@@ -20,7 +20,7 @@ Guarantee safe, deterministic extension behavior for install, remove, repair, an
 - Post-install success notification and guidance-page-open checks
 - Issue escalation direct-submit and manual-fallback behavior checks
 - Multi-root and no-workspace-file root resolution checks
-- Dynamic Group B questionnaire loading checks (registry + family flow)
+- Dynamic Profile Selection Questions questionnaire loading checks (registry + family flow)
 - Downgrade safety and failure-path checks
 
 3. Scenario tests

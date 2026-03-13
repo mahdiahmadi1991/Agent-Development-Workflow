@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { GroupASelections } from "../contracts/questionnaire";
+import { OperationalSelections } from "../contracts/questionnaire";
 import { OutputLogger } from "../services/outputLogger";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
@@ -10,14 +10,14 @@ function createOperationId(): string {
   return `install-${Date.now()}`;
 }
 
-async function askGroupASelections(): Promise<GroupASelections | undefined> {
+async function askOperationalSelections(): Promise<OperationalSelections | undefined> {
   const gitMode = await vscode.window.showQuickPick(
     [
       { label: "Track managed files", value: "track" as const },
       { label: "Add managed paths to .gitignore", value: "ignore" as const }
     ],
     {
-      title: "Group A: Operational settings",
+      title: "Operational Questions: Settings",
       placeHolder: "Choose Git mode for managed onboarding files"
     }
   );
@@ -47,18 +47,18 @@ export async function runInstall(
       return;
     }
 
-    const groupA = await askGroupASelections();
-    if (!groupA) {
+    const operationalSelections = await askOperationalSelections();
+    if (!operationalSelections) {
       logger.log("warning", "operation_blocked", {
         operation_id: operationId,
-        reason: "group_a_cancelled"
+        reason: "operational_questions_cancelled"
       });
       return;
     }
 
     logger.log("debug", "operational_question_asked", {
       operation_id: operationId,
-      git_mode: groupA.gitMode
+      git_mode: operationalSelections.gitMode
     });
 
     const questionnaire = await loadQuestionnaireAssets(context.extensionPath, "dotnet-csharp");
@@ -70,22 +70,22 @@ export async function runInstall(
       flow_path: questionnaire.flowPath
     });
 
-    const groupB = await runDynamicQuestionFlow(questionnaire.flow, logger, operationId);
-    if (!groupB) {
+    const profileSelectionAnswers = await runDynamicQuestionFlow(questionnaire.flow, logger, operationId);
+    if (!profileSelectionAnswers) {
       logger.log("warning", "operation_blocked", {
         operation_id: operationId,
-        reason: "group_b_cancelled"
+        reason: "profile_selection_questions_cancelled"
       });
       return;
     }
 
-    const selectedProfile = groupB.answers.root ?? "unknown";
+    const selectedProfile = profileSelectionAnswers.answers.root ?? "unknown";
 
     const summary = [
       "Install foundation step completed.",
       `Target root: ${target.uri.fsPath}`,
-      `Git mode (Group A): ${groupA.gitMode}`,
-      `Selected profile (Group B): ${selectedProfile}`,
+      `Git mode (Operational Questions): ${operationalSelections.gitMode}`,
+      `Selected profile (Profile Selection Questions): ${selectedProfile}`,
       `Question flow family: ${questionnaire.family}`
     ].join("\n");
 

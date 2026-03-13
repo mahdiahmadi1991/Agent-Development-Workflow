@@ -8,8 +8,8 @@ Build a VS Code extension that applies Codex onboarding files to a user's curren
 
 ## User Flow (Target Behavior)
 1. User runs the extension command in VS Code.
-2. Extension asks operational (Group A) questions required for safe execution context.
-3. Extension loads profile/topic (Group B) questions dynamically from questionnaire files.
+2. Extension asks Operational Questions required for safe execution context.
+3. Extension loads Profile Selection Questions dynamically from questionnaire files.
 4. User selects the target project/profile path through the question flow.
 5. Extension presents behavior-impact summary and requires explicit acknowledgement.
 6. Extension copies predefined onboarding files for that target into predefined paths in the current project.
@@ -42,12 +42,12 @@ Catalog design principles:
 
 ## Question System Model
 - Question flow is split into two groups:
-  - Group A (Operational): extension behavior/runtime choices.
-  - Group B (Profile/Topic): data-driven selection questions for profile/topic composition.
-- Group B question definitions are loaded dynamically from:
+  - Operational Questions: extension behavior/runtime choices.
+  - Profile Selection Questions: data-driven selection questions for profile/topic composition.
+- Profile Selection Questions question definitions are loaded dynamically from:
   - `codex-onboarding/library/questionnaires/index.yaml`
   - `codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
-- Group B must not be hardcoded in extension command handlers.
+- Profile Selection Questions must not be hardcoded in extension command handlers.
 
 ## Instruction Asset Model
 - Instruction assets are modular and topic-based.

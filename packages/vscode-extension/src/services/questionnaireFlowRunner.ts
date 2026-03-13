@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 
-import { GroupBSelections, QuestionnaireFlow } from "../contracts/questionnaire";
+import { ProfileSelectionAnswers, QuestionnaireFlow } from "../contracts/questionnaire";
 import { OutputLogger } from "./outputLogger";
 
 export async function runDynamicQuestionFlow(
   flow: QuestionnaireFlow,
   logger: OutputLogger,
   operationId: string
-): Promise<GroupBSelections | undefined> {
+): Promise<ProfileSelectionAnswers | undefined> {
   const answers: Record<string, string> = {};
   let currentNodeId = flow.entrypoint;
 
@@ -35,7 +35,7 @@ export async function runDynamicQuestionFlow(
         option
       })),
       {
-        title: `Group B: ${node.question}`,
+        title: `Profile Selection Questions: ${node.question}`,
         placeHolder: "Choose one option"
       }
     );

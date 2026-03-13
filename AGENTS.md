@@ -56,9 +56,9 @@ Detailed model is documented in `docs/governance/override-model.md`.
 - For governance decisions, use only sources listed in `docs/governance/context-boundary-map.yaml`.
 
 ## Dynamic Question Model
-- Group A (Operational): extension runtime/operation questions (root selection, Git mode, safety choices).
-- Group B (Profile/Topic): dynamic questions loaded from questionnaire definition files.
-- Group B must be driven by data from `codex-onboarding/library/questionnaires/` and not hardcoded in extension logic.
+- Operational Questions: extension runtime/operation questions (root selection, Git mode, safety choices).
+- Profile Selection Questions: dynamic questions loaded from questionnaire definition files.
+- Profile Selection Questions must be driven by data from `codex-onboarding/library/questionnaires/` and not hardcoded in extension logic.
 
 ## Change Management
 - Use ADR-style documentation for architecture decisions.

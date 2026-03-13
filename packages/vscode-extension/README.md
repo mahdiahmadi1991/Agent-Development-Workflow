@@ -7,9 +7,9 @@ Step 2 is implemented:
 - command surface registered (`Install`, `Remove`, `Repair`)
 - output logger service (`debug`, `warning`, `error`)
 - workspace root resolver (single-root auto-select, multi-root prompt)
-- Group A operational question prompt (Git mode)
-- Group B dynamic questionnaire loading + parsing from file system
-- Group B dynamic question runner from questionnaire node graph
+- Operational question prompt (Git mode)
+- Profile Selection Questions dynamic questionnaire loading + parsing from file system
+- Profile Selection Questions dynamic question runner from questionnaire node graph
 
 ## Next Steps
 - implement managed install file application flow

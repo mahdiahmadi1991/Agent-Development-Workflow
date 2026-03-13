@@ -5,8 +5,8 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 
 ## Product-Level Behavior
 1. User triggers extension command.
-2. Extension asks Group A operational questions required for runtime behavior.
-3. Extension loads Group B profile/topic question flow dynamically from questionnaire files.
+2. Extension asks Operational questions required for runtime behavior.
+3. Extension loads Profile Selection question flow dynamically from questionnaire files.
 4. Extension resolves selected target.
 5. Extension presents pre-install behavior summary and receives explicit acknowledgement.
 6. Extension offers Git tracking mode choice for managed paths.
@@ -47,12 +47,12 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 - Resolver must produce deterministic output with explainability preview (`why-selected`).
 
 ## Question System
-- Group A operational questions are extension-defined.
-- Group B profile/topic questions are file-driven and dynamic.
-- Group B source files:
+- Operational questions are extension-defined.
+- Profile Selection questions are file-driven and dynamic.
+- Profile Selection Questions source files:
   - `codex-onboarding/library/questionnaires/index.yaml`
   - `codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
-- Group B flows must not be hardcoded in extension command logic.
+- Profile Selection question flows must not be hardcoded in extension command logic.
 
 ## Static Bootstrap Artifact
 - Every install/repair must include `codex-onboarding/core/AGENT-ONBOARDING.md`.

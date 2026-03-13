@@ -142,8 +142,8 @@ Define expected behavior for installation and update scenarios.
   - Log fallback-manual event.
 
 ### S-20 Dynamic Question Flow Resolution
-- Preconditions: Install/repair requires Group B profile/topic questions.
+- Preconditions: Install/repair requires Profile Selection questions.
 - Expected:
   - Load questionnaire flow from questionnaire registry and family file.
-  - Do not use hardcoded Group B question graph.
+  - Do not use hardcoded Profile Selection Questions question graph.
   - Fail fast with diagnostics if required flow definition is missing.

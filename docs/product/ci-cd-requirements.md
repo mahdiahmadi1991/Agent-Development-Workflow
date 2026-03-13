@@ -10,7 +10,7 @@ Define non-negotiable pipeline gates before any extension release.
 - Validate instruction-asset metadata schema.
 - Validate onboarding asset files against fixed template standard.
 - Validate library storage layout and topics index integrity.
-- Validate questionnaire registry/flow contract for dynamic Group B questions.
+- Validate questionnaire registry/flow contract for dynamic Profile Selection Questions questions.
 
 2. Scenario validation
 - Execute automated checks for scenario matrix cases.
