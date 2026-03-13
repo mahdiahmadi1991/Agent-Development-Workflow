@@ -17,7 +17,9 @@ Ensure every release communicates behavior-impact changes clearly and consistent
 
 ## Mandatory Quality Checks
 - Release notes and changelog must be published before release publish step.
+- Release version must match extension package version in `packages/vscode-extension/package.json`.
 - User-facing pre-install transparency summary must be synchronized with release behavior.
+- Release flow is two-stage: validation/packaging first, publish actions only after successful artifact gate.
 
 ## Governance Rule
 No release is valid without release notes and changelog updates.

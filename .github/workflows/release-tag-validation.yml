@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Resolve version
         id: version
@@ -32,8 +34,11 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "Resolved version: ${version}"
 
-      - name: Validate release documentation
+      - name: Validate release docs
         run: scripts/validate-release-docs.sh "${{ steps.version.outputs.version }}"
+
+      - name: Validate package version
+        run: scripts/validate-vscode-extension-version.sh "${{ steps.version.outputs.version }}"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -58,10 +63,16 @@ jobs:
         working-directory: packages/vscode-extension
         run: npm run package:ci
 
-      - name: Upload VSIX artifact
+      - name: Generate VSIX checksum
+        working-directory: packages/vscode-extension
+        run: sha256sum artifacts/codex-onboarding.vsix > artifacts/codex-onboarding.vsix.sha256
+
+      - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-vsix-${{ steps.version.outputs.version }}
-          path: packages/vscode-extension/artifacts/*.vsix
+          path: |
+            packages/vscode-extension/artifacts/*.vsix
+            packages/vscode-extension/artifacts/*.sha256
           if-no-files-found: error
           retention-days: 30

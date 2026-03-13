@@ -26,6 +26,8 @@ Define non-negotiable pipeline gates before any extension release.
 - Deterministic package build.
 - Artifact checksum generation.
 - Release artifact verification before publish.
+- Validate release tag/input version equals extension package version.
+- Store `.vsix` and `.sha256` as immutable workflow artifacts before any publish step.
 
 5. Quality checks
 - Lint and static analysis.
@@ -40,6 +42,8 @@ Define non-negotiable pipeline gates before any extension release.
 - Validate pre-install transparency summary is updated and linked.
 - Validate post-install success guidance summary is updated and linked.
 - Enforce changelog update for every release.
+- Enforce release-note file `docs/releases/v<version>.md` for every release.
+- Enforce two-stage release flow: validate/package first, then optional publish actions.
 - Validate supported/tested environment documentation accuracy.
 
 ## Enforcement

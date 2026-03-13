@@ -163,12 +163,14 @@ Downgrade behavior:
 ## Current Active Scope
 - Codex-only onboarding.
 - English-only artifacts.
-- Current phase: extension infrastructure and behavior implementation planning.
+- Current phase: extension infrastructure and behavior implementation.
 - Cross-platform support is required (Windows, WSL, Linux, macOS).
 - Root resolution is smart: single-root auto-select, multi-root prompt, no workspace file requirement.
 - Testing and CI/CD quality gates are mandatory.
 - Trace-level operation logging is mandatory for install/remove/repair.
 - Release notes and changelog are mandatory for each release.
+- Release version must align with extension package version before publish.
+- Release flow stages are mandatory: validate/package first, then optional publish actions.
 - Post-install guidance page is mandatory after successful install.
 - Onboarding file structure is locked by template standard and validator gate.
 - Library storage and selection contracts are locked by validator gate.
