@@ -52,15 +52,17 @@ This repository is focused on:
 - `docs/product/environment-support-matrix.md`: supported/tested/unsupported environment listing.
 - `docs/product/git-tracking-option.md`: Git ignore tracking-mode policy.
 - `docs/product/release-documentation-policy.md`: release notes + changelog requirements.
+- `docs/releases/`: per-version release notes (`v<version>.md`).
 - `docs/consumer/README.md`: consumer-facing behavior and impact summary.
 - `docs/consumer/AI-Quickstart.md`: consumer-facing AI interaction quick-start prompts.
 - `scripts/validate-onboarding-assets.sh`: onboarding template compliance validator.
 - `scripts/validate-governance.sh`: governance baseline validator.
+- `scripts/validate-release-docs.sh`: release docs validator (`CHANGELOG.md` + `docs/releases/`).
 - `docs/extension/`: architecture baseline for the VS Code extension.
 - `codex-onboarding/library/`: source onboarding asset library for profile-based selection.
 - `codex-onboarding/core/`: managed baseline artifacts (immutable by policy).
 - `codex-onboarding/overrides/`: project-specific customization path.
-- `packages/vscode-extension/`: planned extension package.
+- `packages/vscode-extension/`: VS Code extension package implementation.
 
 ## Branching Model
 - `main`: approved and protected branch.

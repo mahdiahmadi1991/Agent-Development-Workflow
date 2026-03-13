@@ -27,8 +27,10 @@ Step 8 is implemented:
 - command-level smoke coverage for multi-root install target selection
 - workspace root resolver tests for no-root, single-root, multi-root, and cancel flows
 - GitHub CI workflow gates for tests, coverage thresholds, compile checks, VSIX packaging smoke, and artifact upload
+- optional dedicated WSL validation lane in CI (self-hosted opt-in)
+- release tag validation workflow with changelog/release-note consistency checks
 - marketplace-ready package manifest metadata coverage and reproducible build config (`tsconfig.build.json`)
 
 ## Next Steps
-- add dedicated WSL validation lane to CI
-- add release tagging workflow with changelog/release-note consistency checks
+- add signed-release and publish workflow safeguards for Marketplace distribution
+- add automated release-note template generation from decision-linked changes

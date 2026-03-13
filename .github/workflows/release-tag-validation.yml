@@ -1,0 +1,67 @@
+name: Release Tag Validation
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (with or without 'v' prefix)"
+        required: true
+        type: string
+
+jobs:
+  validate-release-docs:
+    name: Validate Release Documentation And Package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            raw="${{ inputs.version }}"
+          else
+            raw="${GITHUB_REF_NAME}"
+          fi
+          version="${raw#v}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: ${version}"
+
+      - name: Validate release documentation
+        run: scripts/validate-release-docs.sh "${{ steps.version.outputs.version }}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/vscode-extension/package-lock.json
+
+      - name: Install dependencies
+        working-directory: packages/vscode-extension
+        run: npm ci
+
+      - name: Run tests
+        working-directory: packages/vscode-extension
+        run: npm test
+
+      - name: Compile
+        working-directory: packages/vscode-extension
+        run: npm run compile
+
+      - name: Package VSIX
+        working-directory: packages/vscode-extension
+        run: npm run package:ci
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-vsix-${{ steps.version.outputs.version }}
+          path: packages/vscode-extension/artifacts/*.vsix
+          if-no-files-found: error
+          retention-days: 30

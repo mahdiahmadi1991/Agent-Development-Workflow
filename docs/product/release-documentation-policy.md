@@ -8,6 +8,7 @@ Ensure every release communicates behavior-impact changes clearly and consistent
 - Summary of changes
 - Behavior-impact highlights
 - Migration/update guidance
+- Canonical path: `docs/releases/v<version>.md`
 
 2. Changelog update
 - Version entry with categorized changes
