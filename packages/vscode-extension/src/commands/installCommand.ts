@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 import { OperationalSelections } from "../contracts/questionnaire";
+import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
@@ -34,46 +35,55 @@ export async function runInstall(
   logger: OutputLogger
 ): Promise<void> {
   const operationId = createOperationId();
-  logger.log("debug", "operation_started", { command: "install", operation_id: operationId });
+  let traceLogger: OperationTraceLogger | undefined;
 
   try {
+    traceLogger = await OperationTraceLogger.create(context, logger, "install", operationId);
+
+    traceLogger.log("debug", "operation_started", {
+      log_file: traceLogger.logFilePath
+    });
+
     const target = await resolveTargetWorkspaceFolder();
     if (!target) {
-      logger.log("warning", "operation_blocked", {
-        operation_id: operationId,
+      traceLogger.log("warning", "operation_blocked", {
         reason: "no_workspace_folder"
       });
       void vscode.window.showWarningMessage("No workspace folder is available for install operation.");
       return;
     }
 
+    traceLogger.log("debug", "target_resolved", {
+      target_root: target.uri.fsPath
+    });
+
     const operationalSelections = await askOperationalSelections();
     if (!operationalSelections) {
-      logger.log("warning", "operation_blocked", {
-        operation_id: operationId,
+      traceLogger.log("warning", "operation_blocked", {
         reason: "operational_questions_cancelled"
       });
       return;
     }
 
-    logger.log("debug", "operational_question_asked", {
-      operation_id: operationId,
+    traceLogger.log("debug", "operational_question_asked", {
       git_mode: operationalSelections.gitMode
     });
 
     const questionnaire = await loadQuestionnaireAssets(context.extensionPath, "dotnet-csharp");
 
-    logger.log("debug", "dynamic_question_flow_loaded", {
-      operation_id: operationId,
+    traceLogger.log("debug", "dynamic_question_flow_loaded", {
       family: questionnaire.family,
       index_path: questionnaire.indexPath,
       flow_path: questionnaire.flowPath
     });
 
-    const profileSelectionAnswers = await runDynamicQuestionFlow(questionnaire.flow, logger, operationId);
+    const profileSelectionAnswers = await runDynamicQuestionFlow(
+      questionnaire.flow,
+      traceLogger,
+      operationId
+    );
     if (!profileSelectionAnswers) {
-      logger.log("warning", "operation_blocked", {
-        operation_id: operationId,
+      traceLogger.log("warning", "operation_blocked", {
         reason: "profile_selection_questions_cancelled"
       });
       return;
@@ -86,23 +96,40 @@ export async function runInstall(
       `Target root: ${target.uri.fsPath}`,
       `Git mode (Operational Questions): ${operationalSelections.gitMode}`,
       `Selected profile (Profile Selection Questions): ${selectedProfile}`,
-      `Question flow family: ${questionnaire.family}`
+      `Question flow family: ${questionnaire.family}`,
+      `Operation log: ${traceLogger.logFilePath}`
     ].join("\n");
 
     void vscode.window.showInformationMessage(summary, { modal: false });
-    logger.log("debug", "operation_completed", {
-      operation_id: operationId,
+    traceLogger.log("debug", "success_notification_shown", {
+      target_profile: selectedProfile
+    });
+
+    traceLogger.log("debug", "operation_completed", {
       result_code: "foundation_completed",
-      profile: selectedProfile
+      target_profile: selectedProfile
     });
   } catch (error) {
-    logger.log("error", "operation_completed", {
-      operation_id: operationId,
-      result_code: "failed",
-      reason: error instanceof Error ? error.message : "unknown_error"
-    });
+    if (traceLogger) {
+      traceLogger.log("error", "operation_completed", {
+        result_code: "failed",
+        reason: error instanceof Error ? error.message : "unknown_error"
+      });
+    } else {
+      logger.log("error", "operation_completed", {
+        operation_id: operationId,
+        command: "install",
+        result_code: "failed",
+        reason: error instanceof Error ? error.message : "unknown_error"
+      });
+    }
+
     void vscode.window.showErrorMessage(
       error instanceof Error ? `Install failed: ${error.message}` : "Install failed: unknown error"
     );
+  } finally {
+    if (traceLogger) {
+      await traceLogger.flush();
+    }
   }
 }

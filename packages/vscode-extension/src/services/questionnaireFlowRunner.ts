@@ -1,11 +1,15 @@
 import * as vscode from "vscode";
 
 import { ProfileSelectionAnswers, QuestionnaireFlow } from "../contracts/questionnaire";
-import { OutputLogger } from "./outputLogger";
+import { LogLevel, LogValue } from "./outputLogger";
+
+interface QuestionFlowLogger {
+  log(level: LogLevel, message: string, fields?: Record<string, LogValue>): void;
+}
 
 export async function runDynamicQuestionFlow(
   flow: QuestionnaireFlow,
-  logger: OutputLogger,
+  logger: QuestionFlowLogger,
   operationId: string
 ): Promise<ProfileSelectionAnswers | undefined> {
   const answers: Record<string, string> = {};

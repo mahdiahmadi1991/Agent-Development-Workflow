@@ -3,9 +3,10 @@
 VS Code extension package for applying managed Codex onboarding artifacts to consumer projects.
 
 ## Current Implementation Status
-Step 2 is implemented:
+Step 3 is implemented:
 - command surface registered (`Install`, `Remove`, `Repair`)
 - output logger service (`debug`, `warning`, `error`)
+- per-operation trace logger with unique `.jsonl` log file creation
 - workspace root resolver (single-root auto-select, multi-root prompt)
 - Operational question prompt (Git mode)
 - Profile Selection Questions dynamic questionnaire loading + parsing from file system

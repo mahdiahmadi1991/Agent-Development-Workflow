@@ -14,11 +14,11 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   const remove = vscode.commands.registerCommand("codexOnboarding.remove", async () => {
-    await runRemove(logger);
+    await runRemove(context, logger);
   });
 
   const repair = vscode.commands.registerCommand("codexOnboarding.repair", async () => {
-    await runRepair(logger);
+    await runRepair(context, logger);
   });
 
   context.subscriptions.push(install, remove, repair);

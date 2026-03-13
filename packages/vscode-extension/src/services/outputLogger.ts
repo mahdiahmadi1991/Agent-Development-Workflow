@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 export type LogLevel = "debug" | "warning" | "error";
+export type LogValue = string | number | boolean | null | undefined;
 
 export class OutputLogger {
   private readonly channel: vscode.OutputChannel;
@@ -13,10 +14,11 @@ export class OutputLogger {
     this.channel.dispose();
   }
 
-  public log(level: LogLevel, message: string, fields: Record<string, string> = {}): void {
+  public log(level: LogLevel, message: string, fields: Record<string, LogValue> = {}): void {
     const ts = new Date().toISOString();
     const payload = Object.entries(fields)
-      .map(([k, v]) => `${k}=${v}`)
+      .filter(([, value]) => value !== undefined)
+      .map(([k, v]) => `${k}=${String(v)}`)
       .join(" ");
 
     this.channel.appendLine(`[${ts}] [${level}] ${message}${payload ? ` ${payload}` : ""}`);
