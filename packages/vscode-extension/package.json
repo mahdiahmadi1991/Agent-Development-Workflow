@@ -36,7 +36,9 @@
   "scripts": {
     "clean": "rm -rf out",
     "compile": "npm run clean && tsc -p .",
-    "watch": "tsc -watch -p ."
+    "watch": "tsc -watch -p .",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "yaml": "^2.8.1"
@@ -44,6 +46,8 @@
   "devDependencies": {
     "@types/node": "^22.15.3",
     "@types/vscode": "^1.90.0",
-    "typescript": "^5.8.3"
+    "@vitest/coverage-v8": "^4.1.0",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.0"
   }
 }
