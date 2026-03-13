@@ -52,6 +52,7 @@ This repository is focused on:
 - `docs/product/environment-support-matrix.md`: supported/tested/unsupported environment listing.
 - `docs/product/git-tracking-option.md`: Git ignore tracking-mode policy.
 - `docs/product/release-documentation-policy.md`: release notes + changelog requirements.
+- `docs/product/publisher-release-runbook.md`: operator runbook for Marketplace and GitHub release publishing.
 - `docs/releases/`: per-version release notes (`v<version>.md`).
 - `docs/consumer/README.md`: consumer-facing behavior and impact summary.
 - `docs/consumer/AI-Quickstart.md`: consumer-facing AI interaction quick-start prompts.

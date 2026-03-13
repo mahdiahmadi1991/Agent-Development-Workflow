@@ -44,6 +44,7 @@ Define non-negotiable pipeline gates before any extension release.
 - Enforce changelog update for every release.
 - Enforce release-note file `docs/releases/v<version>.md` for every release.
 - Enforce two-stage release flow: validate/package first, then optional publish actions.
+- Keep publisher release runbook synchronized with active workflow behavior.
 - Validate supported/tested environment documentation accuracy.
 
 ## Enforcement

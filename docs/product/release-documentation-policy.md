@@ -29,5 +29,8 @@ Ensure every release communicates behavior-impact changes clearly and consistent
 3. Review and refine generated release note content.
 4. Run `scripts/validate-release-docs.sh <version>`.
 
+## Publisher Operation Reference
+- Publish execution runbook: `docs/product/publisher-release-runbook.md`
+
 ## Governance Rule
 No release is valid without release notes and changelog updates.

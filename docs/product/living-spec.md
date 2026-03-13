@@ -159,6 +159,7 @@ Downgrade behavior:
 - Consumer AI quickstart prompts: `docs/consumer/AI-Quickstart.md`
 - Git tracking option policy: `docs/product/git-tracking-option.md`
 - Release documentation policy: `docs/product/release-documentation-policy.md`
+- Publisher release runbook: `docs/product/publisher-release-runbook.md`
 
 ## Current Active Scope
 - Codex-only onboarding.
