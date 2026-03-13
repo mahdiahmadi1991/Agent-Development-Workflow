@@ -1,7 +1,27 @@
 import * as vscode from "vscode";
 
+import { removeManagedOnboarding } from "../services/managedRemoveService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
+import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
+
+async function askRemoveConfirmation(targetRootPath: string): Promise<boolean> {
+  const decision = await vscode.window.showWarningMessage(
+    "Remove managed onboarding artifacts from the selected workspace root?",
+    {
+      modal: true,
+      detail: [
+        "Only unchanged managed files are removed.",
+        "Consumer-modified managed files are preserved.",
+        "Managed state will be cleared.",
+        `Target root: ${targetRootPath}`
+      ].join("\n")
+    },
+    "Remove"
+  );
+
+  return decision === "Remove";
+}
 
 export async function runRemove(
   context: vscode.ExtensionContext,
@@ -17,20 +37,50 @@ export async function runRemove(
       log_file: traceLogger.logFilePath
     });
 
-    const message = [
-      "Remove command scaffold is active.",
-      "Managed remove logic will be implemented in the next step.",
+    const target = await resolveTargetWorkspaceFolder();
+    if (!target) {
+      traceLogger.log("warning", "operation_blocked", {
+        reason: "no_workspace_folder"
+      });
+      void vscode.window.showWarningMessage("No workspace folder is available for remove operation.");
+      return;
+    }
+
+    traceLogger.log("debug", "target_resolved", {
+      target_root: target.uri.fsPath
+    });
+
+    const confirmed = await askRemoveConfirmation(target.uri.fsPath);
+    if (!confirmed) {
+      traceLogger.log("warning", "operation_blocked", {
+        reason: "remove_confirmation_declined"
+      });
+      return;
+    }
+
+    const result = await removeManagedOnboarding(target.uri.fsPath, traceLogger);
+
+    const summary = [
+      "Remove operation completed.",
+      `Target root: ${target.uri.fsPath}`,
+      `Removed managed files: ${result.removedFiles.length}`,
+      `Preserved modified managed files: ${result.preservedModifiedFiles.length}`,
+      `Missing managed files in state: ${result.missingManagedFiles.length}`,
+      `State cleared: ${result.stateCleared ? "yes" : "no"}`,
       `Operation log: ${traceLogger.logFilePath}`
     ].join("\n");
 
-    void vscode.window.showInformationMessage(message);
+    void vscode.window.showInformationMessage(summary);
 
     traceLogger.log("debug", "success_notification_shown", {
-      result_code: "scaffold_only"
+      removed_count: result.removedFiles.length,
+      preserved_modified_count: result.preservedModifiedFiles.length,
+      missing_count: result.missingManagedFiles.length,
+      state_cleared: result.stateCleared
     });
 
     traceLogger.log("debug", "operation_completed", {
-      result_code: "scaffold_only"
+      result_code: "removed"
     });
   } catch (error) {
     if (traceLogger) {

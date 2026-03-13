@@ -11,6 +11,8 @@ interface ManagedInstallLogger {
   log(level: LogLevel, message: string, fields?: Record<string, LogValue>): void;
 }
 
+export type ManagedApplyMode = "install" | "repair";
+
 interface ManagedInstallInput {
   extensionPath: string;
   targetRootPath: string;
@@ -18,6 +20,7 @@ interface ManagedInstallInput {
   bundleVersion: string;
   extensionVersion: string;
   selectedTopics: SelectedTopic[];
+  mode?: ManagedApplyMode;
 }
 
 export interface ManagedInstallResult {
@@ -25,6 +28,7 @@ export interface ManagedInstallResult {
   managedRootPath: string;
   appliedFiles: string[];
   skippedFiles: string[];
+  recoveredTrackedFiles: string[];
 }
 
 interface DesiredManagedFile {
@@ -169,7 +173,9 @@ async function applySingleManagedFile(
   stateMap: Map<string, ManagedFileState>,
   logger: ManagedInstallLogger,
   appliedFiles: string[],
-  skippedFiles: string[]
+  skippedFiles: string[],
+  recoveredTrackedFiles: string[],
+  mode: ManagedApplyMode
 ): Promise<void> {
   await ensureParentDirectory(targetRootPath, desired.relative_path);
 
@@ -195,7 +201,7 @@ async function applySingleManagedFile(
     await fs.writeFile(destinationPath, desired.content, "utf8");
     appliedFiles.push(desired.relative_path);
 
-    logger.log("debug", "file_applied", {
+    logger.log("debug", mode === "repair" ? "repair_action" : "file_applied", {
       managed_file: desired.relative_path,
       reason: "new_managed_file",
       content_digest_sha256: desiredDigest
@@ -221,7 +227,7 @@ async function applySingleManagedFile(
       await fs.writeFile(destinationPath, desired.content, "utf8");
       appliedFiles.push(desired.relative_path);
 
-      logger.log("debug", "file_applied", {
+      logger.log("debug", mode === "repair" ? "repair_action" : "file_applied", {
         managed_file: desired.relative_path,
         reason: "managed_file_synced",
         content_digest_sha256: desiredDigest
@@ -237,13 +243,22 @@ async function applySingleManagedFile(
   }
 
   if (isManagedFileContent(existingContent)) {
+    if (mode === "repair" && existingDigest === desiredDigest) {
+      recoveredTrackedFiles.push(desired.relative_path);
+      logger.log("debug", "repair_action", {
+        managed_file: desired.relative_path,
+        reason: "recovered_untracked_managed_file"
+      });
+      return;
+    }
+
     logger.log("error", "operation_blocked", {
       managed_file: desired.relative_path,
       reason: "managed_file_untracked"
     });
 
     throw new Error(
-      `Managed file '${desired.relative_path}' exists but is not tracked in state. Run repair before install.`
+      `Managed file '${desired.relative_path}' exists but is not tracked in state. Run remove then install.`
     );
   }
 
@@ -258,6 +273,7 @@ export async function applyManagedInstall(
   input: ManagedInstallInput,
   logger: ManagedInstallLogger
 ): Promise<ManagedInstallResult> {
+  const mode = input.mode ?? "install";
   const assetRoot = await resolveOnboardingAssetRoot(input.extensionPath);
 
   const onboardingRootPath = path.join(input.targetRootPath, "codex-onboarding");
@@ -269,6 +285,7 @@ export async function applyManagedInstall(
 
   const appliedFiles: string[] = [];
   const skippedFiles: string[] = [];
+  const recoveredTrackedFiles: string[] = [];
 
   const desiredFiles = await buildDesiredManagedFiles(assetRoot, input);
 
@@ -279,7 +296,9 @@ export async function applyManagedInstall(
       managedFileMap,
       logger,
       appliedFiles,
-      skippedFiles
+      skippedFiles,
+      recoveredTrackedFiles,
+      mode
     );
 
     managedFileMap.set(file.relative_path, {
@@ -313,6 +332,7 @@ export async function applyManagedInstall(
     statePath,
     managedRootPath,
     appliedFiles,
-    skippedFiles
+    skippedFiles,
+    recoveredTrackedFiles
   };
 }
