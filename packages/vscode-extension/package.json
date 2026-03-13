@@ -34,7 +34,7 @@
     ]
   },
   "scripts": {
-    "clean": "rm -rf out",
+    "clean": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\"",
     "compile": "npm run clean && tsc -p .",
     "watch": "tsc -watch -p .",
     "test": "vitest run --coverage",

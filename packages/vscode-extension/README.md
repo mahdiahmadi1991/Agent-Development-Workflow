@@ -23,7 +23,9 @@ Step 8 is implemented:
 - repair command reconstructs managed state and restores eligible managed files via repair mode
 - post-install guidance page opening in VS Code
 - high-coverage automated tests for command lifecycle, activation wiring, trace logger behavior, and edge/recovery flows
+- scenario-matrix smoke tests for install/update drift/remove/repair lifecycle paths
+- GitHub CI workflow gates for tests, coverage thresholds, and compile checks on PR/push
 
 ## Next Steps
-- add CI workflow gates to enforce test and coverage thresholds on every pull request
-- add scenario-matrix smoke tests that exercise real filesystem install/remove/repair sequences end-to-end
+- add CI artifact upload for coverage reports to simplify PR review
+- expand scenario matrix smoke coverage for multi-root command execution and downgrade flow
