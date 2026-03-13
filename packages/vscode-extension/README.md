@@ -1,6 +1,6 @@
 # Codex Onboarding
 
-![Codex Onboarding Extension Banner](https://raw.githubusercontent.com/mahdiahmadi1991/Codex-Onboarding-Workflow/main/packages/vscode-extension/assets/branding/banner-extension.png)
+![Codex Onboarding Extension Banner](https://cdn.jsdelivr.net/gh/mahdiahmadi1991/Codex-Onboarding-Workflow@HEAD/packages/vscode-extension/assets/branding/banner-extension.png)
 
 Codex Onboarding is a VS Code extension that applies a managed onboarding layer to your current project.
 
@@ -76,6 +76,6 @@ Before applying updates, users should be able to review:
 ## Source and Governance
 
 - repository: `https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow`
-- publisher: `2ma`
+- publisher: `Mohammad Mahdi Ahmadi`
 
 Extension behavior and governance contracts are maintained in repository docs and synced with release workflow gates.

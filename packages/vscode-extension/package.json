@@ -50,17 +50,17 @@
     "commands": [
       {
         "command": "codexOnboarding.install",
-        "title": "Codex Onboarding: Install",
+        "title": "Install",
         "category": "Codex Onboarding"
       },
       {
         "command": "codexOnboarding.remove",
-        "title": "Codex Onboarding: Remove",
+        "title": "Remove",
         "category": "Codex Onboarding"
       },
       {
         "command": "codexOnboarding.repair",
-        "title": "Codex Onboarding: Repair",
+        "title": "Repair",
         "category": "Codex Onboarding"
       }
     ],
