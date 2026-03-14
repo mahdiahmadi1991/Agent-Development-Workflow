@@ -113,12 +113,13 @@ Define expected behavior for installation and update scenarios.
   - Apply only if integrity and ownership checks pass.
   - Stop and report if safety checks fail.
 
-### S-16 Post-Install Success Guidance Page
+### S-16 Post-Install Success WebviewPanel
 - Preconditions: Install operation completed successfully.
 - Expected:
   - Show success notification with short operation summary.
-  - Open dedicated post-install guidance page in VS Code.
-  - Include quick-start AI usage tips and links to managed path and operation log.
+  - Open dedicated post-install `WebviewPanel` in VS Code.
+  - Render fixed V1 section contract with deterministic order.
+  - Render runtime summary values in Change Report.
 
 ### S-17 Bootstrap Artifact Mandatory Inclusion
 - Preconditions: Install or repair command runs successfully.
@@ -147,3 +148,42 @@ Define expected behavior for installation and update scenarios.
   - Load questionnaire flow from questionnaire registry and family file.
   - Do not use hardcoded Profile Selection Questions question graph.
   - Fail fast with diagnostics if required flow definition is missing.
+
+### S-21 Post-Install V1 Blocks Presence
+- Preconditions: Post-install WebviewPanel opened.
+- Expected:
+  - Contains `Outcome Snapshot`.
+  - Contains `Before/After Map`.
+  - Contains `First 3 Steps`.
+  - Contains `Prompt Packs` (`Discover`, `Implement`, `Validate`).
+  - Contains `Safe Boundaries`.
+  - Contains `Lifecycle Playbook`.
+  - Contains `Change Report`.
+
+### S-22 Post-Install Action Model
+- Preconditions: Post-install WebviewPanel opened.
+- Expected:
+  - Primary Action Bar exposes: `Open Managed Root`, `Open Operation Log`, `Run Repair`, `Run Remove`.
+  - Secondary quick actions expose: `Copy Starter Prompt`, `Report Onboarding Issue`.
+  - All actions are explicit user-initiated actions.
+
+### S-23 Post-Install Fallback Safety
+- Preconditions: Install succeeds, Webview initialization fails.
+- Expected:
+  - Install still completes as success.
+  - Show concise fallback message.
+  - Show minimal post-install summary fallback path.
+
+### S-24 Post-Install Information Architecture Stability
+- Preconditions: Post-install WebviewPanel opened.
+- Expected:
+  - Action Bar remains persistent top element.
+  - Main sections keep fixed order:
+    1. Outcome Snapshot
+    2. Before/After Map
+    3. First 3 Steps
+    4. Prompt Packs
+    5. Safe Boundaries
+    6. Lifecycle Playbook
+    7. Change Report
+  - Detailed content follows progressive disclosure (summary-first, details-secondary).

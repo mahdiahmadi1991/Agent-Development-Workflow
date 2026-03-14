@@ -10,7 +10,7 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - If update is available, surfaces changelog/release notes and proceeds only after explicit confirmation.
 - Must present or link a pre-install behavior summary before applying changes.
 - Must offer Git tracking choice for managed paths (`add to .gitignore` or keep tracked).
-- On success, must show summary notification and open dedicated post-install guidance page.
+- On success, must show summary notification and open dedicated post-install WebviewPanel.
 
 2. `Remove Onboarding`
 - Clears managed state.

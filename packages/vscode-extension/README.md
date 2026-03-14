@@ -14,6 +14,7 @@ It is designed for safe, non-destructive onboarding flows where extension-manage
 - blocks updates when managed-file drift is detected
 - writes deterministic operation trace logs for debugging
 
+
 ## Command Surface
 
 - `Codex Onboarding: Install`

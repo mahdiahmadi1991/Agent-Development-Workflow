@@ -203,13 +203,17 @@ export async function runInstall(
       removed_stale_count: installResult.removedStaleFiles.length
     });
 
-    await openPostInstallGuidancePage({
+    const postInstallPanelOpened = await openPostInstallGuidancePage({
       targetRootPath: target.uri.fsPath,
       selectedProfile: resolvedProfile.profile_id,
-      logFilePath: traceLogger.logFilePath
+      logFilePath: traceLogger.logFilePath,
+      managedStatePath: installResult.statePath,
+      appliedCount: installResult.appliedFiles.length,
+      skippedCount: installResult.skippedFiles.length,
+      removedStaleCount: installResult.removedStaleFiles.length
     });
 
-    traceLogger.log("debug", "post_install_page_opened", {
+    traceLogger.log("debug", postInstallPanelOpened ? "post_install_page_opened" : "post_install_page_fallback", {
       target_profile: resolvedProfile.profile_id
     });
 

@@ -14,7 +14,7 @@ Build a VS Code extension that applies Codex onboarding files to a user's curren
 5. Extension presents behavior-impact summary and requires explicit acknowledgement.
 6. Extension copies predefined onboarding files for that target into predefined paths in the current project.
 7. Extension shows a success message with a summary of applied files.
-8. Extension opens a dedicated post-install guidance page in VS Code with quick-start usage tips.
+8. Extension opens a dedicated post-install `WebviewPanel` in VS Code with fixed V1 section order, professional onboarding guidance blocks, and deterministic change report data.
 9. Extension exposes optional, user-controlled issue escalation actions for onboarding conflicts.
 
 ## Command Surface
@@ -177,7 +177,10 @@ Downgrade behavior:
 - Release-note authoring uses scaffolded template with decision-reference section.
 - Local release rehearsal evidence is required before first public publish sign-off.
 - Published VSIX must include onboarding assets and runtime YAML dependency to remain self-contained.
-- Post-install guidance page is mandatory after successful install.
+- Post-install guidance WebviewPanel is mandatory after successful install.
+- Post-install page contract is static-structure with runtime summary injection only (no dynamic question flow in page).
+- Post-install page execution follows phased contract in `docs/product/post-install-success-experience.md`.
+- Post-install V1 baseline includes Outcome Snapshot, Before/After Map, First 3 Steps, Prompt Packs, Safe Boundaries, Lifecycle Playbook, and Action Bar quick actions.
 - Onboarding file structure is locked by template standard and validator gate.
 - Library storage and selection contracts are locked by validator gate.
 - Static bootstrap onboarding artifact is mandatory in every install/repair result.

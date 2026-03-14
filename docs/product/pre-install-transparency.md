@@ -11,7 +11,7 @@ Ensure users can review extension behavior and impact before onboarding files ar
 - Update consent flow and changelog/release-note review path.
 - Drift detection and stop conditions.
 - Available lifecycle commands: install, remove, repair.
-- Post-install experience (success summary + dedicated guidance page behavior).
+- Post-install experience (success summary + dedicated WebviewPanel behavior).
 - Git tracking option (add managed paths to `.gitignore` or not).
 - Supported, tested, and unsupported runtime environments.
 - Mandatory static bootstrap onboarding artifact path and role.

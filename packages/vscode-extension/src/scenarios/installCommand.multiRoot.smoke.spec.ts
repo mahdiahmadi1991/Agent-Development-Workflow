@@ -112,7 +112,7 @@ describe("install command multi-root smoke", () => {
       removedStaleFiles: []
     });
 
-    vi.mocked(openPostInstallGuidancePage).mockResolvedValue();
+    vi.mocked(openPostInstallGuidancePage).mockResolvedValue(true);
   });
 
   afterEach(() => {

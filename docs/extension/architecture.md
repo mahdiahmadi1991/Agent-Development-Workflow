@@ -13,7 +13,7 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 7. Extension applies predefined onboarding files into `.codex-onboarding/` paths.
 8. Extension follows non-destructive apply mode (no overwrite of existing files).
 9. Extension reports success, applied files, and skipped files summary.
-10. Extension opens a dedicated post-install guidance page with quick-start usage tips.
+10. Extension opens a dedicated post-install WebviewPanel with the fixed V1 section baseline, quick-start usage tips, and runtime change summary.
 11. Extension offers optional user-controlled issue escalation actions for onboarding conflicts.
 
 ## Command Surface
@@ -77,4 +77,5 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 
 ## Quality Requirement
 - Test strategy must include unit, integration, scenario, and cross-platform lanes.
+- Post-install UX tests must verify fixed section order, Prompt Packs availability, and Action Bar behavior.
 - Install/remove/repair flows must emit trace-level structured logs for diagnostics with `debug`/`warning`/`error` severities.

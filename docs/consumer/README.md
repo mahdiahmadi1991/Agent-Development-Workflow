@@ -44,7 +44,23 @@ During install, you can choose:
 
 ## After Install
 - Extension shows a success summary.
-- Extension opens a dedicated guidance page in VS Code.
+- Extension opens a dedicated post-install `WebviewPanel` in VS Code.
+- The page includes a fixed V1 structure:
+  - Outcome Snapshot
+  - Before/After Map
+  - First 3 Steps
+  - Prompt Packs (`Discover`, `Implement`, `Validate`)
+  - Safe Boundaries
+  - Lifecycle Playbook
+  - Change Report
+- Primary Action Bar quick actions:
+  - `Open Managed Root`
+  - `Open Operation Log`
+  - `Run Repair`
+  - `Run Remove`
+- Secondary quick actions:
+  - `Copy Starter Prompt`
+  - `Report Onboarding Issue`
 - Additional prompt examples: `docs/consumer/AI-Quickstart.md`
 
 ## Runtime Support

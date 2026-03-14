@@ -51,7 +51,7 @@ This file records accepted planning decisions and open decisions.
 | D-044 | Supported and tested environments must be documented explicitly in user-facing docs. | Accepted | Avoid hidden compatibility assumptions. |
 | D-045 | Concurrent operation locking is deferred until a real conflict signal is observed. | Accepted | Not in current implementation scope. |
 | D-046 | Successful install must show a concise completion notification in VS Code. | Accepted | Includes operation summary highlights. |
-| D-047 | Successful install must open a dedicated post-install guidance page in VS Code. | Accepted | Provides usage guidance and quick-start actions. |
+| D-047 | Successful install must open a dedicated post-install page in VS Code. | Accepted | Rendering contract is specified as WebviewPanel by D-075. |
 | D-048 | Post-install page must include AI interaction quick-start tips tied to installed onboarding assets. | Accepted | Reduces onboarding friction for end users. |
 | D-049 | Onboarding file structure is fixed by a canonical template standard. | Accepted | Ensures stable structure for future generated assets. |
 | D-050 | Template compliance validation is mandatory in local and CI governance checks. | Accepted | Blocks non-compliant onboarding file generation. |
@@ -79,3 +79,5 @@ This file records accepted planning decisions and open decisions.
 | D-072 | Branding baseline is locked with packaged icon assets and marketplace-readiness checklist gates. | Accepted | Icon assets are versioned under `packages/vscode-extension/assets/branding/`. |
 | D-073 | A local end-to-end release rehearsal script and evidence report are required before first public publish sign-off. | Accepted | Script: `scripts/rehearse-release-local.sh`; reports under `docs/releases/rehearsals/`. |
 | D-074 | Published VSIX must be self-contained for runtime config loading: onboarding assets and YAML runtime dependency must be packaged with the extension. | Accepted | Enforced by package file inclusion and sync script before compile/package. |
+| D-075 | Post-install guidance experience must use a static-structure WebviewPanel with deterministic section order and runtime summary injection. | Accepted | Execution is phase-split in `docs/product/post-install-success-experience.md`; fallback must not fail install. |
+| D-076 | Post-install Webview must follow a professional V1 UX baseline: Outcome Snapshot, Before/After Map, First 3 Steps, Prompt Packs, Safe Boundaries, Lifecycle Playbook, Change Report, and Action Bar. | Accepted | Canonical contract is `docs/product/post-install-success-experience.md`; section order is fixed for V1. |

@@ -29,7 +29,7 @@ Provide an operational, decision-aligned roadmap to ensure implementation stays 
 13. Pre-install transparency summary must be maintained and acknowledged before apply.
 14. Update must be user-confirmed after changelog/release-note visibility.
 15. Each lifecycle run must produce a unique dedicated log file.
-16. Successful install must show completion summary and open guidance page with quick-start usage tips.
+16. Successful install must show completion summary and open post-install WebviewPanel with quick-start usage tips.
 17. Every install/repair result must include the static bootstrap onboarding artifact.
 18. Conflict escalation to upstream issues must remain optional and user-controlled.
 19. Question flow must use two groups: Operational Questions and dynamic Profile Selection Questions.
@@ -109,7 +109,9 @@ Reference: `docs/product/recovery-policy.md`
 - Define user-facing messages and remediation hints.
 - Define structured trace logging contract for install/remove/repair.
 - Define pre-install transparency and acknowledgement UX.
-- Define post-install completion UX (success summary + dedicated guidance page).
+- Define post-install completion UX (success summary + dedicated WebviewPanel).
+- Split post-install Webview implementation into independent execution phases (A-G) as defined in `docs/product/post-install-success-experience.md`.
+- Enforce the V1 professional UX baseline blocks and fixed section order from `docs/product/post-install-success-experience.md`.
 - Define issue-escalation UX for conflict reporting (explicit consent, permission-aware direct submission, manual fallback).
 - Define operational vs dynamic question UX and state handling.
 

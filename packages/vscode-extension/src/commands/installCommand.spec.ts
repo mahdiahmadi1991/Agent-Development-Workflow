@@ -129,7 +129,7 @@ describe("runInstall", () => {
       removedStaleFiles: []
     });
 
-    vi.mocked(openPostInstallGuidancePage).mockResolvedValue();
+    vi.mocked(openPostInstallGuidancePage).mockResolvedValue(true);
   });
 
   it("blocks when no workspace folder is available", async () => {
@@ -193,7 +193,11 @@ describe("runInstall", () => {
     expect(openPostInstallGuidancePage).toHaveBeenCalledWith({
       targetRootPath: "/workspace/project",
       selectedProfile: "dotnet-csharp-web-api-simple",
-      logFilePath: "/tmp/storage/operation-logs/install-log.jsonl"
+      logFilePath: "/tmp/storage/operation-logs/install-log.jsonl",
+      managedStatePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      appliedCount: 1,
+      skippedCount: 0,
+      removedStaleCount: 0
     });
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
@@ -275,5 +279,32 @@ describe("runInstall", () => {
     );
 
     expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Install failed: unknown error");
+  });
+
+  it("continues successfully when post-install panel falls back", async () => {
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
+      label: "Track managed files",
+      value: "track"
+    } as any);
+
+    vi.spyOn(vscode.window, "showInformationMessage")
+      .mockResolvedValueOnce("Apply" as any)
+      .mockResolvedValueOnce(undefined);
+
+    vi.mocked(openPostInstallGuidancePage).mockResolvedValue(false);
+
+    await runInstall(buildContext(), { log: vi.fn() } as any);
+
+    expect(applyManagedInstall).toHaveBeenCalledTimes(1);
+
+    const trace = await createTraceLoggerMock.mock.results[0]?.value;
+    expect(trace.log).toHaveBeenCalledWith("debug", "post_install_page_fallback", {
+      target_profile: "dotnet-csharp-web-api-simple"
+    });
+    expect(trace.log).toHaveBeenCalledWith(
+      "debug",
+      "operation_completed",
+      expect.objectContaining({ result_code: "applied" })
+    );
   });
 });

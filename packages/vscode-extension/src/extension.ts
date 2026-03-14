@@ -4,6 +4,7 @@ import { runInstall } from "./commands/installCommand";
 import { runRemove } from "./commands/removeCommand";
 import { runRepair } from "./commands/repairCommand";
 import { OutputLogger } from "./services/outputLogger";
+import { postInstallActions } from "./services/postInstallGuidancePage";
 
 export function activate(context: vscode.ExtensionContext): void {
   const logger = new OutputLogger();
@@ -21,7 +22,23 @@ export function activate(context: vscode.ExtensionContext): void {
     await runRepair(context, logger);
   });
 
-  context.subscriptions.push(install, remove, repair);
+  const copyStarterPrompt = vscode.commands.registerCommand(postInstallActions.copyStarterPrompt, async (prompt?: string) => {
+    const value = typeof prompt === "string" ? prompt.trim() : "";
+
+    if (!value) {
+      await vscode.window.showWarningMessage("Starter prompt is unavailable.");
+      return;
+    }
+
+    await vscode.env.clipboard.writeText(value);
+    await vscode.window.showInformationMessage("Starter prompt copied to clipboard.");
+  });
+
+  const reportIssue = vscode.commands.registerCommand(postInstallActions.reportIssue, async () => {
+    await vscode.env.openExternal(vscode.Uri.parse(postInstallActions.reportIssueUrl));
+  });
+
+  context.subscriptions.push(install, remove, repair, copyStarterPrompt, reportIssue);
   logger.log("debug", "extension_activated", { extension_id: context.extension.id });
 }
 
