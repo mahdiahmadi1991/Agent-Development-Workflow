@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runRepair } from "./repairCommand";
+import { applyGitTrackingMode } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { loadResolvedProfile } from "../services/profileAssetService";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
@@ -42,6 +43,10 @@ vi.mock("../services/selectionResolver", () => ({
 
 vi.mock("../services/managedInstallService", () => ({
   applyManagedInstall: vi.fn()
+}));
+
+vi.mock("../services/gitTrackingService", () => ({
+  applyGitTrackingMode: vi.fn()
 }));
 
 function buildContext(): vscode.ExtensionContext {
@@ -123,6 +128,12 @@ describe("runRepair", () => {
       recoveredTrackedFiles: [],
       removedStaleFiles: []
     });
+    vi.mocked(applyGitTrackingMode).mockResolvedValue({
+      mode: "track",
+      strategy: "git_info_exclude",
+      updated: true,
+      excludePath: "/workspace/project/.git/info/exclude"
+    });
   });
 
   it("blocks when operational questions are cancelled", async () => {
@@ -175,6 +186,13 @@ describe("runRepair", () => {
       }),
       expect.any(Object)
     );
+    expect(applyGitTrackingMode).toHaveBeenCalledWith(
+      {
+        targetRootPath: "/workspace/project",
+        mode: "track"
+      },
+      expect.any(Object)
+    );
 
     expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
       expect.stringContaining("Repair operation completed.")
@@ -218,6 +236,7 @@ describe("runRepair", () => {
       "No workspace folder is available for repair operation."
     );
     expect(applyManagedInstall).not.toHaveBeenCalled();
+    expect(applyGitTrackingMode).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {

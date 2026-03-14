@@ -28,7 +28,8 @@ This extension applies Codex onboarding files into your project. Review this sum
 ## Git Tracking Choice
 During install, you can choose:
 - Track managed files in Git.
-- Add managed paths to `.gitignore`.
+- Ignore managed paths via repository-local `.git/info/exclude`.
+- If you choose ignore mode, install summary and post-install page explain how ignore was applied and how to switch back to tracking mode.
 
 ## Logging and Diagnostics
 - Each operation creates a unique trace log file.
@@ -48,6 +49,7 @@ During install, you can choose:
 - The page includes a fixed V1 structure:
   - Outcome Snapshot
   - Before/After Map
+  - Git Tracking Details
   - First 3 Steps
   - Prompt Packs (`Discover`, `Implement`, `Validate`)
   - Safe Boundaries

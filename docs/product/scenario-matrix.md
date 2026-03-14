@@ -154,6 +154,7 @@ Define expected behavior for installation and update scenarios.
 - Expected:
   - Contains `Outcome Snapshot`.
   - Contains `Before/After Map`.
+  - Contains `Git Tracking Details`.
   - Contains `First 3 Steps`.
   - Contains `Prompt Packs` (`Discover`, `Implement`, `Validate`).
   - Contains `Safe Boundaries`.
@@ -181,9 +182,10 @@ Define expected behavior for installation and update scenarios.
   - Main sections keep fixed order:
     1. Outcome Snapshot
     2. Before/After Map
-    3. First 3 Steps
-    4. Prompt Packs
-    5. Safe Boundaries
-    6. Lifecycle Playbook
-    7. Change Report
+    3. Git Tracking Details
+    4. First 3 Steps
+    5. Prompt Packs
+    6. Safe Boundaries
+    7. Lifecycle Playbook
+    8. Change Report
   - Detailed content follows progressive disclosure (summary-first, details-secondary).

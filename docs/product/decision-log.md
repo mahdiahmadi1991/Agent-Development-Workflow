@@ -43,7 +43,7 @@ This file records accepted planning decisions and open decisions.
 | D-036 | Trace logs must include severity levels (`debug`, `warning`, `error`). | Accepted | Required for actionable diagnostics. |
 | D-037 | Current state requires no outbound telemetry. | Accepted | Local diagnostics only in this stage. |
 | D-038 | Update application is explicit user action after update notification and changelog review. | Accepted | No silent auto-apply updates. |
-| D-039 | User can choose whether managed onboarding paths are added to Git ignore rules. | Accepted | Git tracking mode is user-configurable. |
+| D-039 | User can choose whether managed onboarding paths are tracked in Git or ignored via repository-local Git metadata. | Accepted | Git tracking mode is user-configurable without editing project files. |
 | D-040 | Every release must include release notes and changelog updates. | Accepted | Mandatory release documentation. |
 | D-041 | Downgrade is allowed only under the same integrity and ownership safeguards as upgrade. | Accepted | Fail-fast if safety checks fail. |
 | D-042 | Remove command must clear managed state and delete only untouched managed files. | Accepted | Modified files are not altered or removed. |

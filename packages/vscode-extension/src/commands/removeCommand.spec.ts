@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runRemove } from "./removeCommand";
+import { applyGitTrackingMode } from "../services/gitTrackingService";
 import { removeManagedOnboarding } from "../services/managedRemoveService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
@@ -22,6 +23,10 @@ vi.mock("../services/workspaceRootResolver", () => ({
 
 vi.mock("../services/managedRemoveService", () => ({
   removeManagedOnboarding: vi.fn()
+}));
+
+vi.mock("../services/gitTrackingService", () => ({
+  applyGitTrackingMode: vi.fn()
 }));
 
 function buildContext(): vscode.ExtensionContext {
@@ -63,6 +68,12 @@ describe("runRemove", () => {
       preservedModifiedFiles: [],
       missingManagedFiles: []
     });
+    vi.mocked(applyGitTrackingMode).mockResolvedValue({
+      mode: "track",
+      strategy: "git_info_exclude",
+      updated: true,
+      excludePath: "/workspace/project/.git/info/exclude"
+    });
   });
 
   it("blocks when no workspace folder is available", async () => {
@@ -74,6 +85,7 @@ describe("runRemove", () => {
       "No workspace folder is available for remove operation."
     );
     expect(removeManagedOnboarding).not.toHaveBeenCalled();
+    expect(applyGitTrackingMode).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
@@ -87,6 +99,7 @@ describe("runRemove", () => {
     await runRemove(buildContext(), { log: vi.fn() } as any);
 
     expect(removeManagedOnboarding).not.toHaveBeenCalled();
+    expect(applyGitTrackingMode).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
@@ -116,6 +129,13 @@ describe("runRemove", () => {
 
     expect(removeManagedOnboarding).toHaveBeenCalledWith(
       "/workspace/project",
+      expect.any(Object)
+    );
+    expect(applyGitTrackingMode).toHaveBeenCalledWith(
+      {
+        targetRootPath: "/workspace/project",
+        mode: "track"
+      },
       expect.any(Object)
     );
 

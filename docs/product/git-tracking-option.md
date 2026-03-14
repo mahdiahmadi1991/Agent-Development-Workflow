@@ -6,11 +6,12 @@ Let users decide whether extension-managed onboarding files should be ignored by
 ## User Choice
 During install flow, user can choose one mode:
 1. `Track managed files` (default)
-2. `Ignore managed files` (add managed paths to `.gitignore`)
+2. `Ignore managed files` (apply managed-path ignores via `.git/info/exclude`)
 
 ## Rules
 - Choice is explicit and user-controlled.
-- Extension must not modify unrelated `.gitignore` entries.
+- Extension must not modify user-owned project files for Git tracking behavior.
+- Ignore rules are written only inside repository-local Git metadata (`.git/info/exclude`).
 - Choice can be changed later via lifecycle flow.
 
 ## Safety Notes

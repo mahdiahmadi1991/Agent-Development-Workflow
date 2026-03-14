@@ -11,6 +11,7 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - Must present or link a pre-install behavior summary before applying changes.
 - Must offer Git tracking choice for managed paths (`ignore` or `track`) in the final install step.
 - On success, must show summary notification and open dedicated post-install WebviewPanel.
+- If `ignore` is selected, success summary must explain that ignore is applied via `.git/info/exclude` and how to exit ignore mode.
 
 2. `Codex Onboarding: Remove`
 - Clears managed state.
@@ -30,7 +31,7 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - Load from questionnaire definitions and do not hardcode in command handlers.
 
 3. `Review & Apply: Git Tracking`
-- Ask whether managed files should be tracked in Git or ignored via `.gitignore`.
+- Ask whether managed files should be tracked in Git or ignored via repository-local `.git/info/exclude`.
 
 4. `Review & Apply`
 - Final confirmation with concise summary and topic preview before changes are written.

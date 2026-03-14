@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 import { OperationalSelections } from "../contracts/questionnaire";
+import { applyGitTrackingMode } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
@@ -23,8 +24,8 @@ async function askOperationalSelectionsForRepair(): Promise<OperationalSelection
         value: "track" as const
       },
       {
-        label: "Ignore managed files in Git",
-        description: "Add managed paths to .gitignore for local-only usage.",
+        label: "Ignore managed files in local Git metadata",
+        description: "Ignore managed paths via .git/info/exclude without editing project files.",
         value: "ignore" as const
       }
     ],
@@ -173,6 +174,20 @@ export async function runRepair(
         ? context.extension.packageJSON.version
         : "0.0.0";
 
+    const gitTrackingResult = await applyGitTrackingMode(
+      {
+        targetRootPath: target.uri.fsPath,
+        mode: operationalSelections.gitMode
+      },
+      traceLogger
+    );
+
+    if (gitTrackingResult.strategy === "no_git_repository") {
+      void vscode.window.showWarningMessage(
+        "Selected workspace root is not a Git repository. Git tracking preference was skipped."
+      );
+    }
+
     const result = await applyManagedInstall(
       {
         extensionPath: context.extensionPath,
@@ -189,6 +204,9 @@ export async function runRepair(
     const summary = [
       "Repair operation completed.",
       `Target root: ${target.uri.fsPath}`,
+      `Git mode: ${operationalSelections.gitMode}`,
+      `Git tracking strategy: ${gitTrackingResult.strategy}`,
+      `Git tracking updated: ${gitTrackingResult.updated ? "yes" : "no"}`,
       `Selected profile: ${resolvedProfile.profile_id}`,
       `Selected topics: ${selectionPlan.selected_topics.length}`,
       `Applied or synchronized files: ${result.appliedFiles.length}`,
@@ -203,6 +221,7 @@ export async function runRepair(
 
     traceLogger.log("debug", "success_notification_shown", {
       target_profile: resolvedProfile.profile_id,
+      git_tracking_strategy: gitTrackingResult.strategy,
       applied_count: result.appliedFiles.length,
       recovered_count: result.recoveredTrackedFiles.length,
       skipped_count: result.skippedFiles.length,

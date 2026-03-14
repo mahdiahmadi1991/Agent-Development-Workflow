@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import { applyGitTrackingMode } from "../services/gitTrackingService";
 import { removeManagedOnboarding } from "../services/managedRemoveService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
@@ -93,11 +94,21 @@ export async function runRemove(
       return;
     }
 
+    const gitTrackingResult = await applyGitTrackingMode(
+      {
+        targetRootPath: target.uri.fsPath,
+        mode: "track"
+      },
+      traceLogger
+    );
+
     const result = await removeManagedOnboarding(target.uri.fsPath, traceLogger);
 
     const summary = [
       "Remove operation completed.",
       `Target root: ${target.uri.fsPath}`,
+      `Git tracking cleanup strategy: ${gitTrackingResult.strategy}`,
+      `Git tracking cleanup updated: ${gitTrackingResult.updated ? "yes" : "no"}`,
       `Removed managed files: ${result.removedFiles.length}`,
       `Preserved modified managed files: ${result.preservedModifiedFiles.length}`,
       `Missing managed files in state: ${result.missingManagedFiles.length}`,
@@ -109,6 +120,7 @@ export async function runRemove(
 
     traceLogger.log("debug", "success_notification_shown", {
       removed_count: result.removedFiles.length,
+      git_tracking_cleanup_strategy: gitTrackingResult.strategy,
       preserved_modified_count: result.preservedModifiedFiles.length,
       missing_count: result.missingManagedFiles.length,
       state_cleared: result.stateCleared

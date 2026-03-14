@@ -12,7 +12,8 @@ Ensure users can review extension behavior and impact before onboarding files ar
 - Drift detection and stop conditions.
 - Available lifecycle commands: install, remove, repair.
 - Post-install experience (success summary + dedicated WebviewPanel behavior).
-- Git tracking option (add managed paths to `.gitignore` or not).
+- Git tracking option (track in Git or ignore via repository-local `.git/info/exclude`).
+- If ignore mode is selected, post-install summary must explain ignore mechanism and explicit opt-out path.
 - Supported, tested, and unsupported runtime environments.
 - Mandatory static bootstrap onboarding artifact path and role.
 - Conflict-escalation path (optional upstream issue reporting as user-controlled action).

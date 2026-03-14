@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 import { OperationalSelections } from "../contracts/questionnaire";
+import { applyGitTrackingMode } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
@@ -28,8 +29,8 @@ async function askGitTrackingSelectionAtFinalStep(): Promise<OperationalSelectio
         value: "track" as const
       },
       {
-        label: "Ignore in Git (.gitignore)",
-        description: "Managed onboarding files stay local and are added to .gitignore.",
+        label: "Ignore in Local Git Metadata",
+        description: "Managed onboarding files are ignored via .git/info/exclude.",
         value: "ignore" as const
       }
     ],
@@ -82,6 +83,32 @@ async function askPreInstallAcknowledgement(input: {
   );
 
   return decision === "Apply Installation";
+}
+
+function buildGitTrackingSummaryLines(input: {
+  gitMode: "track" | "ignore";
+  gitTrackingStrategy: "git_info_exclude" | "no_git_repository";
+  gitTrackingUpdated: boolean;
+}): string[] {
+  const lines = [
+    `Git mode (Review & Apply): ${input.gitMode}`,
+    `Git tracking strategy: ${input.gitTrackingStrategy}`,
+    `Git tracking updated: ${input.gitTrackingUpdated ? "yes" : "no"}`
+  ];
+
+  if (input.gitMode !== "ignore") {
+    return lines;
+  }
+
+  if (input.gitTrackingStrategy === "git_info_exclude") {
+    lines.push("Ignore behavior: managed paths were added to .git/info/exclude (repository-local metadata).");
+    lines.push("How to exit ignore mode: run Install or Repair and choose 'Track in Git'.");
+    return lines;
+  }
+
+  lines.push("Ignore behavior: skipped because selected root is not a Git repository.");
+  lines.push("How to exit ignore mode: initialize Git first, then run Install or Repair and choose 'Track in Git'.");
+  return lines;
 }
 
 export async function runInstall(
@@ -196,6 +223,20 @@ export async function runInstall(
         ? context.extension.packageJSON.version
         : "0.0.0";
 
+    const gitTrackingResult = await applyGitTrackingMode(
+      {
+        targetRootPath: target.uri.fsPath,
+        mode: gitTrackingSelection.gitMode
+      },
+      traceLogger
+    );
+
+    if (gitTrackingResult.strategy === "no_git_repository") {
+      void vscode.window.showWarningMessage(
+        "Selected workspace root is not a Git repository. Git tracking preference was skipped."
+      );
+    }
+
     const installResult = await applyManagedInstall(
       {
         extensionPath: context.extensionPath,
@@ -211,7 +252,11 @@ export async function runInstall(
     const summary = [
       "Install foundation step completed.",
       `Target root: ${target.uri.fsPath}`,
-      `Git mode (Review & Apply): ${gitTrackingSelection.gitMode}`,
+      ...buildGitTrackingSummaryLines({
+        gitMode: gitTrackingSelection.gitMode,
+        gitTrackingStrategy: gitTrackingResult.strategy,
+        gitTrackingUpdated: gitTrackingResult.updated
+      }),
       `Selected profile (Project Profile): ${resolvedProfile.profile_id}`,
       `Selected topics (resolver): ${selectionPlan.selected_topics.length}`,
       `Applied files: ${installResult.appliedFiles.length}`,
@@ -225,6 +270,7 @@ export async function runInstall(
     traceLogger.log("debug", "success_notification_shown", {
       target_profile: resolvedProfile.profile_id,
       selected_topic_count: selectionPlan.selected_topics.length,
+      git_tracking_strategy: gitTrackingResult.strategy,
       applied_count: installResult.appliedFiles.length,
       skipped_count: installResult.skippedFiles.length,
       removed_stale_count: installResult.removedStaleFiles.length
@@ -235,6 +281,9 @@ export async function runInstall(
       selectedProfile: resolvedProfile.profile_id,
       logFilePath: traceLogger.logFilePath,
       managedStatePath: installResult.statePath,
+      gitMode: gitTrackingSelection.gitMode,
+      gitTrackingStrategy: gitTrackingResult.strategy,
+      gitTrackingUpdated: gitTrackingResult.updated,
       appliedCount: installResult.appliedFiles.length,
       skippedCount: installResult.skippedFiles.length,
       removedStaleCount: installResult.removedStaleFiles.length

@@ -19,7 +19,7 @@ Guarantee safe, deterministic extension behavior for install, remove, repair, an
 - Bootstrap artifact inclusion checks for install/repair
 - Pre-install acknowledgement behavior checks
 - Post-install success notification and WebviewPanel-open checks (success-only trigger)
-- Post-install V1 UX block presence checks (Outcome Snapshot, Before/After Map, First 3 Steps, Prompt Packs, Safe Boundaries, Lifecycle Playbook, Change Report)
+- Post-install V1 UX block presence checks (Outcome Snapshot, Before/After Map, Git Tracking Details, First 3 Steps, Prompt Packs, Safe Boundaries, Lifecycle Playbook, Change Report)
 - Post-install Action Bar and secondary action availability checks
 - Post-install fallback behavior checks when Webview initialization fails
 - Issue escalation direct-submit and manual-fallback behavior checks

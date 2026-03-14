@@ -17,6 +17,7 @@ Provide immediate, clear, and actionable guidance after onboarding installation 
 ## Required Completion UX
 1. Success notification in VS Code
 - Show short operation summary (target profile, applied/skipped counts, log reference).
+- If `ignore` mode is selected, explain ignore mechanism (`.git/info/exclude`) and explicit opt-out path.
 
 2. Dedicated post-install page opened automatically
 - Open a dedicated `WebviewPanel` immediately after install completes successfully.
@@ -43,31 +44,35 @@ The first implementation baseline must include these blocks.
 - Concise schematic of what changed in the project.
 - Clarifies managed root creation and key managed artifacts.
 
-3. First 3 Steps
+3. Git Tracking Details
+- Show selected Git mode, runtime strategy, and whether metadata was updated.
+- If `ignore` was selected, explain how ignore was applied and how user can switch back to tracking mode.
+
+4. First 3 Steps
 - Three concrete actions users should do immediately after install.
 - Written as actionable tasks, not abstract tips.
 
-4. Prompt Packs
+5. Prompt Packs
 - `Discover`: prompts that make Codex read and summarize onboarding boundaries.
 - `Implement`: prompts that make Codex apply constraints while coding.
 - `Validate`: prompts that make Codex self-check output against onboarding rules.
 
-5. Safe Boundaries
+6. Safe Boundaries
 - Explicit warning that managed core files are extension-owned.
 - Direct users to override paths for project-specific exceptions.
 
-6. Lifecycle Playbook
+7. Lifecycle Playbook
 - Explain when to use `Repair`.
 - Explain when to use `Remove`.
 - Include expected outcomes and safety notes for both.
 
-7. Change Report
+8. Change Report
 - Deterministic run report with references:
   - managed root path
   - managed state path
   - trace log path
 
-8. Action Bar (Primary Quick Actions)
+9. Action Bar (Primary Quick Actions)
 - `Open Managed Root`
 - `Open Operation Log`
 - `Run Repair`
@@ -80,11 +85,12 @@ Global persistent element:
 Main section order:
 1. Outcome Snapshot
 2. Before/After Map
-3. First 3 Steps
-4. Prompt Packs
-5. Safe Boundaries
-6. Lifecycle Playbook
-7. Change Report
+3. Git Tracking Details
+4. First 3 Steps
+5. Prompt Packs
+6. Safe Boundaries
+7. Lifecycle Playbook
+8. Change Report
 
 This order is fixed for V1 and should stay stable unless explicitly revised.
 
@@ -118,6 +124,9 @@ This order is fixed for V1 and should stay stable unless explicitly revised.
 - `appliedCount`
 - `skippedCount`
 - `removedStaleCount`
+- `gitMode`
+- `gitTrackingStrategy`
+- `gitTrackingUpdated`
 - `managedStatePath`
 - `operationLogPath`
 

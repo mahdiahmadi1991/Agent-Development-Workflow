@@ -29,6 +29,9 @@ describe("openPostInstallGuidancePage", () => {
       selectedProfile: "dotnet-csharp-web-api-simple",
       logFilePath: "/tmp/storage/operation-logs/install-log.jsonl",
       managedStatePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      gitMode: "ignore",
+      gitTrackingStrategy: "git_info_exclude",
+      gitTrackingUpdated: true,
       appliedCount: 3,
       skippedCount: 1,
       removedStaleCount: 2
@@ -48,6 +51,7 @@ describe("openPostInstallGuidancePage", () => {
     expect(panel.webview.html).toContain("Content-Security-Policy");
     expect(panel.webview.html).toContain("Outcome Snapshot");
     expect(panel.webview.html).toContain("Before/After Map");
+    expect(panel.webview.html).toContain("Git Tracking Details");
     expect(panel.webview.html).toContain("First 3 Steps");
     expect(panel.webview.html).toContain("Prompt Packs");
     expect(panel.webview.html).toContain("Safe Boundaries");
@@ -70,11 +74,14 @@ describe("openPostInstallGuidancePage", () => {
 
     expect(panel.webview.html).toContain("/workspace/project/.codex-onboarding/.managed/state.json");
     expect(panel.webview.html).toContain("/tmp/storage/operation-logs/install-log.jsonl");
+    expect(panel.webview.html).toContain(".git/info/exclude");
+    expect(panel.webview.html).toContain("To exit ignore mode");
 
     const html = panel.webview.html;
     const actionBarIndex = html.indexOf("action-bar");
     const outcomeIndex = html.indexOf("Outcome Snapshot");
     const beforeAfterIndex = html.indexOf("Before/After Map");
+    const gitTrackingDetailsIndex = html.indexOf("Git Tracking Details");
     const firstStepsIndex = html.indexOf("First 3 Steps");
     const promptPacksIndex = html.indexOf("Prompt Packs");
     const safeBoundariesIndex = html.indexOf("Safe Boundaries");
@@ -84,6 +91,8 @@ describe("openPostInstallGuidancePage", () => {
     expect(actionBarIndex).toBeGreaterThanOrEqual(0);
     expect(actionBarIndex).toBeLessThan(outcomeIndex);
     expect(outcomeIndex).toBeLessThan(beforeAfterIndex);
+    expect(beforeAfterIndex).toBeLessThan(gitTrackingDetailsIndex);
+    expect(gitTrackingDetailsIndex).toBeLessThan(firstStepsIndex);
     expect(beforeAfterIndex).toBeLessThan(firstStepsIndex);
     expect(firstStepsIndex).toBeLessThan(promptPacksIndex);
     expect(promptPacksIndex).toBeLessThan(safeBoundariesIndex);
@@ -103,6 +112,9 @@ describe("openPostInstallGuidancePage", () => {
       selectedProfile: "dotnet-csharp-web-api-simple",
       logFilePath: "/tmp/storage/operation-logs/install-log.jsonl",
       managedStatePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      gitMode: "track",
+      gitTrackingStrategy: "git_info_exclude",
+      gitTrackingUpdated: false,
       appliedCount: 3,
       skippedCount: 1,
       removedStaleCount: 2

@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runInstall } from "./installCommand";
+import { applyGitTrackingMode } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { loadResolvedProfile } from "../services/profileAssetService";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
@@ -43,6 +44,10 @@ vi.mock("../services/selectionResolver", () => ({
 
 vi.mock("../services/managedInstallService", () => ({
   applyManagedInstall: vi.fn()
+}));
+
+vi.mock("../services/gitTrackingService", () => ({
+  applyGitTrackingMode: vi.fn()
 }));
 
 vi.mock("../services/postInstallGuidancePage", () => ({
@@ -128,6 +133,12 @@ describe("runInstall", () => {
       recoveredTrackedFiles: [],
       removedStaleFiles: []
     });
+    vi.mocked(applyGitTrackingMode).mockResolvedValue({
+      mode: "track",
+      strategy: "git_info_exclude",
+      updated: true,
+      excludePath: "/workspace/project/.git/info/exclude"
+    });
 
     vi.mocked(openPostInstallGuidancePage).mockResolvedValue(true);
   });
@@ -189,12 +200,22 @@ describe("runInstall", () => {
       }),
       expect.any(Object)
     );
+    expect(applyGitTrackingMode).toHaveBeenCalledWith(
+      {
+        targetRootPath: "/workspace/project",
+        mode: "track"
+      },
+      expect.any(Object)
+    );
 
     expect(openPostInstallGuidancePage).toHaveBeenCalledWith({
       targetRootPath: "/workspace/project",
       selectedProfile: "dotnet-csharp-web-api-simple",
       logFilePath: "/tmp/storage/operation-logs/install-log.jsonl",
       managedStatePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      gitMode: "track",
+      gitTrackingStrategy: "git_info_exclude",
+      gitTrackingUpdated: true,
       appliedCount: 1,
       skippedCount: 0,
       removedStaleCount: 0
@@ -237,6 +258,7 @@ describe("runInstall", () => {
     await runInstall(buildContext(), { log: vi.fn() } as any);
 
     expect(applyManagedInstall).not.toHaveBeenCalled();
+    expect(applyGitTrackingMode).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
@@ -255,6 +277,7 @@ describe("runInstall", () => {
     await runInstall(buildContext(), { log: vi.fn() } as any);
 
     expect(applyManagedInstall).not.toHaveBeenCalled();
+    expect(applyGitTrackingMode).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
@@ -305,6 +328,37 @@ describe("runInstall", () => {
       "debug",
       "operation_completed",
       expect.objectContaining({ result_code: "applied" })
+    );
+  });
+
+  it("includes ignore mechanism and opt-out guidance in final install summary", async () => {
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
+      label: "Ignore in Local Git Metadata",
+      value: "ignore"
+    } as any);
+
+    vi.spyOn(vscode.window, "showInformationMessage")
+      .mockResolvedValueOnce("Apply Installation" as any)
+      .mockResolvedValueOnce(undefined);
+
+    vi.mocked(applyGitTrackingMode).mockResolvedValue({
+      mode: "ignore",
+      strategy: "git_info_exclude",
+      updated: true,
+      excludePath: "/workspace/project/.git/info/exclude"
+    });
+
+    await runInstall(buildContext(), { log: vi.fn() } as any);
+
+    expect(vscode.window.showInformationMessage).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining(".git/info/exclude"),
+      { modal: false }
+    );
+    expect(vscode.window.showInformationMessage).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("How to exit ignore mode"),
+      { modal: false }
     );
   });
 });
