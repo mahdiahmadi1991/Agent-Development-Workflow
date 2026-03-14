@@ -94,6 +94,11 @@ async function resolveGitDirectoryPath(targetRootPath: string): Promise<string |
   return path.resolve(targetRootPath, rawGitDir);
 }
 
+export async function hasGitRepository(targetRootPath: string): Promise<boolean> {
+  const gitDirPath = await resolveGitDirectoryPath(targetRootPath);
+  return Boolean(gitDirPath);
+}
+
 async function readFileIfExists(filePath: string): Promise<string | undefined> {
   try {
     return await fs.readFile(filePath, "utf8");

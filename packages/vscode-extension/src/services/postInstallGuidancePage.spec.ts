@@ -93,7 +93,6 @@ describe("openPostInstallGuidancePage", () => {
     expect(outcomeIndex).toBeLessThan(beforeAfterIndex);
     expect(beforeAfterIndex).toBeLessThan(gitTrackingDetailsIndex);
     expect(gitTrackingDetailsIndex).toBeLessThan(firstStepsIndex);
-    expect(beforeAfterIndex).toBeLessThan(firstStepsIndex);
     expect(firstStepsIndex).toBeLessThan(promptPacksIndex);
     expect(promptPacksIndex).toBeLessThan(safeBoundariesIndex);
     expect(safeBoundariesIndex).toBeLessThan(lifecycleIndex);
@@ -124,5 +123,59 @@ describe("openPostInstallGuidancePage", () => {
     expect(warningSpy).toHaveBeenCalledWith(
       "Install completed, but the post-install guidance panel could not be opened."
     );
+  });
+
+  it("does not render git-tracking details when git strategy is not ignore-applied", async () => {
+    const panel = {
+      webview: {
+        html: ""
+      }
+    } as any;
+
+    vi.spyOn(vscode.window, "createWebviewPanel").mockReturnValue(panel);
+
+    const opened = await openPostInstallGuidancePage({
+      targetRootPath: "/workspace/project",
+      selectedProfile: "dotnet-csharp-web-api-simple",
+      logFilePath: "/tmp/storage/operation-logs/install-log.jsonl",
+      managedStatePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      gitMode: "track",
+      gitTrackingStrategy: "no_git_repository",
+      gitTrackingUpdated: false,
+      appliedCount: 1,
+      skippedCount: 0,
+      removedStaleCount: 0
+    });
+
+    expect(opened).toBe(true);
+    expect(panel.webview.html).not.toContain("Git Tracking Details");
+    expect(panel.webview.html).not.toContain(".git/info/exclude");
+  });
+
+  it("does not render git-tracking details in track mode", async () => {
+    const panel = {
+      webview: {
+        html: ""
+      }
+    } as any;
+
+    vi.spyOn(vscode.window, "createWebviewPanel").mockReturnValue(panel);
+
+    const opened = await openPostInstallGuidancePage({
+      targetRootPath: "/workspace/project",
+      selectedProfile: "dotnet-csharp-web-api-simple",
+      logFilePath: "/tmp/storage/operation-logs/install-log.jsonl",
+      managedStatePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      gitMode: "track",
+      gitTrackingStrategy: "git_info_exclude",
+      gitTrackingUpdated: false,
+      appliedCount: 1,
+      skippedCount: 0,
+      removedStaleCount: 0
+    });
+
+    expect(opened).toBe(true);
+    expect(panel.webview.html).not.toContain("Git Tracking Details");
+    expect(panel.webview.html).not.toContain("To exit ignore mode");
   });
 });

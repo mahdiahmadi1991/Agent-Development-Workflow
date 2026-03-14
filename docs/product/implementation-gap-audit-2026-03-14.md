@@ -13,9 +13,8 @@ Record the current gaps between accepted product/governance contracts and the ac
 The extension foundation is stable (commands, managed state, non-destructive defaults, post-install webview, trace logs), but several high-impact contract items are still not implemented.
 
 Most important unresolved areas:
-1. Update-consent workflow (update detection + changelog/release-note gate) is missing.
-2. Issue-escalation flow is currently only an external-link action, not the approved draft/confirm/submit/fallback model.
-3. Scenario/test/CI contracts are broader than current automated enforcement.
+1. Issue-escalation flow is currently only an external-link action, not the approved draft/confirm/submit/fallback model.
+2. Scenario/test/CI contracts are broader than current automated enforcement.
 
 ## Findings
 
@@ -31,18 +30,18 @@ Most important unresolved areas:
 - Resolution note:
   - Ignore behavior no longer edits consumer project files such as root `.gitignore`; it uses repository-local Git metadata.
 
-### F-02: Update consent policy is not implemented in runtime flows
-- Severity: Critical
+### F-02: Update consent policy is runtime-enforced in install/repair (Resolved)
+- Severity: Resolved
 - Contract references:
   - `docs/product/update-consent-policy.md`
   - `docs/product/scenario-matrix.md` (S-02, S-03, S-04)
   - `docs/product/decision-log.md` (D-038)
 - Implementation evidence:
-  - Install/repair commands do not execute update-availability checks or changelog/release-note gating.
-- Gap:
-  - No explicit update gate prior to managed synchronization.
-- Required action:
-  - Add update detection state machine and mandatory release-note acknowledgment before apply.
+  - `packages/vscode-extension/src/services/updateConsentService.ts` checks managed-state version drift and enforces update gate.
+  - Install/repair commands call update-consent gate before apply operations.
+  - Update gate requires opening both Release Notes and Changelog before `Continue Update`.
+- Resolution note:
+  - Update synchronization now requires explicit user approval after release-doc review; no silent apply path remains.
 
 ### F-03: Scenario S-06 behavior mismatch (missing managed file)
 - Severity: Critical
@@ -192,13 +191,12 @@ Implemented:
 - Trace logger with per-operation file and severity fields
 
 Missing or partial:
-- Update consent and release-note gate in install/repair
 - Full issue-escalation contract
 - Full scenario parity and CI gate parity
 - Full explainability and transparency coverage in runtime UI
 
 ## Recommended Execution Priority
-P0 (blockers): F-02, F-03, F-04, F-05
+P0 (blockers): F-03, F-04, F-05
 P1: F-06, F-07, F-08, F-09, F-10
 P2: F-11, F-12, F-13, F-14
 

@@ -154,12 +154,12 @@ Define expected behavior for installation and update scenarios.
 - Expected:
   - Contains `Outcome Snapshot`.
   - Contains `Before/After Map`.
-  - Contains `Git Tracking Details`.
   - Contains `First 3 Steps`.
   - Contains `Prompt Packs` (`Discover`, `Implement`, `Validate`).
   - Contains `Safe Boundaries`.
   - Contains `Lifecycle Playbook`.
   - Contains `Change Report`.
+  - Contains `Git Tracking Details` only when ignore mode is selected and applied.
 
 ### S-22 Post-Install Action Model
 - Preconditions: Post-install WebviewPanel opened.
@@ -179,13 +179,14 @@ Define expected behavior for installation and update scenarios.
 - Preconditions: Post-install WebviewPanel opened.
 - Expected:
   - Action Bar remains persistent top element.
-  - Main sections keep fixed order:
+  - Main base sections keep fixed order:
     1. Outcome Snapshot
     2. Before/After Map
-    3. Git Tracking Details
-    4. First 3 Steps
-    5. Prompt Packs
-    6. Safe Boundaries
-    7. Lifecycle Playbook
-    8. Change Report
+    3. First 3 Steps
+    4. Prompt Packs
+    5. Safe Boundaries
+    6. Lifecycle Playbook
+    7. Change Report
+  - Conditional insertion:
+    - `Git Tracking Details` appears between `Before/After Map` and `First 3 Steps` only when ignore mode is selected and applied.
   - Detailed content follows progressive disclosure (summary-first, details-secondary).

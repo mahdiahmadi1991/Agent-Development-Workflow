@@ -3,12 +3,14 @@ import * as vscode from "vscode";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runInstall } from "../commands/installCommand";
+import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { loadResolvedProfile } from "../services/profileAssetService";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import { resolveSelectionPlan } from "../services/selectionResolver";
 import { openPostInstallGuidancePage } from "../services/postInstallGuidancePage";
+import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
 
 const { createTraceLoggerMock } = vi.hoisted(() => ({
   createTraceLoggerMock: vi.fn()
@@ -40,8 +42,17 @@ vi.mock("../services/managedInstallService", () => ({
   applyManagedInstall: vi.fn()
 }));
 
+vi.mock("../services/gitTrackingService", () => ({
+  applyGitTrackingMode: vi.fn(),
+  hasGitRepository: vi.fn()
+}));
+
 vi.mock("../services/postInstallGuidancePage", () => ({
   openPostInstallGuidancePage: vi.fn()
+}));
+
+vi.mock("../services/updateConsentService", () => ({
+  requireUpdateConsentIfNeeded: vi.fn()
 }));
 
 function buildFolder(name: string, fsPath: string): vscode.WorkspaceFolder {
@@ -113,6 +124,18 @@ describe("install command multi-root smoke", () => {
     });
 
     vi.mocked(openPostInstallGuidancePage).mockResolvedValue(true);
+    vi.mocked(requireUpdateConsentIfNeeded).mockResolvedValue({
+      updateAvailable: false,
+      blocked: false,
+      reason: "no_managed_state"
+    });
+    vi.mocked(hasGitRepository).mockResolvedValue(true);
+    vi.mocked(applyGitTrackingMode).mockResolvedValue({
+      mode: "track",
+      strategy: "git_info_exclude",
+      updated: true,
+      excludePath: "/workspace/app-b/.git/info/exclude"
+    });
   });
 
   afterEach(() => {

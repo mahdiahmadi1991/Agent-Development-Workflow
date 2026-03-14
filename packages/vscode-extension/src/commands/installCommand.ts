@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { OperationalSelections } from "../contracts/questionnaire";
-import { applyGitTrackingMode } from "../services/gitTrackingService";
+import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
@@ -10,10 +10,29 @@ import { loadResolvedProfile } from "../services/profileAssetService";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import { resolveSelectionPlan } from "../services/selectionResolver";
+import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 function createOperationId(): string {
   return `install-${Date.now()}`;
+}
+
+function resolveRepositoryUrl(packageJson: unknown): string | undefined {
+  if (!packageJson || typeof packageJson !== "object") {
+    return undefined;
+  }
+
+  const repository = (packageJson as { repository?: unknown }).repository;
+  if (typeof repository === "string") {
+    return repository;
+  }
+
+  if (!repository || typeof repository !== "object") {
+    return undefined;
+  }
+
+  const url = (repository as { url?: unknown }).url;
+  return typeof url === "string" ? url : undefined;
 }
 
 function isWorkspaceSelectionCancelled(): boolean {
@@ -50,7 +69,7 @@ async function askGitTrackingSelectionAtFinalStep(): Promise<OperationalSelectio
 async function askPreInstallAcknowledgement(input: {
   targetRootPath: string;
   selectedProfile: string;
-  gitMode: "track" | "ignore";
+  gitModeSummary: string;
   selectedTopicCount: number;
   previewTopicIds: string[];
 }): Promise<boolean> {
@@ -66,7 +85,7 @@ async function askPreInstallAcknowledgement(input: {
     "Selected configuration:",
     `- Target root: ${input.targetRootPath}`,
     `- Project profile: ${input.selectedProfile}`,
-    `- Git mode: ${input.gitMode}`,
+    `- Git mode: ${input.gitModeSummary}`,
     `- Selected topics: ${input.selectedTopicCount}`,
     "",
     "Topic preview:",
@@ -89,12 +108,19 @@ function buildGitTrackingSummaryLines(input: {
   gitMode: "track" | "ignore";
   gitTrackingStrategy: "git_info_exclude" | "no_git_repository";
   gitTrackingUpdated: boolean;
+  gitQuestionSkipped: boolean;
 }): string[] {
   const lines = [
-    `Git mode (Review & Apply): ${input.gitMode}`,
+    `Git mode (Review & Apply): ${input.gitQuestionSkipped ? "not_applicable" : input.gitMode}`,
     `Git tracking strategy: ${input.gitTrackingStrategy}`,
     `Git tracking updated: ${input.gitTrackingUpdated ? "yes" : "no"}`
   ];
+
+  if (input.gitQuestionSkipped) {
+    lines.push("Git tracking question: skipped because selected root is not a Git repository.");
+    lines.push("To configure tracking/ignoring later, initialize Git and run Install or Repair again.");
+    return lines;
+  }
 
   if (input.gitMode !== "ignore") {
     return lines;
@@ -187,13 +213,26 @@ export async function runInstall(
       traceLogger
     );
 
-    const gitTrackingSelection = await askGitTrackingSelectionAtFinalStep();
-    if (!gitTrackingSelection) {
-      traceLogger.log("warning", "operation_blocked", {
-        reason: "git_tracking_selection_cancelled"
+    const gitRepositoryAvailable = await hasGitRepository(target.uri.fsPath);
+    const gitTrackingQuestionSkipped = !gitRepositoryAvailable;
+    let gitTrackingSelection: OperationalSelections;
+
+    if (gitRepositoryAvailable) {
+      const selection = await askGitTrackingSelectionAtFinalStep();
+      if (!selection) {
+        traceLogger.log("warning", "operation_blocked", {
+          reason: "git_tracking_selection_cancelled"
+        });
+        void vscode.window.showInformationMessage("Install canceled at Review & Apply (Git Tracking).");
+        return;
+      }
+
+      gitTrackingSelection = selection;
+    } else {
+      gitTrackingSelection = { gitMode: "track" };
+      traceLogger.log("debug", "git_tracking_question_skipped", {
+        reason: "no_git_repository"
       });
-      void vscode.window.showInformationMessage("Install canceled at Review & Apply (Git Tracking).");
-      return;
     }
 
     traceLogger.log("debug", "git_tracking_selected", {
@@ -205,7 +244,7 @@ export async function runInstall(
     const acknowledged = await askPreInstallAcknowledgement({
       targetRootPath: target.uri.fsPath,
       selectedProfile: resolvedProfile.profile_id,
-      gitMode: gitTrackingSelection.gitMode,
+      gitModeSummary: gitTrackingQuestionSkipped ? "not_applicable (no Git repository)" : gitTrackingSelection.gitMode,
       selectedTopicCount: selectionPlan.selected_topics.length,
       previewTopicIds: topicPreview
     });
@@ -222,6 +261,24 @@ export async function runInstall(
       typeof context.extension.packageJSON?.version === "string"
         ? context.extension.packageJSON.version
         : "0.0.0";
+    const repositoryUrl = resolveRepositoryUrl(context.extension.packageJSON);
+
+    const updateConsentResult = await requireUpdateConsentIfNeeded(
+      {
+        command: "install",
+        targetRootPath: target.uri.fsPath,
+        bundleId: resolvedProfile.profile_id,
+        bundleVersion: String(questionnaire.flow.version),
+        extensionVersion,
+        repositoryUrl
+      },
+      traceLogger
+    );
+
+    if (updateConsentResult.blocked) {
+      void vscode.window.showInformationMessage("Install canceled at Update Review.");
+      return;
+    }
 
     const gitTrackingResult = await applyGitTrackingMode(
       {
@@ -252,10 +309,12 @@ export async function runInstall(
     const summary = [
       "Install foundation step completed.",
       `Target root: ${target.uri.fsPath}`,
+      `Update review: ${updateConsentResult.updateAvailable ? "required and approved" : "not required"}`,
       ...buildGitTrackingSummaryLines({
         gitMode: gitTrackingSelection.gitMode,
         gitTrackingStrategy: gitTrackingResult.strategy,
-        gitTrackingUpdated: gitTrackingResult.updated
+        gitTrackingUpdated: gitTrackingResult.updated,
+        gitQuestionSkipped: gitTrackingQuestionSkipped
       }),
       `Selected profile (Project Profile): ${resolvedProfile.profile_id}`,
       `Selected topics (resolver): ${selectionPlan.selected_topics.length}`,

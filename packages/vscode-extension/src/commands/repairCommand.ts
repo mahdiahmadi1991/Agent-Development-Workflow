@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { OperationalSelections } from "../contracts/questionnaire";
-import { applyGitTrackingMode } from "../services/gitTrackingService";
+import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
@@ -9,10 +9,29 @@ import { loadResolvedProfile } from "../services/profileAssetService";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import { resolveSelectionPlan } from "../services/selectionResolver";
+import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 function isWorkspaceSelectionCancelled(): boolean {
   return (vscode.workspace.workspaceFolders ?? []).length > 0;
+}
+
+function resolveRepositoryUrl(packageJson: unknown): string | undefined {
+  if (!packageJson || typeof packageJson !== "object") {
+    return undefined;
+  }
+
+  const repository = (packageJson as { repository?: unknown }).repository;
+  if (typeof repository === "string") {
+    return repository;
+  }
+
+  if (!repository || typeof repository !== "object") {
+    return undefined;
+  }
+
+  const url = (repository as { url?: unknown }).url;
+  return typeof url === "string" ? url : undefined;
 }
 
 async function askOperationalSelectionsForRepair(): Promise<OperationalSelections | undefined> {
@@ -100,13 +119,26 @@ export async function runRepair(
       target_root: target.uri.fsPath
     });
 
-    const operationalSelections = await askOperationalSelectionsForRepair();
-    if (!operationalSelections) {
-      traceLogger.log("warning", "operation_blocked", {
-        reason: "operational_questions_cancelled"
+    const gitRepositoryAvailable = await hasGitRepository(target.uri.fsPath);
+    const gitTrackingQuestionSkipped = !gitRepositoryAvailable;
+    let operationalSelections: OperationalSelections;
+
+    if (gitRepositoryAvailable) {
+      const selections = await askOperationalSelectionsForRepair();
+      if (!selections) {
+        traceLogger.log("warning", "operation_blocked", {
+          reason: "operational_questions_cancelled"
+        });
+        void vscode.window.showInformationMessage("Repair canceled at Repair Options.");
+        return;
+      }
+
+      operationalSelections = selections;
+    } else {
+      operationalSelections = { gitMode: "track" };
+      traceLogger.log("debug", "git_tracking_question_skipped", {
+        reason: "no_git_repository"
       });
-      void vscode.window.showInformationMessage("Repair canceled at Repair Options.");
-      return;
     }
 
     traceLogger.log("debug", "operational_question_asked", {
@@ -173,6 +205,24 @@ export async function runRepair(
       typeof context.extension.packageJSON?.version === "string"
         ? context.extension.packageJSON.version
         : "0.0.0";
+    const repositoryUrl = resolveRepositoryUrl(context.extension.packageJSON);
+
+    const updateConsentResult = await requireUpdateConsentIfNeeded(
+      {
+        command: "repair",
+        targetRootPath: target.uri.fsPath,
+        bundleId: resolvedProfile.profile_id,
+        bundleVersion: String(questionnaire.flow.version),
+        extensionVersion,
+        repositoryUrl
+      },
+      traceLogger
+    );
+
+    if (updateConsentResult.blocked) {
+      void vscode.window.showInformationMessage("Repair canceled at Update Review.");
+      return;
+    }
 
     const gitTrackingResult = await applyGitTrackingMode(
       {
@@ -204,9 +254,16 @@ export async function runRepair(
     const summary = [
       "Repair operation completed.",
       `Target root: ${target.uri.fsPath}`,
-      `Git mode: ${operationalSelections.gitMode}`,
+      `Update review: ${updateConsentResult.updateAvailable ? "required and approved" : "not required"}`,
+      `Git mode: ${gitTrackingQuestionSkipped ? "not_applicable" : operationalSelections.gitMode}`,
       `Git tracking strategy: ${gitTrackingResult.strategy}`,
       `Git tracking updated: ${gitTrackingResult.updated ? "yes" : "no"}`,
+      ...(gitTrackingQuestionSkipped
+        ? [
+            "Git tracking question: skipped because selected root is not a Git repository.",
+            "To configure tracking/ignoring later, initialize Git and run Install or Repair again."
+          ]
+        : []),
       `Selected profile: ${resolvedProfile.profile_id}`,
       `Selected topics: ${selectionPlan.selected_topics.length}`,
       `Applied or synchronized files: ${result.appliedFiles.length}`,

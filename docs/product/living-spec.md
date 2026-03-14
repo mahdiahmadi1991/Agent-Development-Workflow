@@ -29,6 +29,7 @@ Build a VS Code extension that applies Codex onboarding files to a user's curren
 - Extension must notify user when a newer onboarding bundle/version is available.
 - Update application must be explicit user action (no silent auto-apply).
 - User must be able to review changelog/release notes before confirming update.
+- Update confirmation gate requires both release notes and changelog review.
 - Backward compatibility is a mandatory constraint for managed update behavior.
 
 ## Option Model (Dynamic Catalog)
@@ -93,6 +94,7 @@ Examples of applicability intent:
 - Extension reports skipped files and completion summary.
 - Read-only hardening is optional and `opt-in`.
 - User can choose whether managed onboarding paths are tracked in Git or ignored via repository-local `.git/info/exclude`.
+- If selected root has no Git repository, Git tracking question is skipped.
 
 ## Managed Ownership and Update Model
 - Extension manages only files it owns under managed onboarding paths.
@@ -180,7 +182,8 @@ Downgrade behavior:
 - Post-install guidance WebviewPanel is mandatory after successful install.
 - Post-install page contract is static-structure with runtime summary injection only (no dynamic question flow in page).
 - Post-install page execution follows phased contract in `docs/product/post-install-success-experience.md`.
-- Post-install V1 baseline includes Outcome Snapshot, Before/After Map, Git Tracking Details, First 3 Steps, Prompt Packs, Safe Boundaries, Lifecycle Playbook, and Action Bar quick actions.
+- Post-install V1 baseline includes Outcome Snapshot, Before/After Map, First 3 Steps, Prompt Packs, Safe Boundaries, Lifecycle Playbook, and Action Bar quick actions.
+- `Git Tracking Details` is a conditional block shown only when ignore mode is selected and applied.
 - Onboarding file structure is locked by template standard and validator gate.
 - Library storage and selection contracts are locked by validator gate.
 - Static bootstrap onboarding artifact is mandatory in every install/repair result.

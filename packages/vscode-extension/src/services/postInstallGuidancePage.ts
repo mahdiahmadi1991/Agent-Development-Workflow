@@ -63,16 +63,21 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
   const bootstrapFile = `${onboardingRoot}/core/AGENT-ONBOARDING.md`;
   const isIgnoreMode = input.gitMode === "ignore";
   const ignoreApplied = isIgnoreMode && input.gitTrackingStrategy === "git_info_exclude";
-  const ignoreExplainText = ignoreApplied
-    ? "Managed onboarding paths were ignored using repository-local Git metadata at .git/info/exclude."
-    : isIgnoreMode
-      ? "Ignore mode was selected, but the selected root is not a Git repository, so no ignore entry was applied."
-      : "Managed onboarding paths are tracked in Git.";
-  const ignoreExitText = ignoreApplied
-    ? "To exit ignore mode, run Install or Repair and choose 'Track in Git'."
-    : isIgnoreMode
-      ? "To exit ignore mode, initialize Git first, then run Install or Repair and choose 'Track in Git'."
-      : "To switch to ignore mode later, run Install or Repair and choose 'Ignore in Local Git Metadata'.";
+  const shouldRenderGitTrackingDetails = ignoreApplied;
+  const gitTrackingSectionHtml = shouldRenderGitTrackingDetails
+    ? `
+        <section class="card">
+          <h2>Git Tracking Details</h2>
+          <ul>
+            <li><strong>Selected Mode:</strong> <code>${escapeHtml(input.gitMode)}</code></li>
+            <li><strong>Strategy:</strong> <code>${escapeHtml(input.gitTrackingStrategy)}</code></li>
+            <li><strong>Updated:</strong> <code>${input.gitTrackingUpdated ? "yes" : "no"}</code></li>
+          </ul>
+          <p class="muted">Managed onboarding paths were ignored using repository-local Git metadata at <code>.git/info/exclude</code>.</p>
+          <p class="muted">To exit ignore mode, run Install or Repair and choose <code>Track in Git</code>.</p>
+        </section>
+`
+    : "";
 
   const prompts = buildPromptPacks(onboardingRoot);
 
@@ -242,16 +247,7 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
           <p class="muted">Before install, managed onboarding artifacts were not guaranteed in this workspace. After install, extension-owned artifacts are applied under <code>.codex-onboarding/</code> with tracked managed state.</p>
         </section>
 
-        <section class="card">
-          <h2>Git Tracking Details</h2>
-          <ul>
-            <li><strong>Selected Mode:</strong> <code>${escapeHtml(input.gitMode)}</code></li>
-            <li><strong>Strategy:</strong> <code>${escapeHtml(input.gitTrackingStrategy)}</code></li>
-            <li><strong>Updated:</strong> <code>${input.gitTrackingUpdated ? "yes" : "no"}</code></li>
-          </ul>
-          <p class="muted">${escapeHtml(ignoreExplainText)}</p>
-          <p class="muted">${escapeHtml(ignoreExitText)}</p>
-        </section>
+${gitTrackingSectionHtml}
 
         <section class="card">
           <h2>First 3 Steps</h2>

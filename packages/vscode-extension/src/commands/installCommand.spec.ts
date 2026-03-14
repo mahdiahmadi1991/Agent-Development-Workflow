@@ -3,13 +3,14 @@ import * as vscode from "vscode";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runInstall } from "./installCommand";
-import { applyGitTrackingMode } from "../services/gitTrackingService";
+import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { loadResolvedProfile } from "../services/profileAssetService";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import { resolveSelectionPlan } from "../services/selectionResolver";
 import { openPostInstallGuidancePage } from "../services/postInstallGuidancePage";
+import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 const { createTraceLoggerMock } = vi.hoisted(() => ({
@@ -47,7 +48,12 @@ vi.mock("../services/managedInstallService", () => ({
 }));
 
 vi.mock("../services/gitTrackingService", () => ({
-  applyGitTrackingMode: vi.fn()
+  applyGitTrackingMode: vi.fn(),
+  hasGitRepository: vi.fn()
+}));
+
+vi.mock("../services/updateConsentService", () => ({
+  requireUpdateConsentIfNeeded: vi.fn()
 }));
 
 vi.mock("../services/postInstallGuidancePage", () => ({
@@ -139,6 +145,12 @@ describe("runInstall", () => {
       updated: true,
       excludePath: "/workspace/project/.git/info/exclude"
     });
+    vi.mocked(hasGitRepository).mockResolvedValue(true);
+    vi.mocked(requireUpdateConsentIfNeeded).mockResolvedValue({
+      updateAvailable: false,
+      blocked: false,
+      reason: "no_managed_state"
+    });
 
     vi.mocked(openPostInstallGuidancePage).mockResolvedValue(true);
   });
@@ -152,6 +164,8 @@ describe("runInstall", () => {
       "No workspace folder is available for install operation."
     );
     expect(applyManagedInstall).not.toHaveBeenCalled();
+    expect(requireUpdateConsentIfNeeded).not.toHaveBeenCalled();
+    expect(hasGitRepository).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
@@ -193,6 +207,16 @@ describe("runInstall", () => {
 
     expect(applyManagedInstall).toHaveBeenCalledWith(
       expect.objectContaining({
+        targetRootPath: "/workspace/project",
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "7",
+        extensionVersion: "1.2.3"
+      }),
+      expect.any(Object)
+    );
+    expect(requireUpdateConsentIfNeeded).toHaveBeenCalledWith(
+      expect.objectContaining({
+        command: "install",
         targetRootPath: "/workspace/project",
         bundleId: "dotnet-csharp-web-api-simple",
         bundleVersion: "7",
@@ -259,6 +283,8 @@ describe("runInstall", () => {
 
     expect(applyManagedInstall).not.toHaveBeenCalled();
     expect(applyGitTrackingMode).not.toHaveBeenCalled();
+    expect(requireUpdateConsentIfNeeded).not.toHaveBeenCalled();
+    expect(hasGitRepository).toHaveBeenCalledTimes(1);
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
@@ -278,6 +304,8 @@ describe("runInstall", () => {
 
     expect(applyManagedInstall).not.toHaveBeenCalled();
     expect(applyGitTrackingMode).not.toHaveBeenCalled();
+    expect(requireUpdateConsentIfNeeded).not.toHaveBeenCalled();
+    expect(hasGitRepository).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
@@ -328,6 +356,53 @@ describe("runInstall", () => {
       "debug",
       "operation_completed",
       expect.objectContaining({ result_code: "applied" })
+    );
+  });
+
+  it("blocks when update review is declined", async () => {
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
+      label: "Track managed files",
+      value: "track"
+    } as any);
+
+    vi.spyOn(vscode.window, "showInformationMessage")
+      .mockResolvedValueOnce("Apply Installation" as any)
+      .mockResolvedValueOnce(undefined);
+
+    vi.mocked(requireUpdateConsentIfNeeded).mockResolvedValue({
+      updateAvailable: true,
+      blocked: true,
+      reason: "update_consent_declined",
+      releaseNotesUrl: "https://example.com/release",
+      changelogUrl: "https://example.com/changelog"
+    });
+
+    await runInstall(buildContext(), { log: vi.fn() } as any);
+
+    expect(applyGitTrackingMode).not.toHaveBeenCalled();
+    expect(applyManagedInstall).not.toHaveBeenCalled();
+    expect(openPostInstallGuidancePage).not.toHaveBeenCalled();
+
+    const trace = await createTraceLoggerMock.mock.results[0]?.value;
+    expect(trace.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips git tracking question when root has no git repository", async () => {
+    vi.mocked(hasGitRepository).mockResolvedValue(false);
+
+    vi.spyOn(vscode.window, "showInformationMessage")
+      .mockResolvedValueOnce("Apply Installation" as any)
+      .mockResolvedValueOnce(undefined);
+
+    await runInstall(buildContext(), { log: vi.fn() } as any);
+
+    expect(vscode.window.showQuickPick).toHaveBeenCalledTimes(0);
+    expect(applyGitTrackingMode).toHaveBeenCalledWith(
+      {
+        targetRootPath: "/workspace/project",
+        mode: "track"
+      },
+      expect.any(Object)
     );
   });
 

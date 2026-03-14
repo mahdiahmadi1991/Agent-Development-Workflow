@@ -44,9 +44,10 @@ The first implementation baseline must include these blocks.
 - Concise schematic of what changed in the project.
 - Clarifies managed root creation and key managed artifacts.
 
-3. Git Tracking Details
+3. Git Tracking Details (Conditional)
 - Show selected Git mode, runtime strategy, and whether metadata was updated.
-- If `ignore` was selected, explain how ignore was applied and how user can switch back to tracking mode.
+- Render only when `ignore` mode is selected and ignore metadata is applied.
+- Explain how ignore was applied and how user can switch back to tracking mode.
 
 4. First 3 Steps
 - Three concrete actions users should do immediately after install.
@@ -82,15 +83,17 @@ The first implementation baseline must include these blocks.
 Global persistent element:
 - Action Bar (always visible at top).
 
-Main section order:
+Main section order (base):
 1. Outcome Snapshot
 2. Before/After Map
-3. Git Tracking Details
-4. First 3 Steps
-5. Prompt Packs
-6. Safe Boundaries
-7. Lifecycle Playbook
-8. Change Report
+3. First 3 Steps
+4. Prompt Packs
+5. Safe Boundaries
+6. Lifecycle Playbook
+7. Change Report
+
+Conditional insertion:
+- `Git Tracking Details` appears between `Before/After Map` and `First 3 Steps` only when ignore mode is selected and applied.
 
 This order is fixed for V1 and should stay stable unless explicitly revised.
 
