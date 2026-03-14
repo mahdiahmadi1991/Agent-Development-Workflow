@@ -5,9 +5,13 @@ import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
+function isWorkspaceSelectionCancelled(): boolean {
+  return (vscode.workspace.workspaceFolders ?? []).length > 0;
+}
+
 async function askRemoveConfirmation(targetRootPath: string): Promise<boolean> {
   const decision = await vscode.window.showWarningMessage(
-    "Remove managed onboarding artifacts from the selected workspace root?",
+    "Review & Remove: remove managed onboarding artifacts from the selected workspace root?",
     {
       modal: true,
       detail: [
@@ -17,10 +21,33 @@ async function askRemoveConfirmation(targetRootPath: string): Promise<boolean> {
         `Target root: ${targetRootPath}`
       ].join("\n")
     },
-    "Remove"
+    "Continue"
   );
 
-  return decision === "Remove";
+  if (decision !== "Continue") {
+    void vscode.window.showInformationMessage("Remove canceled at Review & Remove.");
+    return false;
+  }
+
+  const typedConfirmation = await vscode.window.showInputBox({
+    title: "Remove Confirmation",
+    prompt: "Type REMOVE to confirm managed artifact removal.",
+    placeHolder: "REMOVE",
+    ignoreFocusOut: true,
+    validateInput: (value) => (value.trim() === "REMOVE" ? undefined : "Type REMOVE exactly to confirm.")
+  });
+
+  if (typedConfirmation === undefined) {
+    void vscode.window.showInformationMessage("Remove canceled at typed confirmation.");
+    return false;
+  }
+
+  if (typedConfirmation.trim() !== "REMOVE") {
+    void vscode.window.showWarningMessage("Remove canceled: confirmation text did not match.");
+    return false;
+  }
+
+  return true;
 }
 
 export async function runRemove(
@@ -39,6 +66,14 @@ export async function runRemove(
 
     const target = await resolveTargetWorkspaceFolder();
     if (!target) {
+      if (isWorkspaceSelectionCancelled()) {
+        traceLogger.log("warning", "operation_blocked", {
+          reason: "target_scope_cancelled"
+        });
+        void vscode.window.showInformationMessage("Remove canceled at Installation Scope.");
+        return;
+      }
+
       traceLogger.log("warning", "operation_blocked", {
         reason: "no_workspace_folder"
       });

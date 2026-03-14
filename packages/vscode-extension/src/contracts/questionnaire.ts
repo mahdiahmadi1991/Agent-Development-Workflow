@@ -5,6 +5,7 @@ export interface OperationalSelections {
 export interface QuestionnaireOption {
   id: string;
   label: string;
+  description?: string;
   next: string;
 }
 

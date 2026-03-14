@@ -18,8 +18,8 @@ export async function resolveTargetWorkspaceFolder(): Promise<vscode.WorkspaceFo
       folder: f
     })),
     {
-      title: "Select target workspace folder",
-      placeHolder: "Choose where onboarding files should be managed"
+      title: "Installation Scope",
+      placeHolder: "Select the workspace root for onboarding changes"
     }
   );
 

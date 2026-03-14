@@ -26,6 +26,7 @@
     "Other"
   ],
   "keywords": [
+    "openai",
     "codex",
     "onboarding",
     "agent",
@@ -50,18 +51,15 @@
     "commands": [
       {
         "command": "codexOnboarding.install",
-        "title": "Install",
-        "category": "Codex Onboarding"
+        "title": "Codex Onboarding: Install"
       },
       {
         "command": "codexOnboarding.remove",
-        "title": "Remove",
-        "category": "Codex Onboarding"
+        "title": "Codex Onboarding: Remove"
       },
       {
         "command": "codexOnboarding.repair",
-        "title": "Repair",
-        "category": "Codex Onboarding"
+        "title": "Codex Onboarding: Repair"
       }
     ],
     "menus": {

@@ -26,6 +26,7 @@ Create reusable, domain-agnostic onboarding structures that can be applied to an
 10. Consumer-project apply/update behavior must remain non-destructive by default.
 11. Upstream issue escalation must stay explicit and user-controlled.
 12. All behavior-impact changes must be synchronized in the same cycle.
+13. Every approved change must keep the full workspace synchronized (code, docs, tests, assets, and validators where impacted).
 
 ## Policy Hierarchy
 Policy precedence is deterministic. Higher level wins on conflict.

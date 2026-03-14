@@ -48,6 +48,7 @@ describe("runRemove", () => {
     vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue(undefined);
     vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue(undefined);
     vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
+    vi.spyOn(vscode.window, "showInputBox").mockResolvedValue(undefined);
 
     vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
       uri: { fsPath: "/workspace/project" }
@@ -93,8 +94,23 @@ describe("runRemove", () => {
     });
   });
 
+  it("blocks when typed confirmation is cancelled", async () => {
+    vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue("Continue" as any);
+    vi.spyOn(vscode.window, "showInputBox").mockResolvedValue(undefined);
+
+    await runRemove(buildContext(), { log: vi.fn() } as any);
+
+    expect(removeManagedOnboarding).not.toHaveBeenCalled();
+
+    const trace = await createTraceLoggerMock.mock.results[0]?.value;
+    expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
+      reason: "remove_confirmation_declined"
+    });
+  });
+
   it("removes managed onboarding and shows completion summary", async () => {
-    vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue("Remove" as any);
+    vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue("Continue" as any);
+    vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("REMOVE" as any);
 
     await runRemove(buildContext(), { log: vi.fn() } as any);
 
@@ -115,7 +131,8 @@ describe("runRemove", () => {
   });
 
   it("shows error message when remove fails", async () => {
-    vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue("Remove" as any);
+    vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue("Continue" as any);
+    vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("REMOVE" as any);
     vi.mocked(removeManagedOnboarding).mockRejectedValue(new Error("remove boom"));
 
     await runRemove(buildContext(), { log: vi.fn() } as any);

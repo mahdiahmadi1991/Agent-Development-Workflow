@@ -8,10 +8,12 @@ nodes:
     question: Choose the target .NET/C# project profile.
     options:
       - id: baseline
-        label: Baseline
+        label: Baseline (Recommended)
+        description: Balanced baseline onboarding set for most .NET/C# repositories.
         next: done
       - id: web_api_simple
         label: Web API (Simple)
+        description: API-focused onboarding set for straightforward service projects.
         next: done
 
   - id: done

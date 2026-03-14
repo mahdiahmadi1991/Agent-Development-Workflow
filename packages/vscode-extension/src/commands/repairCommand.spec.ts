@@ -161,7 +161,7 @@ describe("runRepair", () => {
       value: "track"
     } as any);
 
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Repair" as any);
+    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Apply Repair" as any);
 
     await runRepair(buildContext(), { log: vi.fn() } as any);
 
@@ -193,7 +193,7 @@ describe("runRepair", () => {
       value: "track"
     } as any);
 
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Repair" as any);
+    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Apply Repair" as any);
     vi.mocked(applyManagedInstall).mockRejectedValue(new Error("repair boom"));
 
     await runRepair(buildContext(), { log: vi.fn() } as any);

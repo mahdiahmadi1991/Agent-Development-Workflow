@@ -1,10 +1,18 @@
 import * as vscode from "vscode";
 
-import { ProfileSelectionAnswers, QuestionnaireFlow } from "../contracts/questionnaire";
+import { ProfileSelectionAnswers, QuestionnaireFlow, QuestionnaireOption } from "../contracts/questionnaire";
 import { LogLevel, LogValue } from "./outputLogger";
 
 interface QuestionFlowLogger {
   log(level: LogLevel, message: string, fields?: Record<string, LogValue>): void;
+}
+
+function toOptionDescription(option: QuestionnaireOption): string {
+  if (option.description) {
+    return option.description;
+  }
+
+  return `Option key: ${option.id}`;
 }
 
 export async function runDynamicQuestionFlow(
@@ -36,11 +44,12 @@ export async function runDynamicQuestionFlow(
     const pick = await vscode.window.showQuickPick(
       node.options.map((option) => ({
         label: option.label,
+        description: toOptionDescription(option),
         option
       })),
       {
-        title: `Profile Selection Questions: ${node.question}`,
-        placeHolder: "Choose one option"
+        title: `Project Profile: ${node.question}`,
+        placeHolder: "Choose the best match for this workspace"
       }
     );
 

@@ -15,15 +15,27 @@ function createOperationId(): string {
   return `install-${Date.now()}`;
 }
 
-async function askOperationalSelections(): Promise<OperationalSelections | undefined> {
+function isWorkspaceSelectionCancelled(): boolean {
+  return (vscode.workspace.workspaceFolders ?? []).length > 0;
+}
+
+async function askGitTrackingSelectionAtFinalStep(): Promise<OperationalSelections | undefined> {
   const gitMode = await vscode.window.showQuickPick(
     [
-      { label: "Track managed files", value: "track" as const },
-      { label: "Add managed paths to .gitignore", value: "ignore" as const }
+      {
+        label: "Track in Git (Recommended)",
+        description: "Managed onboarding files stay versioned in your repository.",
+        value: "track" as const
+      },
+      {
+        label: "Ignore in Git (.gitignore)",
+        description: "Managed onboarding files stay local and are added to .gitignore.",
+        value: "ignore" as const
+      }
     ],
     {
-      title: "Operational Questions: Settings",
-      placeHolder: "Choose Git mode for managed onboarding files"
+      title: "Review & Apply: Git Tracking",
+      placeHolder: "Should extension-managed onboarding files be tracked in Git?"
     }
   );
 
@@ -45,27 +57,31 @@ async function askPreInstallAcknowledgement(input: {
     input.previewTopicIds.length > 0 ? input.previewTopicIds.map((item) => `- ${item}`).join("\n") : "- (none)";
 
   const detail = [
-    "The install operation applies extension-managed onboarding artifacts.",
-    "Existing files are not overwritten (non-destructive mode).",
-    "Managed state will be written to .codex-onboarding/.managed/state.json.",
-    `Target root: ${input.targetRootPath}`,
-    `Selected profile: ${input.selectedProfile}`,
-    `Git mode: ${input.gitMode}`,
-    `Selected topics (resolver preview): ${input.selectedTopicCount}`,
+    "What will happen:",
+    "- Extension-managed onboarding artifacts will be applied.",
+    "- Existing files are not overwritten (non-destructive mode).",
+    "- Managed state will be written to .codex-onboarding/.managed/state.json.",
+    "",
+    "Selected configuration:",
+    `- Target root: ${input.targetRootPath}`,
+    `- Project profile: ${input.selectedProfile}`,
+    `- Git mode: ${input.gitMode}`,
+    `- Selected topics: ${input.selectedTopicCount}`,
+    "",
     "Topic preview:",
     preview
   ].join("\n");
 
   const decision = await vscode.window.showInformationMessage(
-    "Review and confirm onboarding install behavior before apply.",
+    "Review & Apply: confirm onboarding installation.",
     {
       modal: true,
       detail
     },
-    "Apply"
+    "Apply Installation"
   );
 
-  return decision === "Apply";
+  return decision === "Apply Installation";
 }
 
 export async function runInstall(
@@ -84,6 +100,14 @@ export async function runInstall(
 
     const target = await resolveTargetWorkspaceFolder();
     if (!target) {
+      if (isWorkspaceSelectionCancelled()) {
+        traceLogger.log("warning", "operation_blocked", {
+          reason: "target_scope_cancelled"
+        });
+        void vscode.window.showInformationMessage("Install canceled at Installation Scope.");
+        return;
+      }
+
       traceLogger.log("warning", "operation_blocked", {
         reason: "no_workspace_folder"
       });
@@ -93,18 +117,6 @@ export async function runInstall(
 
     traceLogger.log("debug", "target_resolved", {
       target_root: target.uri.fsPath
-    });
-
-    const operationalSelections = await askOperationalSelections();
-    if (!operationalSelections) {
-      traceLogger.log("warning", "operation_blocked", {
-        reason: "operational_questions_cancelled"
-      });
-      return;
-    }
-
-    traceLogger.log("debug", "operational_question_asked", {
-      git_mode: operationalSelections.gitMode
     });
 
     const family = "dotnet-csharp";
@@ -125,6 +137,7 @@ export async function runInstall(
       traceLogger.log("warning", "operation_blocked", {
         reason: "profile_selection_questions_cancelled"
       });
+      void vscode.window.showInformationMessage("Install canceled at Project Profile.");
       return;
     }
 
@@ -147,12 +160,25 @@ export async function runInstall(
       traceLogger
     );
 
+    const gitTrackingSelection = await askGitTrackingSelectionAtFinalStep();
+    if (!gitTrackingSelection) {
+      traceLogger.log("warning", "operation_blocked", {
+        reason: "git_tracking_selection_cancelled"
+      });
+      void vscode.window.showInformationMessage("Install canceled at Review & Apply (Git Tracking).");
+      return;
+    }
+
+    traceLogger.log("debug", "git_tracking_selected", {
+      git_mode: gitTrackingSelection.gitMode
+    });
+
     const topicPreview = selectionPlan.selected_topics.slice(0, 10).map((topic) => topic.file_id);
 
     const acknowledged = await askPreInstallAcknowledgement({
       targetRootPath: target.uri.fsPath,
       selectedProfile: resolvedProfile.profile_id,
-      gitMode: operationalSelections.gitMode,
+      gitMode: gitTrackingSelection.gitMode,
       selectedTopicCount: selectionPlan.selected_topics.length,
       previewTopicIds: topicPreview
     });
@@ -161,6 +187,7 @@ export async function runInstall(
       traceLogger.log("warning", "operation_blocked", {
         reason: "pre_install_acknowledgement_declined"
       });
+      void vscode.window.showInformationMessage("Install canceled at Review & Apply.");
       return;
     }
 
@@ -184,8 +211,8 @@ export async function runInstall(
     const summary = [
       "Install foundation step completed.",
       `Target root: ${target.uri.fsPath}`,
-      `Git mode (Operational Questions): ${operationalSelections.gitMode}`,
-      `Selected profile (Profile Selection Questions): ${resolvedProfile.profile_id}`,
+      `Git mode (Review & Apply): ${gitTrackingSelection.gitMode}`,
+      `Selected profile (Project Profile): ${resolvedProfile.profile_id}`,
       `Selected topics (resolver): ${selectionPlan.selected_topics.length}`,
       `Applied files: ${installResult.appliedFiles.length}`,
       `Skipped files: ${installResult.skippedFiles.length}`,

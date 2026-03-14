@@ -39,10 +39,12 @@ The extension intentionally keeps command surface minimal.
 
 ## Dynamic Selection Model
 
-Install/repair flow is split into two groups:
+Install flow runs in this order:
 
-1. Operational Questions
-2. Profile Selection Questions (dynamic, file-driven)
+1. Installation Scope
+2. Project Profile (dynamic, file-driven)
+3. Review & Apply Git Tracking
+4. Review & Apply confirmation
 
 Questionnaire and selection assets are loaded from extension-bundled onboarding assets.
 

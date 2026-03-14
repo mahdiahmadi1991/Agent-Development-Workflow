@@ -175,7 +175,7 @@ describe("runInstall", () => {
     } as any);
 
     vi.spyOn(vscode.window, "showInformationMessage")
-      .mockResolvedValueOnce("Apply" as any)
+      .mockResolvedValueOnce("Apply Installation" as any)
       .mockResolvedValueOnce(undefined);
 
     await runInstall(buildContext(), { log: vi.fn() } as any);
@@ -214,7 +214,7 @@ describe("runInstall", () => {
       value: "track"
     } as any);
 
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Apply" as any);
+    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Apply Installation" as any);
 
     vi.mocked(applyManagedInstall).mockRejectedValue(new Error("boom"));
 
@@ -231,7 +231,7 @@ describe("runInstall", () => {
     expect(trace.flush).toHaveBeenCalledTimes(1);
   });
 
-  it("blocks when operational questions are cancelled", async () => {
+  it("blocks when git tracking selection is cancelled", async () => {
     vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue(undefined);
 
     await runInstall(buildContext(), { log: vi.fn() } as any);
@@ -240,7 +240,7 @@ describe("runInstall", () => {
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
-      reason: "operational_questions_cancelled"
+      reason: "git_tracking_selection_cancelled"
     });
   });
 
@@ -288,7 +288,7 @@ describe("runInstall", () => {
     } as any);
 
     vi.spyOn(vscode.window, "showInformationMessage")
-      .mockResolvedValueOnce("Apply" as any)
+      .mockResolvedValueOnce("Apply Installation" as any)
       .mockResolvedValueOnce(undefined);
 
     vi.mocked(openPostInstallGuidancePage).mockResolvedValue(false);

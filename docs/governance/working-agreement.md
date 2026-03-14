@@ -29,6 +29,7 @@ This file records standing rules agreed in this project.
 16. Trace-level diagnostics and local-first privacy model are mandatory.
 17. Cross-platform behavior and test coverage are mandatory (Windows, WSL, Linux, macOS).
 18. Release documentation (`release notes` + `CHANGELOG.md`) is mandatory.
+19. Every approved change must keep the full workspace synchronized (code, docs, tests, assets, and validation scripts where impacted); partial updates are not allowed.
 
 ## Source-of-Truth Map
 - Product behavior: `docs/product/decision-log.md`

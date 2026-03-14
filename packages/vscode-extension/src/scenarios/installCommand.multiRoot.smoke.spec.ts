@@ -139,7 +139,7 @@ describe("install command multi-root smoke", () => {
       } as never);
 
     vi.spyOn(vscode.window, "showInformationMessage")
-      .mockResolvedValueOnce("Apply" as never)
+      .mockResolvedValueOnce("Apply Installation" as never)
       .mockResolvedValue(undefined);
     vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue(undefined);
     vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
@@ -158,7 +158,7 @@ describe("install command multi-root smoke", () => {
     expect(quickPickSpy).toHaveBeenCalledTimes(2);
     expect(quickPickSpy.mock.calls[0][1]).toEqual(
       expect.objectContaining({
-        title: "Select target workspace folder"
+        title: "Installation Scope"
       })
     );
 

@@ -10,15 +10,27 @@ import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import { resolveSelectionPlan } from "../services/selectionResolver";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
+function isWorkspaceSelectionCancelled(): boolean {
+  return (vscode.workspace.workspaceFolders ?? []).length > 0;
+}
+
 async function askOperationalSelectionsForRepair(): Promise<OperationalSelections | undefined> {
   const gitMode = await vscode.window.showQuickPick(
     [
-      { label: "Track managed files", value: "track" as const },
-      { label: "Add managed paths to .gitignore", value: "ignore" as const }
+      {
+        label: "Track managed files (Recommended)",
+        description: "Keep onboarding artifacts versioned in your repository.",
+        value: "track" as const
+      },
+      {
+        label: "Ignore managed files in Git",
+        description: "Add managed paths to .gitignore for local-only usage.",
+        value: "ignore" as const
+      }
     ],
     {
-      title: "Operational Questions: Repair Settings",
-      placeHolder: "Choose Git mode for managed onboarding files"
+      title: "Repair Options",
+      placeHolder: "Choose how managed onboarding files should behave in Git"
     }
   );
 
@@ -35,7 +47,7 @@ async function askRepairConfirmation(input: {
   selectedTopicCount: number;
 }): Promise<boolean> {
   const decision = await vscode.window.showInformationMessage(
-    "Repair managed onboarding state and consistency for selected profile?",
+    "Review & Repair: confirm managed state reconciliation.",
     {
       modal: true,
       detail: [
@@ -46,10 +58,10 @@ async function askRepairConfirmation(input: {
         `Selected topics: ${input.selectedTopicCount}`
       ].join("\n")
     },
-    "Repair"
+    "Apply Repair"
   );
 
-  return decision === "Repair";
+  return decision === "Apply Repair";
 }
 
 export async function runRepair(
@@ -68,6 +80,14 @@ export async function runRepair(
 
     const target = await resolveTargetWorkspaceFolder();
     if (!target) {
+      if (isWorkspaceSelectionCancelled()) {
+        traceLogger.log("warning", "operation_blocked", {
+          reason: "target_scope_cancelled"
+        });
+        void vscode.window.showInformationMessage("Repair canceled at Installation Scope.");
+        return;
+      }
+
       traceLogger.log("warning", "operation_blocked", {
         reason: "no_workspace_folder"
       });
@@ -84,6 +104,7 @@ export async function runRepair(
       traceLogger.log("warning", "operation_blocked", {
         reason: "operational_questions_cancelled"
       });
+      void vscode.window.showInformationMessage("Repair canceled at Repair Options.");
       return;
     }
 
@@ -110,6 +131,7 @@ export async function runRepair(
       traceLogger.log("warning", "operation_blocked", {
         reason: "profile_selection_questions_cancelled"
       });
+      void vscode.window.showInformationMessage("Repair canceled at Project Profile.");
       return;
     }
 
@@ -142,6 +164,7 @@ export async function runRepair(
       traceLogger.log("warning", "operation_blocked", {
         reason: "repair_confirmation_declined"
       });
+      void vscode.window.showInformationMessage("Repair canceled at Review & Repair.");
       return;
     }
 

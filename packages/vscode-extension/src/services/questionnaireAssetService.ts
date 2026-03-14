@@ -22,9 +22,14 @@ function parseOption(raw: unknown): QuestionnaireOption {
     throw new Error("Invalid questionnaire option shape.");
   }
 
+  if (obj.description !== undefined && !isString(obj.description)) {
+    throw new Error(`Invalid questionnaire option description for option '${obj.id}'.`);
+  }
+
   return {
     id: obj.id,
     label: obj.label,
+    description: isString(obj.description) ? obj.description : undefined,
     next: obj.next
   };
 }
