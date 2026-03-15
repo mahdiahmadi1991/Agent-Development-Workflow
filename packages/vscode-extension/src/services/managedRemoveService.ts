@@ -36,6 +36,8 @@ interface ManagedRemoveOptions {
   removeWholeManagedRoot?: boolean;
 }
 
+const APPLIED_ARTIFACTS_REPORT_RELATIVE_PATH = ".codex-onboarding/.managed/applied-artifacts.md";
+
 function digestSha256(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex");
 }
@@ -107,6 +109,10 @@ function isExtensionOwnedRuntimeFile(relativePath: string): boolean {
     return true;
   }
 
+  if (relativePath === APPLIED_ARTIFACTS_REPORT_RELATIVE_PATH) {
+    return true;
+  }
+
   return relativePath.startsWith(".codex-onboarding/.managed/logs/");
 }
 
@@ -159,6 +165,27 @@ async function removeManagedRuntimeLogFiles(
   }
 
   await fs.rm(managedLogsPath, { recursive: true, force: true });
+}
+
+async function removeManagedAppliedArtifactsReport(
+  targetRootPath: string,
+  logger: ManagedRemoveLogger,
+  removedFiles: string[]
+): Promise<void> {
+  const reportPath = path.join(targetRootPath, APPLIED_ARTIFACTS_REPORT_RELATIVE_PATH);
+
+  try {
+    await fs.unlink(reportPath);
+    removedFiles.push(APPLIED_ARTIFACTS_REPORT_RELATIVE_PATH);
+    logger.log("debug", "file_removed", {
+      managed_file: APPLIED_ARTIFACTS_REPORT_RELATIVE_PATH,
+      reason: "managed_runtime_report_removed"
+    });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
 }
 
 export async function analyzeManagedRemoveImpact(
@@ -363,6 +390,7 @@ export async function removeManagedOnboarding(
     state_cleared: stateCleared
   });
 
+  await removeManagedAppliedArtifactsReport(targetRootPath, logger, removedFiles);
   await removeManagedRuntimeLogFiles(targetRootPath, managedRootPath, logger, removedFiles);
 
   await tryRemoveEmptyDirectory(path.join(targetRootPath, ".codex-onboarding", ".managed"));

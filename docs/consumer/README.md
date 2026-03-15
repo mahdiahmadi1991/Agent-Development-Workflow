@@ -7,6 +7,8 @@ This extension applies Codex onboarding files into your project. Review this sum
 - Only extension-owned files under `.codex-onboarding/` managed paths.
 - It does not modify unrelated project files.
 - A static bootstrap onboarding file is always included: `.codex-onboarding/AGENTS.md`.
+- After successful install/repair apply, extension writes runtime artifact inventory report:
+  - `.codex-onboarding/.managed/applied-artifacts.md`
 - Root `AGENTS.md` integration behavior:
   - if missing, install creates it automatically with onboarding pointer content.
   - if already present, install asks permission before editing.

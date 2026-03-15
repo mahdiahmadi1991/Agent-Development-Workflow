@@ -509,6 +509,9 @@ export async function runRepair(
       `Skipped files: ${result.skippedFiles.length}`,
       `Removed stale managed files: ${result.removedStaleFiles.length}`,
       `Managed state: ${result.statePath}`,
+      ...(result.appliedArtifactsReportPath
+        ? [`Applied artifacts report: ${result.appliedArtifactsReportPath}`]
+        : []),
       `Project operation log: ${projectLogPath}`,
       `Operation log: ${traceLogger.logFilePath}`
     ].join("\n");

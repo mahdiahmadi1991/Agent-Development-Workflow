@@ -111,6 +111,7 @@ Examples of applicability intent:
 
 ## Managed Ownership and Update Model
 - Extension manages only files it owns under managed onboarding paths.
+- Extension generates runtime artifact inventory report at `.codex-onboarding/.managed/applied-artifacts.md` after successful install/repair apply.
 - Managed-file updates are version-aware and bundle-aware.
 - Update operation must stop if a managed file was modified by the consumer.
 - If extension version changes, all managed files must be synchronized to the new extension version, even when semantic content is unchanged.

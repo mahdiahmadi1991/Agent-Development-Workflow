@@ -448,6 +448,9 @@ export async function runInstall(
       `Removed stale managed files: ${installResult.removedStaleFiles.length}`,
       `Root AGENTS integration: ${rootAgentsResult.status}`,
       `Managed state: ${installResult.statePath}`,
+      ...(installResult.appliedArtifactsReportPath
+        ? [`Applied artifacts report: ${installResult.appliedArtifactsReportPath}`]
+        : []),
       `Project operation log: ${projectLogPath}`,
       `Operation log: ${traceLogger.logFilePath}`
     ].join("\n");

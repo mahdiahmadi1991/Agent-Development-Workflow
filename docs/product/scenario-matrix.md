@@ -138,6 +138,7 @@ Define expected behavior for installation and update scenarios.
 - Expected:
   - Show success notification with short operation summary.
   - Open dedicated post-install `WebviewPanel` in VS Code.
+  - Runtime artifact inventory report exists at `.codex-onboarding/.managed/applied-artifacts.md`.
   - Render fixed V1 section contract with deterministic order.
   - Render runtime summary values in Change Report.
 

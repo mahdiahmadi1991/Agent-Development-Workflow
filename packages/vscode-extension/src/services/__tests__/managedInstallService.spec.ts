@@ -77,6 +77,18 @@ describe("applyManagedInstall", () => {
 
     await expect(fs.readFile(bootstrapPath, "utf8")).resolves.toContain("bundle_id: dotnet-csharp-web-api-simple");
     await expect(fs.readFile(topicPath, "utf8")).resolves.toContain("extension_version: 0.0.1");
+    await expect(
+      fs.readFile(
+        path.join(
+          fixture.targetRoot,
+          ".codex-onboarding/.managed/applied-artifacts.md"
+        ),
+        "utf8"
+      )
+    ).resolves.toContain(".codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
+    expect(result.appliedArtifactsReportPath).toBe(
+      path.join(fixture.targetRoot, ".codex-onboarding/.managed/applied-artifacts.md")
+    );
 
     const stateRaw = await fs.readFile(result.statePath, "utf8");
     const state = JSON.parse(stateRaw) as {
@@ -524,6 +536,7 @@ describe("applyManagedInstall", () => {
     expect(second.removedStaleFiles).toHaveLength(0);
     expect(second.stateRewritten).toBe(false);
     expect(second.resultCode).toBe("already_up_to_date");
+    expect(second.appliedArtifactsReportPath).toBeUndefined();
   });
 
   it("fails when existing managed state shape is invalid", async () => {

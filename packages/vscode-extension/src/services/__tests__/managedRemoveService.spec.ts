@@ -149,6 +149,7 @@ describe("managedRemoveService", () => {
       expect.arrayContaining([
         ".codex-onboarding/AGENTS.md",
         ".codex-onboarding/.gitignore",
+        ".codex-onboarding/.managed/applied-artifacts.md",
         ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md",
         ".codex-onboarding/.managed/logs/install-2026-03-15-remove-test.jsonl"
       ])
