@@ -1,0 +1,7 @@
+version: 1
+profile_id: dotnet-csharp-fake-web-api-simple
+family: dotnet-csharp-fake
+inherits: dotnet-csharp-fake-baseline
+questionnaire_ref: .codex-onboarding/library/questionnaires/dotnet-csharp-fake/install-flow.yaml
+baseline_topics: []
+default_capabilities: []

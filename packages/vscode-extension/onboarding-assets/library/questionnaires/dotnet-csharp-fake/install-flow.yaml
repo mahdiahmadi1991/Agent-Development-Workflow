@@ -1,0 +1,20 @@
+version: 1
+family: dotnet-csharp-fake
+entrypoint: root
+
+nodes:
+  - id: root
+    type: select
+    question: Choose the target .NET/C# FAKE test profile.
+    options:
+      - id: baseline
+        label: Baseline (FAKE)
+        description: Fake test profile for validating dynamic family selection.
+        next: done
+      - id: web_api_simple
+        label: Web API (Simple, FAKE)
+        description: Fake API profile for validating install path end-to-end.
+        next: done
+
+  - id: done
+    type: end

@@ -93,27 +93,106 @@ function parseFlow(rawYaml: string): QuestionnaireFlow {
   };
 }
 
+interface QuestionnaireCatalogRawFamily {
+  install_flow: string;
+}
+
+interface QuestionnaireCatalogRaw {
+  version: number;
+  families: Record<string, QuestionnaireCatalogRawFamily>;
+}
+
+export interface QuestionnaireCatalogEntry {
+  family: string;
+  installFlowRelativePath: string;
+}
+
+export interface QuestionnaireCatalogLoad {
+  version: number;
+  indexPath: string;
+  families: QuestionnaireCatalogEntry[];
+}
+
+function toAssetRelativePath(rawPath: string): string {
+  const withoutDotPrefix = rawPath.replace(/^\.\//, "");
+  const withoutRootPrefix = withoutDotPrefix.replace(/^\.codex-onboarding\//, "");
+  const normalized = withoutRootPrefix.split("\\").join("/");
+
+  if (normalized.length === 0) {
+    throw new Error("Questionnaire install_flow path is empty.");
+  }
+
+  const resolved = normalized.startsWith("/") ? normalized.slice(1) : normalized;
+  if (resolved.startsWith("../") || resolved.includes("/../")) {
+    throw new Error("Questionnaire install_flow path must stay inside onboarding assets.");
+  }
+
+  return resolved;
+}
+
+function parseCatalog(rawYaml: string): QuestionnaireCatalogRaw {
+  const parsed = parse(rawYaml) as QuestionnaireCatalogRaw;
+
+  if (
+    !parsed ||
+    typeof parsed.version !== "number" ||
+    !parsed.families ||
+    typeof parsed.families !== "object"
+  ) {
+    throw new Error("Invalid questionnaires index document.");
+  }
+
+  return parsed;
+}
+
+export async function loadQuestionnaireCatalog(
+  extensionPath: string
+): Promise<QuestionnaireCatalogLoad> {
+  const assetRoot = await resolveOnboardingAssetRoot(extensionPath);
+  const indexPath = path.join(assetRoot, "library", "questionnaires", "index.yaml");
+  const indexRaw = await fs.readFile(indexPath, "utf8");
+  const parsed = parseCatalog(indexRaw);
+
+  const families = Object.entries(parsed.families)
+    .map(([family, value]) => {
+      if (!value || !isString(value.install_flow)) {
+        throw new Error(`Invalid questionnaires index entry for family '${family}'.`);
+      }
+
+      return {
+        family,
+        installFlowRelativePath: toAssetRelativePath(value.install_flow)
+      };
+    })
+    .sort((left, right) => left.family.localeCompare(right.family));
+
+  if (families.length === 0) {
+    throw new Error("Questionnaires index contains no families.");
+  }
+
+  return {
+    version: parsed.version,
+    indexPath,
+    families
+  };
+}
+
 export async function loadQuestionnaireAssets(
   extensionPath: string,
   family: string
 ): Promise<QuestionnaireAssetLoad> {
   const assetRoot = await resolveOnboardingAssetRoot(extensionPath);
-
-  const indexPath = path.join(assetRoot, "library", "questionnaires", "index.yaml");
-  const flowPath = path.join(assetRoot, "library", "questionnaires", family, "install-flow.yaml");
-
-  const [indexRaw, flowRaw] = await Promise.all([
-    fs.readFile(indexPath, "utf8"),
-    fs.readFile(flowPath, "utf8")
-  ]);
-
-  if (!indexRaw.includes(family)) {
+  const catalog = await loadQuestionnaireCatalog(extensionPath);
+  const familyEntry = catalog.families.find((item) => item.family === family);
+  if (!familyEntry) {
     throw new Error(`Questionnaire family '${family}' is not listed in questionnaires index.`);
   }
+  const flowPath = path.join(assetRoot, familyEntry.installFlowRelativePath);
+  const flowRaw = await fs.readFile(flowPath, "utf8");
 
   return {
     family,
-    indexPath,
+    indexPath: catalog.indexPath,
     flowPath,
     flow: parseFlow(flowRaw)
   };

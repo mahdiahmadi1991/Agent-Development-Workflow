@@ -42,14 +42,18 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 1. `Installation Scope`
 - Select workspace root in multi-root contexts.
 
-2. `Project Profile` (dynamic)
+2. `Project Technology Family` (dynamic, conditional)
+- Load family list from questionnaire registry.
+- Ask only when multiple families are available in registry.
+
+3. `Project Profile` (dynamic)
 - Load from questionnaire definitions and do not hardcode in command handlers.
 
-3. `Git Tracking Preference`
+4. `Git Tracking Preference`
 - Ask whether managed files should be tracked in Git or ignored via repository-local `.git/info/exclude` only when Git repository exists at selected root.
 - No additional final preview confirmation is shown after this step; install proceeds with non-destructive managed-write rules.
 
-4. `Root AGENTS.md Permission` (conditional)
+5. `Root AGENTS.md Permission` (conditional)
 - Ask only when root `AGENTS.md` already exists in selected target root.
 - If approved, append onboarding pointer snippet to root `AGENTS.md` when not already present.
 - If declined, keep root file unchanged and present manual snippet in post-install Webview.

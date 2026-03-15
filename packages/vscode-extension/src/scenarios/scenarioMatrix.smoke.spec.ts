@@ -83,8 +83,8 @@ async function seedSmokeAssets(assetRoot: string): Promise<void> {
     [
       "version: 1",
       "families:",
-      "  - id: dotnet-csharp",
-      "    flow: dotnet-csharp/install-flow.yaml"
+      "  dotnet-csharp:",
+      "    install_flow: .codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml"
     ].join("\n")
   );
 

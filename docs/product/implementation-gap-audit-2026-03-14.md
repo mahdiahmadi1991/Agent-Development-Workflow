@@ -79,28 +79,26 @@ Most important unresolved areas:
 - Resolution note:
   - Escalation remains explicit and user-controlled as advisory guidance for Codex behavior, not extension-driven network submission logic.
 
-### F-06: Dynamic option catalog target family is still hardcoded in install
-- Severity: High
+### F-06: Dynamic option catalog target family hardcoded in install (Resolved)
+- Severity: Resolved
 - Contract references:
   - `docs/product/living-spec.md` (Option model)
   - `docs/product/decision-log.md` (D-008, D-009)
 - Implementation evidence:
-  - `family = "dotnet-csharp"` hardcoded in install command.
-- Gap:
-  - Target-family selection model is not runtime-dynamic yet.
-- Required action:
-  - Introduce catalog-driven family selector before questionnaire flow.
+  - `packages/vscode-extension/src/services/questionnaireAssetService.ts` now parses questionnaire catalog from `index.yaml`.
+  - `packages/vscode-extension/src/commands/installCommand.ts` resolves family dynamically from catalog and prompts only when multiple families exist.
+- Resolution note:
+  - Install no longer hardcodes a fixed family key.
 
-### F-07: Questionnaire registry is not truly resolved from index
-- Severity: High
+### F-07: Questionnaire registry not truly resolved from index (Resolved)
+- Severity: Resolved
 - Contract references:
   - `docs/product/question-model-contract.md`
 - Implementation evidence:
-  - `questionnaireAssetService` checks `indexRaw.includes(family)` and uses hardcoded family file path.
-- Gap:
-  - Registry file is not parsed as canonical routing source.
-- Required action:
-  - Parse `index.yaml` and resolve actual `install_flow` path from registry contract.
+  - `packages/vscode-extension/src/services/questionnaireAssetService.ts` parses `index.yaml` as canonical registry.
+  - `install_flow` path is resolved from registry entries instead of hardcoded family-path convention.
+- Resolution note:
+  - Questionnaire routing now follows catalog contract directly.
 
 ### F-08: Explainability (`why-selected`) is not exposed to user before apply
 - Severity: High
@@ -198,7 +196,7 @@ Missing or partial:
 
 ## Recommended Execution Priority
 P0 (blockers): F-03, F-04, F-05
-P1: F-06, F-07, F-08, F-09, F-10
+P1: F-08, F-09, F-10
 P2: F-11, F-12, F-13, F-14
 
 ## Governance Note

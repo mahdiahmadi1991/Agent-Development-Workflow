@@ -6,7 +6,10 @@ import { runInstall } from "./installCommand";
 import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { loadResolvedProfile } from "../services/profileAssetService";
-import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
+import {
+  loadQuestionnaireAssets,
+  loadQuestionnaireCatalog
+} from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import {
   applyRootAgentsIntegration,
@@ -32,6 +35,7 @@ vi.mock("../services/workspaceRootResolver", () => ({
 }));
 
 vi.mock("../services/questionnaireAssetService", () => ({
+  loadQuestionnaireCatalog: vi.fn(),
   loadQuestionnaireAssets: vi.fn()
 }));
 
@@ -109,6 +113,16 @@ describe("runInstall", () => {
         entrypoint: "root",
         nodes: []
       }
+    });
+    vi.mocked(loadQuestionnaireCatalog).mockResolvedValue({
+      version: 1,
+      indexPath: "index.yaml",
+      families: [
+        {
+          family: "dotnet-csharp",
+          installFlowRelativePath: "library/questionnaires/dotnet-csharp/install-flow.yaml"
+        }
+      ]
     });
 
     vi.mocked(runDynamicQuestionFlow).mockResolvedValue({
@@ -321,6 +335,32 @@ describe("runInstall", () => {
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
       reason: "profile_selection_questions_cancelled"
     });
+  });
+
+  it("blocks when project technology family selection is cancelled", async () => {
+    vi.mocked(loadQuestionnaireCatalog).mockResolvedValue({
+      version: 1,
+      indexPath: "index.yaml",
+      families: [
+        {
+          family: "dotnet-csharp",
+          installFlowRelativePath: "library/questionnaires/dotnet-csharp/install-flow.yaml"
+        },
+        {
+          family: "python",
+          installFlowRelativePath: "library/questionnaires/python/install-flow.yaml"
+        }
+      ]
+    });
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue(undefined);
+
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
+
+    expect(loadQuestionnaireAssets).not.toHaveBeenCalled();
+    expect(runDynamicQuestionFlow).not.toHaveBeenCalled();
+    expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+      "Install canceled at Project Technology Family."
+    );
   });
 
   it("falls back to output logger when trace logger cannot be created", async () => {

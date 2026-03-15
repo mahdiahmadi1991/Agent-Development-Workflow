@@ -44,9 +44,10 @@ The extension intentionally keeps command surface minimal.
 Install flow runs in this order:
 
 1. Installation Scope
-2. Project Profile (dynamic, file-driven)
-3. Review & Apply Git Tracking
-4. Root `AGENTS.md` Integration (auto-create when missing; permission-gated edit when existing)
+2. Project Technology Family (dynamic, only when multiple families exist in registry)
+3. Project Profile (dynamic, file-driven)
+4. Review & Apply Git Tracking
+5. Root `AGENTS.md` Integration (auto-create when missing; permission-gated edit when existing)
 
 Questionnaire and selection assets are loaded from extension-bundled onboarding assets.
 

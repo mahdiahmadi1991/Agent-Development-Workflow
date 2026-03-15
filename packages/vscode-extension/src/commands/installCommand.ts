@@ -11,7 +11,11 @@ import {
   mirrorOperationLogToProject
 } from "../services/projectOperationLogService";
 import { loadResolvedProfile } from "../services/profileAssetService";
-import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
+import {
+  QuestionnaireCatalogEntry,
+  loadQuestionnaireAssets,
+  loadQuestionnaireCatalog
+} from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import {
   RootAgentsPermission,
@@ -105,6 +109,60 @@ async function askRootAgentsEditPermission(): Promise<RootAgentsPermission | und
   return selection.value;
 }
 
+function toFamilyDisplayName(family: string): string {
+  return family
+    .split("-")
+    .map((part) => (part.length === 0 ? part : part[0]!.toUpperCase() + part.slice(1)))
+    .join(" ");
+}
+
+async function resolveQuestionnaireFamily(
+  extensionPath: string,
+  traceLogger: OperationTraceLogger
+): Promise<string | undefined> {
+  const catalog = await loadQuestionnaireCatalog(extensionPath);
+  traceLogger.log("debug", "dynamic_catalog_loaded", {
+    catalog_version: catalog.version,
+    catalog_family_count: catalog.families.length,
+    catalog_index_path: catalog.indexPath
+  });
+
+  if (catalog.families.length === 1) {
+    const only = catalog.families[0]!;
+    traceLogger.log("debug", "dynamic_catalog_family_resolved", {
+      selected_family: only.family,
+      selection_mode: "auto_single_family"
+    });
+    return only.family;
+  }
+
+  const pick = await vscode.window.showQuickPick(
+    catalog.families.map((entry: QuestionnaireCatalogEntry) => ({
+      label: toFamilyDisplayName(entry.family),
+      description: `Family key: ${entry.family}`,
+      entry
+    })),
+    {
+      title: "Project Technology Family",
+      placeHolder: "Select the technology family for this workspace.",
+      ignoreFocusOut: true
+    }
+  );
+
+  if (!pick) {
+    traceLogger.log("warning", "operation_blocked", {
+      reason: "catalog_family_selection_cancelled"
+    });
+    return undefined;
+  }
+
+  traceLogger.log("debug", "dynamic_catalog_family_resolved", {
+    selected_family: pick.entry.family,
+    selection_mode: "quick_pick"
+  });
+  return pick.entry.family;
+}
+
 function buildGitTrackingSummaryLines(input: {
   gitMode: "track" | "ignore";
   gitTrackingStrategy: "git_info_exclude" | "no_git_repository";
@@ -177,7 +235,12 @@ export async function runInstall(
     });
     targetRootPath = target.uri.fsPath;
 
-    const family = "dotnet-csharp";
+    const family = await resolveQuestionnaireFamily(context.extensionPath, traceLogger);
+    if (!family) {
+      void vscode.window.showInformationMessage("Install canceled at Project Technology Family.");
+      return;
+    }
+
     const questionnaire = await loadQuestionnaireAssets(context.extensionPath, family);
 
     traceLogger.log("debug", "dynamic_question_flow_loaded", {

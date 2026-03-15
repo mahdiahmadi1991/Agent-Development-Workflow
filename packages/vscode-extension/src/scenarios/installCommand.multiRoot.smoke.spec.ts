@@ -6,7 +6,10 @@ import { runInstall } from "../commands/installCommand";
 import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
 import { loadResolvedProfile } from "../services/profileAssetService";
-import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
+import {
+  loadQuestionnaireAssets,
+  loadQuestionnaireCatalog
+} from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import { resolveSelectionPlan } from "../services/selectionResolver";
 import { openPostInstallGuidancePage } from "../services/postInstallGuidancePage";
@@ -23,6 +26,7 @@ vi.mock("../services/operationTraceLogger", () => ({
 }));
 
 vi.mock("../services/questionnaireAssetService", () => ({
+  loadQuestionnaireCatalog: vi.fn(),
   loadQuestionnaireAssets: vi.fn()
 }));
 
@@ -83,6 +87,16 @@ describe("install command multi-root smoke", () => {
         entrypoint: "root",
         nodes: []
       }
+    });
+    vi.mocked(loadQuestionnaireCatalog).mockResolvedValue({
+      version: 1,
+      indexPath: "index.yaml",
+      families: [
+        {
+          family: "dotnet-csharp",
+          installFlowRelativePath: "library/questionnaires/dotnet-csharp/install-flow.yaml"
+        }
+      ]
     });
 
     vi.mocked(runDynamicQuestionFlow).mockResolvedValue({

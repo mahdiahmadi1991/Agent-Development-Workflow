@@ -9,13 +9,14 @@ Build a VS Code extension that applies Codex onboarding files to a user's curren
 ## User Flow (Target Behavior)
 1. User runs the extension command in VS Code.
 2. Extension asks Operational Questions required for safe execution context.
-3. Extension loads Profile Selection Questions dynamically from questionnaire files.
-4. User selects the target project/profile path through the question flow.
-5. Extension presents behavior-impact summary and requires explicit acknowledgement.
-6. Extension copies predefined onboarding files for that target into predefined paths in the current project.
-7. Extension shows a success message with a summary of applied files.
-8. Extension opens a dedicated post-install `WebviewPanel` in VS Code with fixed V1 section order, professional onboarding guidance blocks, and deterministic change report data.
-9. Extension installs managed advisory guidance for user-controlled issue escalation recommendations.
+3. Extension loads questionnaire catalog dynamically from registry and resolves target technology family.
+4. Extension loads Profile Selection Questions dynamically from selected family questionnaire files.
+5. User selects the target project/profile path through the question flow.
+6. Extension presents behavior-impact summary and requires explicit acknowledgement.
+7. Extension copies predefined onboarding files for that target into predefined paths in the current project.
+8. Extension shows a success message with a summary of applied files.
+9. Extension opens a dedicated post-install `WebviewPanel` in VS Code with fixed V1 section order, professional onboarding guidance blocks, and deterministic change report data.
+10. Extension installs managed advisory guidance for user-controlled issue escalation recommendations.
 
 ## Command Surface
 - Minimal command set:
