@@ -33,6 +33,8 @@ This file records standing rules agreed in this project.
 20. Every approved change must keep the full workspace synchronized (code, docs, tests, assets, and validation scripts where impacted); partial updates are not allowed.
 21. Canonical onboarding assets live only under `.codex-onboarding/**`; `packages/vscode-extension/onboarding-assets/**` is generated mirror and must not be edited manually.
 22. Mirror parity is mandatory and must pass `npm run verify:onboarding-assets-sync`.
+23. After every extension implementation change, VSIX must be rebuilt and force-installed locally before user test handoff.
+24. Until first public release exists, backward-compatibility and legacy-support implementation is out of scope unless explicitly approved.
 
 ## Source-of-Truth Map
 - Product behavior: `docs/product/decision-log.md`

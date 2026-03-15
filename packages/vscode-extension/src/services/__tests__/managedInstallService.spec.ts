@@ -62,7 +62,7 @@ describe("applyManagedInstall", () => {
       logger
     );
 
-    expect(result.appliedFiles).toHaveLength(4);
+    expect(result.appliedFiles).toHaveLength(5);
     expect(result.skippedFiles).toHaveLength(0);
     expect(result.removedStaleFiles).toHaveLength(0);
 
@@ -86,6 +86,7 @@ describe("applyManagedInstall", () => {
     expect(state.managed_files.map((item) => item.relative_path).sort()).toEqual([
       ".codex-onboarding/.gitignore",
       ".codex-onboarding/AGENTS.md",
+      ".codex-onboarding/INDEX.md",
       ".codex-onboarding/ISSUE-REPORTING.md",
       ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
     ]);
@@ -297,6 +298,7 @@ describe("applyManagedInstall", () => {
     expect(repaired.recoveredTrackedFiles).toEqual(
       expect.arrayContaining([
         ".codex-onboarding/AGENTS.md",
+        ".codex-onboarding/INDEX.md",
         ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
       ])
     );

@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runRepair } from "./repairCommand";
 import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
+import { removeRootAgentsIntegration } from "../services/rootAgentsIntegrationService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 const { createTraceLoggerMock } = vi.hoisted(() => ({
@@ -32,6 +33,10 @@ vi.mock("../services/managedInstallService", () => ({
 vi.mock("../services/gitTrackingService", () => ({
   applyGitTrackingMode: vi.fn(),
   hasGitRepository: vi.fn()
+}));
+
+vi.mock("../services/rootAgentsIntegrationService", () => ({
+  removeRootAgentsIntegration: vi.fn()
 }));
 
 function buildContext(): vscode.ExtensionContext {
@@ -199,6 +204,10 @@ describe("runRepair", () => {
       recoveredTrackedFiles: [],
       removedStaleFiles: []
     });
+    vi.mocked(removeRootAgentsIntegration).mockResolvedValue({
+      status: "removed",
+      rootAgentsPath: "/tmp/project/AGENTS.md"
+    });
   });
 
   afterEach(async () => {
@@ -213,7 +222,7 @@ describe("runRepair", () => {
   it("blocks when no workspace folder is available", async () => {
     vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue(undefined);
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
       "No workspace folder is available for repair operation."
@@ -230,7 +239,7 @@ describe("runRepair", () => {
       uri: { fsPath: fixture.targetRoot }
     } as unknown as vscode.WorkspaceFolder);
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
       "No existing managed onboarding artifacts were found in this workspace. Run Install first."
@@ -251,7 +260,7 @@ describe("runRepair", () => {
       value: "track"
     } as any);
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(applyManagedInstall).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -277,7 +286,7 @@ describe("runRepair", () => {
       value: "track"
     } as any);
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(applyManagedInstall).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -303,7 +312,7 @@ describe("runRepair", () => {
       value: "track"
     } as any);
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(applyManagedInstall).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -325,8 +334,9 @@ describe("runRepair", () => {
       label: "Track managed files (Recommended)",
       value: "track"
     } as any);
+    const logger = { log: vi.fn(), show: vi.fn() };
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), logger as any);
 
     expect(applyManagedInstall).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -342,6 +352,11 @@ describe("runRepair", () => {
     expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
       expect.stringContaining("Repair operation completed.")
     );
+    expect(removeRootAgentsIntegration).toHaveBeenCalledWith(
+      fixture.targetRoot,
+      expect.any(Object)
+    );
+    expect(logger.show).not.toHaveBeenCalled();
   });
 
   it("shows drift warning QuickPick and cancels when user declines reset", async () => {
@@ -356,7 +371,7 @@ describe("runRepair", () => {
       value: "cancel"
     } as any);
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(applyManagedInstall).not.toHaveBeenCalled();
     expect(vscode.window.showInformationMessage).toHaveBeenCalledWith("Repair canceled.");
@@ -379,7 +394,7 @@ describe("runRepair", () => {
         value: "track"
       } as any);
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(applyManagedInstall).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -400,7 +415,7 @@ describe("runRepair", () => {
     } as unknown as vscode.WorkspaceFolder);
     vi.mocked(hasGitRepository).mockResolvedValue(false);
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(vscode.window.showQuickPick).toHaveBeenCalledTimes(0);
     expect(applyGitTrackingMode).toHaveBeenCalledWith(
@@ -424,9 +439,11 @@ describe("runRepair", () => {
       value: "track"
     } as any);
     vi.mocked(applyManagedInstall).mockRejectedValue(new Error("repair boom"));
+    const logger = { log: vi.fn(), show: vi.fn() };
 
-    await runRepair(buildContext(), { log: vi.fn() } as any);
+    await runRepair(buildContext(), logger as any);
 
     expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Repair failed: repair boom");
+    expect(logger.show).toHaveBeenCalledTimes(1);
   });
 });

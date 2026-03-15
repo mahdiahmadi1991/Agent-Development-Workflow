@@ -16,6 +16,9 @@ This file introduces Codex to the onboarding model applied in this project.
 - This onboarding system targets Codex behavior only.
 - Managed artifacts are installed under `.codex-onboarding/`.
 
+## Entry Point
+- Start from `.codex-onboarding/INDEX.md` before reading detailed onboarding files.
+
 ## Ownership Model
 - Managed baseline path: `.codex-onboarding/`
 - Consumer customization path: `.codex-onboarding/overrides/`
@@ -42,6 +45,9 @@ This file introduces Codex to the onboarding model applied in this project.
 - If conflict remains unresolved, follow `.codex-onboarding/ISSUE-REPORTING.md`.
 
 ## Indexed Managed Instructions
+- `.codex-onboarding/INDEX.md`:
+  - Primary discovery index for onboarding scope and read order.
+  - Optimized for low-noise onboarding.
 - `.codex-onboarding/ISSUE-REPORTING.md`:
   - Guidance for Codex and user-controlled upstream issue suggestion flow.
   - No automatic submission without explicit user approval.

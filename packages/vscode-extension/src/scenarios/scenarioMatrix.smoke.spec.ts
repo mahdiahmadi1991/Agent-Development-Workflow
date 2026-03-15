@@ -45,6 +45,23 @@ async function seedSmokeAssets(assetRoot: string): Promise<void> {
 
   await writeAssetFile(
     assetRoot,
+    "core/INDEX.md",
+    [
+      "<!--",
+      "artifact_id: core-onboarding-index",
+      "managed: true",
+      "schema_version: 1",
+      "bundle_id: TBD",
+      "bundle_version: TBD",
+      "extension_version: TBD",
+      "-->",
+      "",
+      "# INDEX"
+    ].join("\n")
+  );
+
+  await writeAssetFile(
+    assetRoot,
     "core/ISSUE-REPORTING.md",
     [
       "<!--",
@@ -263,6 +280,9 @@ describe("scenario-matrix smoke", () => {
 
     expect(state.managed_files.map((item) => item.relative_path)).toContain(
       ".codex-onboarding/AGENTS.md"
+    );
+    expect(state.managed_files.map((item) => item.relative_path)).toContain(
+      ".codex-onboarding/INDEX.md"
     );
 
     await expect(

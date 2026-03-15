@@ -6,7 +6,7 @@ Define a stable and scalable question system without hardcoding project/topic lo
 ## Question Groups
 1. Operational Questions
 - Purpose: collect extension/runtime operation choices.
-- Examples: target root selection, Git tracking mode, safety acknowledgements.
+- Examples: target root selection, Git tracking mode, root `AGENTS.md` edit permission, safety acknowledgements.
 - Ownership: extension behavior layer.
 
 2. Profile Selection Questions

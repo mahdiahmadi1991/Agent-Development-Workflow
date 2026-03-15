@@ -25,6 +25,7 @@ export class OutputLogger {
   }
 
   public show(): void {
-    this.channel.show(false);
+    // Keep Output visible for live tracing without stealing keyboard focus from active prompts.
+    this.channel.show(true);
   }
 }

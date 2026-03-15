@@ -80,6 +80,11 @@ The first implementation baseline must include these blocks.
 - `Open Managed Root` should prefer VS Code explorer reveal and fallback safely.
 - `Open Operation Log` should prefer opening the active trace log in an editor tab and fallback safely.
 
+10. Root AGENTS.md Manual Snippet (Conditional)
+- Render only when existing root `AGENTS.md` was not edited because user denied permission.
+- Show target root `AGENTS.md` path and copy-ready snippet.
+- Explain that adding snippet is optional but improves onboarding discoverability.
+
 ## Information Architecture (Fixed Order)
 Global persistent element:
 - Action Bar (always visible at top).
@@ -95,6 +100,7 @@ Main section order (base):
 
 Conditional insertion:
 - `Git Tracking Details` appears between `Before/After Map` and `First 3 Steps` only when ignore mode is selected and applied.
+- `Root AGENTS.md Manual Snippet` appears after `Git Tracking Details` (or after `Before/After Map` when Git block is absent) only when root edit permission is denied.
 
 This order is fixed for V1 and should stay stable unless explicitly revised.
 
@@ -133,6 +139,9 @@ This order is fixed for V1 and should stay stable unless explicitly revised.
 - `gitTrackingUpdated`
 - `managedStatePath`
 - `operationLogPath`
+- `rootAgentsPath`
+- `rootAgentsStatus`
+- `rootAgentsManualSnippet` (optional)
 
 ### Command Links / Actions
 Primary:

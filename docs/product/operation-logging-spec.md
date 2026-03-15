@@ -52,7 +52,8 @@ Conditional fields (event-specific):
 
 ## Output Requirements
 - Human-readable summary in VS Code notifications.
-- VS Code Output channel opens automatically at command start and streams trace logs in real time.
+- VS Code Output channel opens automatically on operation failure to surface diagnostics immediately.
+- Successful and user-canceled flows do not auto-open Output by default.
 - Detailed trace log persisted for debugging.
 - Deterministic result codes for support diagnostics.
 - Log retention policy must be explicit and documented.

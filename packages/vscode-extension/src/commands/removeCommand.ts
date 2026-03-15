@@ -7,6 +7,7 @@ import {
 } from "../services/managedRemoveService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
+import { removeRootAgentsIntegration } from "../services/rootAgentsIntegrationService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 function isWorkspaceSelectionCancelled(): boolean {
@@ -119,11 +120,13 @@ export async function runRemove(
     const result = await removeManagedOnboarding(target.uri.fsPath, traceLogger, {
       removeWholeManagedRoot: removeImpact.requiresConfirmation
     });
+    const rootAgentsCleanup = await removeRootAgentsIntegration(target.uri.fsPath, traceLogger);
 
     const summary = [
       "Remove operation completed.",
       `Target root: ${target.uri.fsPath}`,
       `Remove mode: ${result.removeMode}`,
+      `Root AGENTS cleanup: ${rootAgentsCleanup.status}`,
       `Git tracking cleanup strategy: ${gitTrackingResult.strategy}`,
       `Git tracking cleanup updated: ${gitTrackingResult.updated ? "yes" : "no"}`,
       `Detected modified managed files: ${removeImpact.modifiedManagedFiles.length}`,
@@ -153,6 +156,8 @@ export async function runRemove(
       result_code: "removed"
     });
   } catch (error) {
+    logger.show();
+
     if (traceLogger) {
       traceLogger.log("error", "operation_completed", {
         result_code: "failed",

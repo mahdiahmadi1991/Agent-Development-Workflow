@@ -14,6 +14,7 @@ import {
   buildProjectOperationLogPath,
   mirrorOperationLogToProject
 } from "../services/projectOperationLogService";
+import { removeRootAgentsIntegration } from "../services/rootAgentsIntegrationService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 function isWorkspaceSelectionCancelled(): boolean {
@@ -471,6 +472,7 @@ export async function runRepair(
       },
       traceLogger
     );
+    const rootAgentsCleanup = await removeRootAgentsIntegration(target.uri.fsPath, traceLogger);
     projectLogPath = buildProjectOperationLogPath(target.uri.fsPath, traceLogger.logFilePath);
 
     const summary = [
@@ -489,6 +491,7 @@ export async function runRepair(
         : []),
       `Managed bundle: ${bundleId}@${bundleVersion}`,
       `Managed topics from state: ${selectedTopics.length}`,
+      `Root AGENTS cleanup: ${rootAgentsCleanup.status}`,
       `Applied or synchronized files: ${result.appliedFiles.length}`,
       `Recovered tracked files: ${result.recoveredTrackedFiles.length}`,
       `Skipped files: ${result.skippedFiles.length}`,
@@ -515,6 +518,8 @@ export async function runRepair(
       result_code: "repaired"
     });
   } catch (error) {
+    logger.show();
+
     if (traceLogger) {
       traceLogger.log("error", "operation_completed", {
         result_code: "failed",

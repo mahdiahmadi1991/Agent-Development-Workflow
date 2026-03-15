@@ -34,7 +34,7 @@ Build a VS Code extension that applies Codex onboarding files to a user's curren
 - Update application must be explicit user action (no silent auto-apply).
 - User must be able to review changelog/release notes before confirming update.
 - Update confirmation gate requires both release notes and changelog review.
-- Backward compatibility is a mandatory constraint for managed update behavior.
+- In current pre-release phase (no public release yet), backward-compatibility/legacy-support constraints are out of scope unless explicitly approved.
 
 ## Option Model (Dynamic Catalog)
 Options must be dynamically sourced from a catalog model, not hardcoded as a fixed one-off flow.
@@ -90,8 +90,10 @@ Examples of applicability intent:
   - `.codex-onboarding/AGENTS.md`
 - Purpose: generic Codex onboarding orientation for any selected target.
 - The file is business-neutral and target-independent.
-- Root `AGENTS.md` must not be auto-modified if already present.
-- AGENTS linkage is user-controlled through optional reference snippets.
+- If root `AGENTS.md` is missing, install creates it automatically with onboarding pointer guidance.
+- If root `AGENTS.md` already exists, install asks explicit permission before editing it.
+- If permission is denied, install keeps root file unchanged and provides a manual snippet in post-install page.
+- Repair and Remove clean extension-managed pointer content from root `AGENTS.md` when present.
 
 ## Safety Policy for File Application
 - Default mode is non-destructive.
@@ -126,8 +128,7 @@ Update decision flow:
 7. Otherwise, update only managed files and rewrite managed state.
 
 Downgrade behavior:
-- Downgrade is supported only with the same ownership and integrity constraints.
-- If downgrade safety checks fail, operation must stop with actionable diagnostics.
+- Deferred in current pre-release phase.
 
 ## Issue Escalation Model
 - If a policy/content conflict is detected, user must be offered:
@@ -177,7 +178,7 @@ Downgrade behavior:
 - Root resolution is smart: single-root auto-select, multi-root prompt, no workspace file requirement.
 - Testing and CI/CD quality gates are mandatory.
 - Trace-level operation logging is mandatory for install/remove/repair.
-- Lifecycle commands auto-open the Output channel and stream trace logs live.
+- Lifecycle commands keep Output channel closed by default and auto-open it on operation failure.
 - Release notes and changelog are mandatory for each release.
 - Release version must align with extension package version before publish.
 - Release flow stages are mandatory: validate/package first, then optional publish actions.

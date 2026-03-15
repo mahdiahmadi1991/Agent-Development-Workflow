@@ -98,7 +98,7 @@ Reference: `docs/product/question-model-contract.md`
 - Specify up-to-date short-circuit behavior.
 - Specify remove and repair lifecycle safety behavior.
 - Specify rollback/remediation policy.
-- Specify safe downgrade behavior under integrity constraints.
+- Safe downgrade behavior is deferred until after first public release.
 
 Exit criteria:
 - Safety behavior approved with scenario matrix.

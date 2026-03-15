@@ -89,7 +89,7 @@ describe("extension activation", () => {
     expect(installLoggerArg).toBeInstanceOf(OutputLogger);
     expect(removeLoggerArg).toBe(installLoggerArg);
     expect(repairLoggerArg).toBe(installLoggerArg);
-    expect(outputShowSpy).toHaveBeenCalledTimes(3);
+    expect(outputShowSpy).not.toHaveBeenCalled();
   });
 
   it("copies starter prompt via internal post-install action", async () => {

@@ -148,6 +148,24 @@ async function buildDesiredManagedFiles(
     metadata_format: "comment_block"
   });
 
+  const sourceIndexPath = path.join(assetRoot, "core", "INDEX.md");
+  const indexRaw = await fs.readFile(sourceIndexPath, "utf8");
+  const indexContent = renderManagedMetadata(
+    indexRaw,
+    input.bundleId,
+    input.bundleVersion,
+    input.extensionVersion
+  );
+
+  desired.push({
+    file_id: "core-onboarding-index",
+    source_path: sourceIndexPath,
+    relative_path: ".codex-onboarding/INDEX.md",
+    content: indexContent,
+    metadata_mode: "embedded",
+    metadata_format: "comment_block"
+  });
+
   const sourceIssueReportingPath = path.join(assetRoot, "core", "ISSUE-REPORTING.md");
   const issueReportingRaw = await fs.readFile(sourceIssueReportingPath, "utf8");
   const issueReportingContent = renderManagedMetadata(

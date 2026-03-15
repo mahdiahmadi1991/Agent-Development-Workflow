@@ -8,6 +8,10 @@ import { applyManagedInstall } from "../services/managedInstallService";
 import { loadResolvedProfile } from "../services/profileAssetService";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
+import {
+  applyRootAgentsIntegration,
+  inspectRootAgentsIntegration
+} from "../services/rootAgentsIntegrationService";
 import { resolveSelectionPlan } from "../services/selectionResolver";
 import { openPostInstallGuidancePage } from "../services/postInstallGuidancePage";
 import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
@@ -58,6 +62,11 @@ vi.mock("../services/updateConsentService", () => ({
 
 vi.mock("../services/postInstallGuidancePage", () => ({
   openPostInstallGuidancePage: vi.fn()
+}));
+
+vi.mock("../services/rootAgentsIntegrationService", () => ({
+  inspectRootAgentsIntegration: vi.fn(),
+  applyRootAgentsIntegration: vi.fn()
 }));
 
 function buildContext(): vscode.ExtensionContext {
@@ -152,13 +161,23 @@ describe("runInstall", () => {
       reason: "no_managed_state"
     });
 
+    vi.mocked(inspectRootAgentsIntegration).mockResolvedValue({
+      exists: false,
+      containsOnboardingReference: false,
+      rootAgentsPath: "/workspace/project/AGENTS.md"
+    });
+    vi.mocked(applyRootAgentsIntegration).mockResolvedValue({
+      status: "created",
+      rootAgentsPath: "/workspace/project/AGENTS.md"
+    });
+
     vi.mocked(openPostInstallGuidancePage).mockResolvedValue(true);
   });
 
   it("blocks when no workspace folder is available", async () => {
     vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue(undefined);
 
-    await runInstall(buildContext(), { log: vi.fn() } as any);
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
       "No workspace folder is available for install operation."
@@ -180,7 +199,8 @@ describe("runInstall", () => {
       value: "track"
     } as any);
 
-    await runInstall(buildContext(), { log: vi.fn() } as any);
+    const logger = { log: vi.fn(), show: vi.fn() };
+    await runInstall(buildContext(), logger as any);
 
     expect(applyManagedInstall).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -224,8 +244,12 @@ describe("runInstall", () => {
       bundleId: "dotnet-csharp-web-api-simple",
       bundleVersion: "7",
       capabilityTags: ["cap.base", "answer.root.web_api_simple"],
-      operationId: expect.stringMatching(/^install-\d+$/)
+      operationId: expect.stringMatching(/^install-\d+$/),
+      rootAgentsPath: "/workspace/project/AGENTS.md",
+      rootAgentsStatus: "created",
+      rootAgentsManualSnippet: undefined
     });
+    expect(logger.show).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith(
@@ -242,10 +266,12 @@ describe("runInstall", () => {
     } as any);
 
     vi.mocked(applyManagedInstall).mockRejectedValue(new Error("boom"));
+    const logger = { log: vi.fn(), show: vi.fn() };
 
-    await runInstall(buildContext(), { log: vi.fn() } as any);
+    await runInstall(buildContext(), logger as any);
 
     expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Install failed: boom");
+    expect(logger.show).toHaveBeenCalledTimes(1);
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith(
@@ -259,7 +285,7 @@ describe("runInstall", () => {
   it("blocks when git tracking selection is cancelled", async () => {
     vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue(undefined);
 
-    await runInstall(buildContext(), { log: vi.fn() } as any);
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(applyManagedInstall).not.toHaveBeenCalled();
     expect(applyGitTrackingMode).not.toHaveBeenCalled();
@@ -279,13 +305,17 @@ describe("runInstall", () => {
     } as any);
 
     vi.mocked(runDynamicQuestionFlow).mockResolvedValue(undefined);
+    const logger = { log: vi.fn(), show: vi.fn() };
 
-    await runInstall(buildContext(), { log: vi.fn() } as any);
+    await runInstall(buildContext(), logger as any);
 
     expect(applyManagedInstall).not.toHaveBeenCalled();
     expect(applyGitTrackingMode).not.toHaveBeenCalled();
     expect(requireUpdateConsentIfNeeded).not.toHaveBeenCalled();
     expect(hasGitRepository).not.toHaveBeenCalled();
+    expect(inspectRootAgentsIntegration).not.toHaveBeenCalled();
+    expect(applyRootAgentsIntegration).not.toHaveBeenCalled();
+    expect(logger.show).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
@@ -295,7 +325,7 @@ describe("runInstall", () => {
 
   it("falls back to output logger when trace logger cannot be created", async () => {
     createTraceLoggerMock.mockRejectedValue("trace-create-failed");
-    const logger = { log: vi.fn() };
+    const logger = { log: vi.fn(), show: vi.fn() };
 
     await runInstall(buildContext(), logger as any);
 
@@ -310,6 +340,7 @@ describe("runInstall", () => {
     );
 
     expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Install failed: unknown error");
+    expect(logger.show).toHaveBeenCalledTimes(1);
   });
 
   it("continues successfully when post-install panel falls back", async () => {
@@ -320,7 +351,7 @@ describe("runInstall", () => {
 
     vi.mocked(openPostInstallGuidancePage).mockResolvedValue(false);
 
-    await runInstall(buildContext(), { log: vi.fn() } as any);
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(applyManagedInstall).toHaveBeenCalledTimes(1);
 
@@ -349,7 +380,7 @@ describe("runInstall", () => {
       changelogUrl: "https://example.com/changelog"
     });
 
-    await runInstall(buildContext(), { log: vi.fn() } as any);
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(applyGitTrackingMode).not.toHaveBeenCalled();
     expect(applyManagedInstall).not.toHaveBeenCalled();
@@ -362,13 +393,23 @@ describe("runInstall", () => {
   it("skips git tracking question when root has no git repository", async () => {
     vi.mocked(hasGitRepository).mockResolvedValue(false);
 
-    await runInstall(buildContext(), { log: vi.fn() } as any);
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(vscode.window.showQuickPick).toHaveBeenCalledTimes(0);
     expect(applyGitTrackingMode).toHaveBeenCalledWith(
       {
         targetRootPath: "/workspace/project",
         mode: "track"
+      },
+      expect.any(Object)
+    );
+    expect(inspectRootAgentsIntegration).toHaveBeenCalledWith("/workspace/project");
+    expect(applyRootAgentsIntegration).toHaveBeenCalledWith(
+      {
+        inspection: expect.objectContaining({
+          rootAgentsPath: "/workspace/project/AGENTS.md"
+        }),
+        permission: "auto_create"
       },
       expect.any(Object)
     );
@@ -387,7 +428,7 @@ describe("runInstall", () => {
       excludePath: "/workspace/project/.git/info/exclude"
     });
 
-    await runInstall(buildContext(), { log: vi.fn() } as any);
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(vscode.window.showInformationMessage).toHaveBeenNthCalledWith(
       1,
@@ -398,6 +439,73 @@ describe("runInstall", () => {
       1,
       expect.stringContaining("How to exit ignore mode"),
       { modal: false }
+    );
+  });
+
+  it("blocks when root AGENTS permission is cancelled", async () => {
+    vi.mocked(inspectRootAgentsIntegration).mockResolvedValue({
+      exists: true,
+      containsOnboardingReference: false,
+      rootAgentsPath: "/workspace/project/AGENTS.md"
+    });
+
+    vi.spyOn(vscode.window, "showQuickPick")
+      .mockResolvedValueOnce({
+        label: "Track managed files",
+        value: "track"
+      } as any)
+      .mockResolvedValueOnce(undefined);
+
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
+
+    expect(applyManagedInstall).not.toHaveBeenCalled();
+    expect(applyRootAgentsIntegration).not.toHaveBeenCalled();
+    expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+      "Install canceled at Root AGENTS Permission."
+    );
+  });
+
+  it("provides manual root AGENTS snippet when user declines edit", async () => {
+    vi.mocked(inspectRootAgentsIntegration).mockResolvedValue({
+      exists: true,
+      containsOnboardingReference: false,
+      rootAgentsPath: "/workspace/project/AGENTS.md"
+    });
+
+    vi.mocked(applyRootAgentsIntegration).mockResolvedValue({
+      status: "skipped_user_declined",
+      rootAgentsPath: "/workspace/project/AGENTS.md",
+      manualSnippet: "manual snippet"
+    });
+
+    vi.spyOn(vscode.window, "showQuickPick")
+      .mockResolvedValueOnce({
+        label: "Track managed files",
+        value: "track"
+      } as any)
+      .mockResolvedValueOnce({
+        label: "No, keep root AGENTS.md unchanged",
+        value: "deny_edit"
+      } as any);
+
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
+
+    expect(applyRootAgentsIntegration).toHaveBeenCalledWith(
+      {
+        inspection: expect.objectContaining({
+          rootAgentsPath: "/workspace/project/AGENTS.md"
+        }),
+        permission: "deny_edit"
+      },
+      expect.any(Object)
+    );
+
+    expect(openPostInstallGuidancePage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rootAgentsPath: "/workspace/project/AGENTS.md",
+        rootAgentsStatus: "skipped_user_declined",
+        rootAgentsManualSnippet: "manual snippet"
+      })
     );
   });
 });

@@ -11,6 +11,10 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - Update confirmation is blocked until both release notes and changelog are reviewed in the update gate.
 - Must present or link a pre-install behavior summary before applying changes.
 - Must offer Git tracking choice for managed paths (`ignore` or `track`) only when selected root is a Git repository.
+- Must evaluate root `AGENTS.md` integration:
+  - If root `AGENTS.md` is missing, create it automatically with onboarding pointer.
+  - If root `AGENTS.md` exists, ask explicit permission before editing.
+  - If permission is denied, keep file unchanged and provide manual snippet in post-install page.
 - On success, must show summary notification and open dedicated post-install WebviewPanel.
 - If `ignore` is selected, success summary must explain that ignore is applied via `.git/info/exclude` and how to exit ignore mode.
 
@@ -23,6 +27,7 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - If changes are detected, show a destructive `QuickPick` warning.
 - If user confirms destructive mode, remove deletes entire `.codex-onboarding/` root.
 - If user declines, remove is canceled.
+- On successful remove, extension also removes extension-managed pointer content from root `AGENTS.md` when present.
 
 3. `Codex Onboarding: Repair`
 - Runs only when managed onboarding evidence already exists in selected workspace root.
@@ -31,6 +36,7 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - If managed state is missing/corrupt/empty but managed files are intact, repair recovers source metadata from managed files and rebuilds state.
 - If tracked managed files are edited/missing, show a destructive-reset `QuickPick` warning before overwrite.
 - If tracked managed files are unchanged, run repair without extra confirmation.
+- On successful repair, extension removes extension-managed pointer content from root `AGENTS.md` when present.
 
 ## Install Prompt Model
 1. `Installation Scope`
@@ -43,10 +49,15 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - Ask whether managed files should be tracked in Git or ignored via repository-local `.git/info/exclude` only when Git repository exists at selected root.
 - No additional final preview confirmation is shown after this step; install proceeds with non-destructive managed-write rules.
 
+4. `Root AGENTS.md Permission` (conditional)
+- Ask only when root `AGENTS.md` already exists in selected target root.
+- If approved, append onboarding pointer snippet to root `AGENTS.md` when not already present.
+- If declined, keep root file unchanged and present manual snippet in post-install Webview.
+
 ## Command Policy
 - No broad option explosion in command palette.
 - Update behavior is lifecycle logic under install flow, not a separate user command.
 - Upstream issue escalation is advisory guidance only (instruction artifact), not a dedicated extension command.
 - Project profile questions are dynamic data-driven flows for install command, not separate commands.
 - All commands must produce deterministic operation reports.
-- Running any lifecycle command auto-opens Output channel for live trace diagnostics.
+- Output channel auto-opens only when a lifecycle command fails; normal success/cancel flows do not force Output focus.

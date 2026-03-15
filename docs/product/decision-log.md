@@ -45,7 +45,7 @@ This file records accepted planning decisions and open decisions.
 | D-038 | Update application is explicit user action after update notification and changelog review. | Accepted | No silent auto-apply updates. |
 | D-039 | User can choose whether managed onboarding paths are tracked in Git or ignored via repository-local Git metadata. | Accepted | Git tracking mode is user-configurable without editing project files. |
 | D-040 | Every release must include release notes and changelog updates. | Accepted | Mandatory release documentation. |
-| D-041 | Downgrade is allowed only under the same integrity and ownership safeguards as upgrade. | Accepted | Fail-fast if safety checks fail. |
+| D-041 | Downgrade is allowed only under the same integrity and ownership safeguards as upgrade. | Superseded | Superseded by D-090 for current pre-release phase. |
 | D-042 | Remove command must clear managed state and delete only untouched managed files. | Superseded | Replaced by D-083 remove impact-scan + destructive-confirm model. |
 | D-043 | Each lifecycle operation must write a dedicated unique trace log file. | Accepted | One log file per install/remove/repair run. |
 | D-044 | Supported and tested environments must be documented explicitly in user-facing docs. | Accepted | Avoid hidden compatibility assumptions. |
@@ -62,7 +62,7 @@ This file records accepted planning decisions and open decisions.
 | D-055 | Library storage and selection contracts are validator-enforced in local and CI checks. | Accepted | Non-compliant layout or metadata blocks validation. |
 | D-056 | A mandatory static bootstrap onboarding file must be installed in every target project. | Accepted | Canonical path: `.codex-onboarding/AGENTS.md`. |
 | D-057 | Static bootstrap onboarding content must remain generic and target-independent. | Accepted | No project-type-specific content in this artifact. |
-| D-058 | Extension must not auto-modify an existing root `AGENTS.md`; AGENTS integration is user-controlled. | Accepted | Non-destructive ownership boundary preserved. |
+| D-058 | Root `AGENTS.md` integration is user-controlled for existing files; extension may auto-create root `AGENTS.md` when missing. | Accepted | Existing root file edits require explicit runtime permission; missing root file is created automatically with onboarding pointer snippet. |
 | D-059 | Onboarding conflict reporting must use explicit user-controlled issue escalation only. | Accepted | No silent automatic external issue creation. |
 | D-060 | Issue escalation should use pre-filled, redaction-safe diagnostics payloads for user review before submission. | Accepted | Includes version/profile/log references, not raw sensitive content. |
 | D-061 | Codex may submit upstream issues directly using user-granted GitHub permissions after explicit per-submit confirmation. | Accepted | If permission/check fails, fallback is manual submission with prepared draft. |
@@ -91,3 +91,7 @@ This file records accepted planning decisions and open decisions.
 | D-084 | Repair may recover managed source metadata from intact managed files when managed state is missing/corrupt/empty, then rebuild state through repair flow. | Accepted | If no managed evidence exists, repair remains blocked and install-first guidance is shown. |
 | D-085 | Issue escalation must be delivered as managed advisory guidance (`.codex-onboarding/ISSUE-REPORTING.md`) instead of dedicated extension runtime submission flows. | Accepted | Extension remains non-destructive and local-first; Codex may only suggest escalation and offer user-approved help. |
 | D-086 | Onboarding asset source-of-truth is `.codex-onboarding/**`; extension `onboarding-assets/**` is generated mirror that must stay byte-synchronized via sync/verify gates. | Accepted | Prevents dual-source drift while keeping VSIX self-contained at runtime. |
+| D-087 | Install flow must detect root `AGENTS.md` and request edit permission when it already exists; if permission is denied, post-install page must provide a manual snippet for user paste. | Accepted | Keeps existing root ownership user-controlled while preserving onboarding discoverability. |
+| D-088 | VS Code Output channel should open automatically only on operation failure (not at command start). | Accepted | Reduces focus interference/noise during normal interactive flows while still surfacing diagnostics when needed. |
+| D-089 | Repair and Remove must clean extension-managed pointer content from root `AGENTS.md` when present. | Accepted | Cleanup is best-effort and supports current marker-based pointer format only. |
+| D-090 | Until first public release exists, backward-compatibility and legacy-support requirements are out of scope. | Accepted | Do not add legacy code paths in this phase unless explicitly approved in a separate decision. |

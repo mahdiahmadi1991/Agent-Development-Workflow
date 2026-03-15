@@ -14,8 +14,7 @@ Define safe behavior when operations fail or managed-file drift is detected.
 - Reapply full managed set for selected profile when user explicitly approves reset.
 
 4. `Safe Downgrade`
-- Apply downgrade only if managed integrity checks pass.
-- Stop operation on any drift or ownership violation.
+- Deferred in current pre-release phase (no public release yet).
 
 ## Rollback Policy
 - No destructive rollback on partial failure by default.

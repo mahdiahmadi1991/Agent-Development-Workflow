@@ -96,17 +96,14 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push({ dispose: () => logger.dispose() });
 
   const install = vscode.commands.registerCommand("codexOnboarding.install", async () => {
-    logger.show();
     await runInstall(context, logger);
   });
 
   const remove = vscode.commands.registerCommand("codexOnboarding.remove", async () => {
-    logger.show();
     await runRemove(context, logger);
   });
 
   const repair = vscode.commands.registerCommand("codexOnboarding.repair", async () => {
-    logger.show();
     await runRepair(context, logger);
   });
 

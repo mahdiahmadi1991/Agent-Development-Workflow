@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 
+import type { RootAgentsIntegrationStatus } from "./rootAgentsIntegrationService";
+
 export interface PostInstallGuidanceInput {
   targetRootPath: string;
   selectedProfile: string;
@@ -16,6 +18,9 @@ export interface PostInstallGuidanceInput {
   bundleVersion: string;
   capabilityTags: string[];
   operationId: string;
+  rootAgentsPath?: string;
+  rootAgentsStatus?: RootAgentsIntegrationStatus;
+  rootAgentsManualSnippet?: string;
 }
 
 export const POST_INSTALL_PANEL_VIEW_TYPE = "codexOnboarding.postInstall";
@@ -48,7 +53,7 @@ function buildPromptPacks(onboardingRoot: string): {
   starter: string;
 } {
   const discover =
-    `Read ${onboardingRoot}/AGENTS.md and summarize active constraints for this project.`;
+    `Read ${onboardingRoot}/INDEX.md first, then summarize active constraints from the relevant onboarding files.`;
   const implement =
     "Before writing code, explain which onboarding boundaries apply and how your plan stays compliant.";
   const validate =
@@ -65,6 +70,11 @@ function buildPromptPacks(onboardingRoot: string): {
 function buildWebviewHtml(input: PostInstallGuidanceInput): string {
   const onboardingRoot = `${input.targetRootPath}/.codex-onboarding`;
   const bootstrapFile = `${onboardingRoot}/AGENTS.md`;
+  const rootAgentsPath = input.rootAgentsPath ?? `${input.targetRootPath}/AGENTS.md`;
+  const rootAgentsStatus = input.rootAgentsStatus ?? "already_referenced";
+  const rootAgentsManualSnippet = input.rootAgentsManualSnippet?.trim();
+  const rootAgentsManualSnippetText = rootAgentsManualSnippet ?? "";
+  const shouldRenderRootAgentsManualSnippet = Boolean(rootAgentsManualSnippet);
   const isIgnoreMode = input.gitMode === "ignore";
   const ignoreApplied = isIgnoreMode && input.gitTrackingStrategy === "git_info_exclude";
   const shouldRenderGitTrackingDetails = ignoreApplied;
@@ -90,6 +100,19 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
   const runRepairHref = commandUri("codexOnboarding.repair");
   const runRemoveHref = commandUri("codexOnboarding.remove");
   const copyStarterPromptHref = commandUri(COPY_STARTER_PROMPT_COMMAND, [prompts.starter]);
+  const rootAgentsManualSection = shouldRenderRootAgentsManualSnippet
+    ? `
+        <section class="card">
+          <h2>Root AGENTS.md Manual Snippet</h2>
+          <p class="muted">Automatic edit for root <code>AGENTS.md</code> was skipped. Add this snippet manually if you want project-level AGENTS discovery to point to managed onboarding files.</p>
+          <ul>
+            <li><strong>Target file:</strong> <code>${escapeHtml(rootAgentsPath)}</code></li>
+            <li><strong>Status:</strong> <code>${escapeHtml(rootAgentsStatus)}</code></li>
+          </ul>
+          <pre>${escapeHtml(rootAgentsManualSnippetText)}</pre>
+        </section>
+`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -260,6 +283,7 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
             <div><strong>Selected Profile:</strong> <code>${escapeHtml(input.selectedProfile)}</code></div>
             <div><strong>Managed Root:</strong> <code>${escapeHtml(onboardingRoot)}</code></div>
             <div><strong>Bootstrap File:</strong> <code>${escapeHtml(bootstrapFile)}</code></div>
+            <div><strong>Root AGENTS Integration:</strong> <code>${escapeHtml(rootAgentsStatus)}</code></div>
           </div>
         </section>
 
@@ -270,10 +294,12 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
 
 ${gitTrackingSectionHtml}
 
+${rootAgentsManualSection}
+
         <section class="card">
           <h2>First 3 Steps</h2>
           <ol>
-            <li>Ask Codex to read <code>.codex-onboarding/AGENTS.md</code> first.</li>
+            <li>Ask Codex to read <code>.codex-onboarding/INDEX.md</code> first.</li>
             <li>Ask Codex to explain which constraints apply before code changes.</li>
             <li>If a conflict exists, request an override plan instead of editing managed core files.</li>
           </ol>

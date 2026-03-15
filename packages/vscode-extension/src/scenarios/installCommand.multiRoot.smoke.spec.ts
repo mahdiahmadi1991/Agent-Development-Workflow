@@ -174,7 +174,7 @@ describe("install command multi-root smoke", () => {
       }
     } as unknown as vscode.ExtensionContext;
 
-    await runInstall(context, { log: vi.fn() } as any);
+    await runInstall(context, { log: vi.fn(), show: vi.fn() } as any);
 
     expect(quickPickSpy).toHaveBeenCalledTimes(2);
     expect(quickPickSpy.mock.calls[0][1]).toEqual(

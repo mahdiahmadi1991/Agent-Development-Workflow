@@ -109,7 +109,7 @@
     "package:ci": "node -e \"require('fs').mkdirSync('artifacts',{recursive:true})\" && npx vsce package --no-yarn --out artifacts/codex-onboarding.vsix",
     "sync:onboarding-assets": "node ./scripts/sync-onboarding-assets.js",
     "precompile": "npm run sync:onboarding-assets",
-    "prepackage:ci": "npm run sync:onboarding-assets"
+    "prepackage:ci": "npm run compile"
   },
   "dependencies": {
     "yaml": "^2.8.1"

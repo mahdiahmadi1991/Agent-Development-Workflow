@@ -46,6 +46,7 @@ Install flow runs in this order:
 1. Installation Scope
 2. Project Profile (dynamic, file-driven)
 3. Review & Apply Git Tracking
+4. Root `AGENTS.md` Integration (auto-create when missing; permission-gated edit when existing)
 
 Questionnaire and selection assets are loaded from extension-bundled onboarding assets.
 
@@ -60,7 +61,8 @@ Questionnaire and selection assets are loaded from extension-bundled onboarding 
 
 ## Logging
 
-Each lifecycle run opens the VS Code Output channel and streams trace logs in real time.
+On operation failure, the extension auto-opens the VS Code Output channel and highlights trace diagnostics.
+Successful and user-canceled flows do not auto-open Output by default.
 Each run also creates a dedicated trace log file with structured events and severity levels.
 On successful install/repair, a project mirror is written to `.codex-onboarding/.managed/logs/`.
 The extension manages `.codex-onboarding/.gitignore` so mirrored logs remain untracked by default.

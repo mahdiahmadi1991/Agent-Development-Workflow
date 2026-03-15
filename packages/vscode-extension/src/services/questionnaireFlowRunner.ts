@@ -49,11 +49,16 @@ export async function runDynamicQuestionFlow(
       })),
       {
         title: `Project Profile: ${node.question}`,
-        placeHolder: "Choose the best match for this workspace"
+        placeHolder: "Choose the best match for this workspace",
+        ignoreFocusOut: true
       }
     );
 
     if (!pick) {
+      logger.log("warning", "dynamic_question_cancelled", {
+        operation_id: operationId,
+        node_id: node.id
+      });
       return undefined;
     }
 

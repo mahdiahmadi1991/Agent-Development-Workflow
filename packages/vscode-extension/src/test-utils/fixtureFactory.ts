@@ -39,6 +39,21 @@ function issueReportingContent(): string {
   ].join("\n");
 }
 
+function onboardingIndexContent(): string {
+  return [
+    "<!--",
+    "artifact_id: core-onboarding-index",
+    "managed: true",
+    "schema_version: 1",
+    "bundle_id: TBD",
+    "bundle_version: TBD",
+    "extension_version: TBD",
+    "-->",
+    "",
+    "# Onboarding Index"
+  ].join("\n");
+}
+
 function topicContent(fileId: string): string {
   return [
     "<!--",
@@ -75,6 +90,7 @@ export async function writeBootstrap(assetRoot: string): Promise<void> {
   const coreRoot = path.join(assetRoot, "core");
   await fs.mkdir(coreRoot, { recursive: true });
   await fs.writeFile(path.join(coreRoot, "AGENTS.md"), bootstrapContent(), "utf8");
+  await fs.writeFile(path.join(coreRoot, "INDEX.md"), onboardingIndexContent(), "utf8");
   await fs.writeFile(path.join(coreRoot, "ISSUE-REPORTING.md"), issueReportingContent(), "utf8");
 }
 

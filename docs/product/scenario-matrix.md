@@ -123,9 +123,10 @@ Define expected behavior for installation and update scenarios.
   - Create one unique log file for that operation.
   - Emit structured trace events with severity levels.
   - Persist log path in operation completion summary.
+  - Auto-open VS Code Output channel only when operation fails.
 
 ### S-15 Safe Downgrade
-- Preconditions: User selects downgrade target from a newer managed version.
+- Preconditions: Post-first-public-release phase only.
 - Expected:
   - Show downgrade context and changelog/release-note visibility.
   - Require explicit user confirmation.
@@ -206,4 +207,20 @@ Define expected behavior for installation and update scenarios.
     7. Change Report
   - Conditional insertion:
     - `Git Tracking Details` appears between `Before/After Map` and `First 3 Steps` only when ignore mode is selected and applied.
+    - `Root AGENTS.md Manual Snippet` appears only when root `AGENTS.md` edit permission is denied.
   - Detailed content follows progressive disclosure (summary-first, details-secondary).
+
+### S-25 Root AGENTS Integration Behavior
+- Preconditions: Install operation runs on selected root.
+- Expected:
+  - If root `AGENTS.md` is missing, extension creates it automatically with onboarding pointer to `.codex-onboarding/INDEX.md`.
+  - If root `AGENTS.md` exists, extension asks explicit permission before editing.
+  - If permission is denied, root `AGENTS.md` remains unchanged.
+  - If permission is denied, post-install page includes a manual snippet for user-controlled paste.
+
+### S-26 Root AGENTS Cleanup on Repair/Remove
+- Preconditions: `repair` or `remove` operation succeeds.
+- Expected:
+  - If root `AGENTS.md` exists, extension-managed onboarding pointer content is removed.
+  - Cleanup supports current marker-based pointer format.
+  - If no managed pointer exists, operation continues without failure.

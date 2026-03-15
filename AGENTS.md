@@ -27,6 +27,8 @@ Create reusable, domain-agnostic onboarding structures that can be applied to an
 11. Upstream issue escalation must stay explicit and user-controlled.
 12. All behavior-impact changes must be synchronized in the same cycle.
 13. Every approved change must keep the full workspace synchronized (code, docs, tests, assets, and validators where impacted).
+14. After every extension implementation change, build VSIX and force-install it locally before handing off for user testing.
+15. Until first public release exists, do not add backward-compatibility or legacy-support code paths unless explicitly approved.
 
 ## Policy Hierarchy
 Policy precedence is deterministic. Higher level wins on conflict.

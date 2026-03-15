@@ -7,6 +7,10 @@ This extension applies Codex onboarding files into your project. Review this sum
 - Only extension-owned files under `.codex-onboarding/` managed paths.
 - It does not modify unrelated project files.
 - A static bootstrap onboarding file is always included: `.codex-onboarding/AGENTS.md`.
+- Root `AGENTS.md` integration behavior:
+  - if missing, install creates it automatically with onboarding pointer content.
+  - if already present, install asks permission before editing.
+  - if permission is denied, file remains unchanged and post-install page provides a manual snippet.
 
 ## Lifecycle Commands
 - `Install Onboarding`
@@ -19,6 +23,7 @@ This extension applies Codex onboarding files into your project. Review this sum
 - Remove runs an impact scan first.
 - If no changes are detected in `.codex-onboarding/`, remove runs without confirmation.
 - If managed drift or additional user files are detected in `.codex-onboarding/`, remove asks destructive confirmation and, when approved, deletes the full `.codex-onboarding/` root.
+- On successful repair/remove, extension-managed pointer content is cleaned from root `AGENTS.md` when present.
 
 ## Update Behavior
 - Update is never silently auto-applied.
@@ -35,7 +40,8 @@ During install, you can choose:
 - If selected root has no Git repository, this question is skipped as not applicable.
 
 ## Logging and Diagnostics
-- When you run Install/Repair/Remove, the extension opens the VS Code Output channel and streams operation logs live.
+- On operation failure, the extension opens the VS Code Output channel automatically to surface diagnostics.
+- Successful or user-canceled runs do not auto-open Output by default.
 - Each operation creates a unique trace log file.
 - Log severity levels: `debug`, `warning`, `error`.
 - Primary log path is extension global storage (`operation-logs`).

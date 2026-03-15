@@ -58,7 +58,8 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 ## Static Bootstrap Artifact
 - Every install/repair must include `.codex-onboarding/AGENTS.md`.
 - The artifact content is generic and target-independent.
-- Existing consumer root `AGENTS.md` must not be auto-modified.
+- If root `AGENTS.md` is missing, install auto-creates it with onboarding pointer guidance.
+- If root `AGENTS.md` already exists, edit requires explicit user permission in install flow.
 
 ## Conflict Escalation Principle
 - Escalation to upstream issue reporting is optional and user-controlled.

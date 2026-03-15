@@ -13,6 +13,11 @@ import {
 import { loadResolvedProfile } from "../services/profileAssetService";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
+import {
+  RootAgentsPermission,
+  applyRootAgentsIntegration,
+  inspectRootAgentsIntegration
+} from "../services/rootAgentsIntegrationService";
 import { resolveSelectionPlan } from "../services/selectionResolver";
 import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
@@ -59,7 +64,8 @@ async function askGitTrackingSelectionAtFinalStep(): Promise<OperationalSelectio
     ],
     {
       title: "Git Tracking Preference",
-      placeHolder: "Should extension-managed onboarding files be tracked in Git?"
+      placeHolder: "Should extension-managed onboarding files be tracked in Git?",
+      ignoreFocusOut: true
     }
   );
 
@@ -68,6 +74,35 @@ async function askGitTrackingSelectionAtFinalStep(): Promise<OperationalSelectio
   }
 
   return { gitMode: gitMode.value };
+}
+
+async function askRootAgentsEditPermission(): Promise<RootAgentsPermission | undefined> {
+  const selection = await vscode.window.showQuickPick(
+    [
+      {
+        label: "Yes, update root AGENTS.md",
+        description: "Add a pointer to .codex-onboarding/INDEX.md automatically.",
+        value: "allow_edit" as const
+      },
+      {
+        label: "No, keep root AGENTS.md unchanged",
+        description: "I will paste the pointer snippet manually from the post-install page.",
+        value: "deny_edit" as const
+      }
+    ],
+    {
+      title: "Root AGENTS.md Permission",
+      placeHolder:
+        "Allow Codex Onboarding to edit root AGENTS.md and add a pointer to .codex-onboarding/INDEX.md?",
+      ignoreFocusOut: true
+    }
+  );
+
+  if (!selection) {
+    return undefined;
+  }
+
+  return selection.value;
 }
 
 function buildGitTrackingSummaryLines(input: {
@@ -209,6 +244,27 @@ export async function runInstall(
       git_mode: gitTrackingSelection.gitMode
     });
 
+    const rootAgentsInspection = await inspectRootAgentsIntegration(target.uri.fsPath);
+    let rootAgentsPermission: RootAgentsPermission = "auto_create";
+
+    if (rootAgentsInspection.exists) {
+      const permission = await askRootAgentsEditPermission();
+      if (!permission) {
+        traceLogger.log("warning", "operation_blocked", {
+          reason: "root_agents_permission_cancelled"
+        });
+        void vscode.window.showInformationMessage("Install canceled at Root AGENTS Permission.");
+        return;
+      }
+
+      rootAgentsPermission = permission;
+    }
+
+    traceLogger.log("debug", "root_agents_permission_resolved", {
+      root_agents_exists: rootAgentsInspection.exists,
+      root_agents_permission: rootAgentsPermission
+    });
+
     const extensionVersion =
       typeof context.extension.packageJSON?.version === "string"
         ? context.extension.packageJSON.version
@@ -257,6 +313,15 @@ export async function runInstall(
       },
       traceLogger
     );
+
+    const rootAgentsResult = await applyRootAgentsIntegration(
+      {
+        inspection: rootAgentsInspection,
+        permission: rootAgentsPermission
+      },
+      traceLogger
+    );
+
     projectLogPath = buildProjectOperationLogPath(target.uri.fsPath, traceLogger.logFilePath);
 
     const summary = [
@@ -274,6 +339,7 @@ export async function runInstall(
       `Applied files: ${installResult.appliedFiles.length}`,
       `Skipped files: ${installResult.skippedFiles.length}`,
       `Removed stale managed files: ${installResult.removedStaleFiles.length}`,
+      `Root AGENTS integration: ${rootAgentsResult.status}`,
       `Managed state: ${installResult.statePath}`,
       `Project operation log: ${projectLogPath}`,
       `Operation log: ${traceLogger.logFilePath}`
@@ -306,7 +372,12 @@ export async function runInstall(
       bundleId: resolvedProfile.profile_id,
       bundleVersion: String(questionnaire.flow.version),
       capabilityTags: selectionPlan.capability_tags,
-      operationId
+      operationId,
+      rootAgentsPath: rootAgentsResult.rootAgentsPath,
+      rootAgentsStatus: rootAgentsResult.status,
+      rootAgentsManualSnippet: rootAgentsResult.status === "skipped_user_declined"
+        ? rootAgentsResult.manualSnippet
+        : undefined
     });
 
     traceLogger.log("debug", postInstallPanelOpened ? "post_install_page_opened" : "post_install_page_fallback", {
@@ -318,6 +389,8 @@ export async function runInstall(
       target_profile: resolvedProfile.profile_id
     });
   } catch (error) {
+    logger.show();
+
     if (traceLogger) {
       traceLogger.log("error", "operation_completed", {
         result_code: "failed",

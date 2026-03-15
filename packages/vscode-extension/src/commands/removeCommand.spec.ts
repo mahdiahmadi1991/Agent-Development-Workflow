@@ -8,6 +8,7 @@ import {
   analyzeManagedRemoveImpact,
   removeManagedOnboarding
 } from "../services/managedRemoveService";
+import { removeRootAgentsIntegration } from "../services/rootAgentsIntegrationService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 const { createTraceLoggerMock } = vi.hoisted(() => ({
@@ -31,6 +32,10 @@ vi.mock("../services/managedRemoveService", () => ({
 
 vi.mock("../services/gitTrackingService", () => ({
   applyGitTrackingMode: vi.fn()
+}));
+
+vi.mock("../services/rootAgentsIntegrationService", () => ({
+  removeRootAgentsIntegration: vi.fn()
 }));
 
 function buildContext(): vscode.ExtensionContext {
@@ -90,12 +95,16 @@ describe("runRemove", () => {
       updated: true,
       excludePath: "/workspace/project/.git/info/exclude"
     });
+    vi.mocked(removeRootAgentsIntegration).mockResolvedValue({
+      status: "removed",
+      rootAgentsPath: "/workspace/project/AGENTS.md"
+    });
   });
 
   it("blocks when no workspace folder is available", async () => {
     vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue(undefined);
 
-    await runRemove(buildContext(), { log: vi.fn() } as any);
+    await runRemove(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
       "No workspace folder is available for remove operation."
@@ -123,7 +132,7 @@ describe("runRemove", () => {
     });
     vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue(undefined);
 
-    await runRemove(buildContext(), { log: vi.fn() } as any);
+    await runRemove(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(removeManagedOnboarding).not.toHaveBeenCalled();
     expect(applyGitTrackingMode).not.toHaveBeenCalled();
@@ -136,8 +145,9 @@ describe("runRemove", () => {
 
   it("removes managed onboarding without confirmation when no changes were detected", async () => {
     vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue(undefined);
+    const logger = { log: vi.fn(), show: vi.fn() };
 
-    await runRemove(buildContext(), { log: vi.fn() } as any);
+    await runRemove(buildContext(), logger as any);
 
     expect(analyzeManagedRemoveImpact).toHaveBeenCalledWith(
       "/workspace/project",
@@ -155,11 +165,16 @@ describe("runRemove", () => {
       },
       expect.any(Object)
     );
+    expect(removeRootAgentsIntegration).toHaveBeenCalledWith(
+      "/workspace/project",
+      expect.any(Object)
+    );
 
     expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
       expect.stringContaining("Remove operation completed.")
     );
     expect(vscode.window.showQuickPick).not.toHaveBeenCalled();
+    expect(logger.show).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("debug", "operation_completed", {
@@ -194,7 +209,7 @@ describe("runRemove", () => {
       removeMode: "full_root_reset"
     });
 
-    await runRemove(buildContext(), { log: vi.fn() } as any);
+    await runRemove(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
 
     expect(removeManagedOnboarding).toHaveBeenCalledWith(
       "/workspace/project",
@@ -205,10 +220,12 @@ describe("runRemove", () => {
 
   it("shows error message when remove fails", async () => {
     vi.mocked(removeManagedOnboarding).mockRejectedValue(new Error("remove boom"));
+    const logger = { log: vi.fn(), show: vi.fn() };
 
-    await runRemove(buildContext(), { log: vi.fn() } as any);
+    await runRemove(buildContext(), logger as any);
 
     expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Remove failed: remove boom");
+    expect(logger.show).toHaveBeenCalledTimes(1);
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith(
@@ -221,7 +238,7 @@ describe("runRemove", () => {
 
   it("falls back to output logger when trace logger cannot be created", async () => {
     createTraceLoggerMock.mockRejectedValue("trace-create-failed");
-    const logger = { log: vi.fn() };
+    const logger = { log: vi.fn(), show: vi.fn() };
 
     await runRemove(buildContext(), logger as any);
 
@@ -236,5 +253,6 @@ describe("runRemove", () => {
     );
 
     expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Remove failed: unknown error");
+    expect(logger.show).toHaveBeenCalledTimes(1);
   });
 });

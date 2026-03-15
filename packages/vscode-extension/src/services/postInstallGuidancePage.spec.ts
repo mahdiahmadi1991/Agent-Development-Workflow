@@ -63,6 +63,7 @@ describe("openPostInstallGuidancePage", () => {
     expect(panel.webview.html).toContain("Safe Boundaries");
     expect(panel.webview.html).toContain("Lifecycle Playbook");
     expect(panel.webview.html).toContain("Change Report");
+    expect(panel.webview.html).toContain("Root AGENTS Integration");
 
     expect(panel.webview.html).toContain("Open Managed Root");
     expect(panel.webview.html).toContain("Open Operation Log");
@@ -200,5 +201,42 @@ describe("openPostInstallGuidancePage", () => {
     expect(opened).toBe(true);
     expect(panel.webview.html).not.toContain("Git Tracking Details");
     expect(panel.webview.html).not.toContain("To exit ignore mode");
+  });
+
+  it("renders manual root AGENTS snippet section when automatic edit was declined", async () => {
+    const panel = {
+      webview: {
+        html: ""
+      }
+    } as any;
+
+    vi.spyOn(vscode.window, "createWebviewPanel").mockReturnValue(panel);
+
+    const opened = await openPostInstallGuidancePage({
+      targetRootPath: "/workspace/project",
+      selectedProfile: "dotnet-csharp-web-api-simple",
+      logFilePath: "/tmp/storage/operation-logs/install-log.jsonl",
+      managedStatePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      gitMode: "track",
+      gitTrackingStrategy: "git_info_exclude",
+      gitTrackingUpdated: false,
+      appliedCount: 1,
+      skippedCount: 0,
+      removedStaleCount: 0,
+      extensionVersion: "1.2.3",
+      bundleId: "dotnet-csharp-web-api-simple",
+      bundleVersion: "7",
+      capabilityTags: [],
+      operationId: "install-123",
+      rootAgentsPath: "/workspace/project/AGENTS.md",
+      rootAgentsStatus: "skipped_user_declined",
+      rootAgentsManualSnippet: "## Codex Onboarding Extension Reference\nRead `.codex-onboarding/INDEX.md` first."
+    });
+
+    expect(opened).toBe(true);
+    expect(panel.webview.html).toContain("Root AGENTS.md Manual Snippet");
+    expect(panel.webview.html).toContain("/workspace/project/AGENTS.md");
+    expect(panel.webview.html).toContain("skipped_user_declined");
+    expect(panel.webview.html).toContain(".codex-onboarding/INDEX.md");
   });
 });
