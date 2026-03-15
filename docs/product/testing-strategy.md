@@ -1,0 +1,65 @@
+# Testing Strategy
+
+## Goal
+Guarantee safe, deterministic extension behavior for install, remove, repair, and update synchronization.
+
+## Test Layers
+1. Unit tests
+- State parsing/validation
+- Digest calculation
+- Resolver selection/composition logic
+- Command decision engine
+- Questionnaire tree parser and validation
+- Technology Selection Wizard traversal engine (`single`/`multi`, branching, rules, constraints)
+- Post-install view-model mapping and section contract generation
+
+2. Integration tests
+- Install flow end-to-end with fixture projects
+- Remove flow impact-scan behavior (clean path vs destructive-confirm path)
+- Remove destructive-confirm behavior (full `.codex-onboarding/` delete after approval)
+- Repair flow recovery behavior
+- Repair precondition checks (block when no prior managed onboarding evidence exists)
+- Repair state-driven restore behavior (use current managed state bundle/version)
+- Repair recovery behavior for missing/corrupt/empty state with intact managed files
+- Repair drift warning QuickPick behavior (confirm reset vs cancel)
+- Drift detection and fail-fast outcomes
+- Bootstrap artifact inclusion checks for install/repair
+- Pre-install acknowledgement behavior checks
+- Post-install success notification and WebviewPanel-open checks (success-only trigger)
+- Post-install V1 UX block presence checks (Outcome Snapshot, Before/After Map, First 3 Steps, Prompt Packs, Safe Boundaries, Lifecycle Playbook, Change Report)
+- Conditional post-install check: `Git Tracking Details` appears only when ignore mode is selected and applied.
+- Post-install Action Bar and secondary action availability checks
+- Post-install fallback behavior checks when Webview initialization fails
+- Managed conflict-escalation guidance artifact checks (`.codex-onboarding/ISSUE-REPORTING.md` + AGENTS index reference)
+- Multi-root and no-workspace-file root resolution checks
+- Dynamic Profile Selection Questions questionnaire loading checks (registry + family flow)
+- Dynamic Technology Selection Wizard checks:
+  - multi-select constraints (`min_select`/`max_select`)
+  - rule-gated node/option visibility
+  - deterministic payload generation (`selected_paths`, emitted tags)
+- Downgrade safety and failure-path checks
+
+3. Scenario tests
+- Full scenario traceability coverage of `docs/product/scenario-matrix.md` via `docs/product/scenario-coverage-map.yaml`
+- Safety-critical scenarios must be automated and enforced in CI.
+- Deferred scenarios must be explicitly marked as `deferred` in the coverage map with a rationale.
+- Explicit coverage mapping for post-install scenarios: `S-16`, `S-21`, `S-22`, `S-23`, `S-24`
+- Explicit checks for extension-upgrade sync behavior
+- Explicit checks for logging severity output (`debug`, `warning`, `error`)
+- Explicit checks for unique per-operation log file creation
+- Explicit checks for post-install Webview fixed section order and runtime summary rendering
+- Explicit checks for Prompt Packs content availability (`Discover`, `Implement`, `Validate`)
+- Explicit checks for Action Bar command-link behavior (`Open Managed Root`, `Open Operation Log`, `Run Repair`, `Run Remove`)
+- Explicit checks for progressive disclosure behavior (summary-first, details-secondary)
+- Explicit checks for post-install fallback behavior when Webview initialization fails
+- Explicit checks for managed advisory conflict-report guidance presence and consistency
+- Explicit checks for dynamic questionnaire resolution behavior
+
+4. Cross-platform tests
+- Windows, Linux, macOS CI matrix
+- WSL validation lane (self-hosted or dedicated workflow)
+
+## Quality Gates
+- No release without passing unit + integration + scenario gates.
+- Scenario coverage validator must pass (`scripts/validate-scenario-coverage.sh`).
+- Cross-platform regressions block release.

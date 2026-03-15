@@ -1,0 +1,15 @@
+{
+  "$schema": "./schemas/contract.schema.json",
+  "contractVersion": "0.1.0",
+  "agent": "codex",
+  "language": "en",
+  "paths": {
+    "core": ".codex-onboarding/core",
+    "overrides": ".codex-onboarding/overrides"
+  },
+  "resolutionOrder": ["core", "overrides"],
+  "integrity": {
+    "coreImmutable": true,
+    "allowOverrideOnlyForOverridableKeys": true
+  }
+}

@@ -1,0 +1,11 @@
+version: 1
+resolver:
+  deterministic_sort:
+    - required
+    - category
+    - file_id
+  conflict_resolution:
+    strategy: fail_on_required_conflict
+    optional_topic_policy: drop_optional_conflicts
+  dependency_policy:
+    missing_dependency: fail

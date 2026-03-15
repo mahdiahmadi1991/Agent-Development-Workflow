@@ -1,0 +1,125 @@
+name: VSCode Extension CI
+
+on:
+  pull_request:
+    paths:
+      - ".codex-onboarding/**"
+      - "packages/vscode-extension/**"
+      - "packages/vscode-extension/scripts/**"
+      - ".github/workflows/vscode-extension-ci.yml"
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - ".codex-onboarding/**"
+      - "packages/vscode-extension/**"
+      - "packages/vscode-extension/scripts/**"
+      - ".github/workflows/vscode-extension-ci.yml"
+
+jobs:
+  quality-gates:
+    name: Extension Quality (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+
+    defaults:
+      run:
+        working-directory: packages/vscode-extension
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/vscode-extension/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate governance contracts (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        working-directory: .
+        run: scripts/validate-governance.sh
+
+      - name: Validate onboarding asset mirror sync
+        run: npm run verify:onboarding-assets-sync
+
+      - name: Run tests with coverage gate
+        run: npm test
+
+      - name: Compile TypeScript
+        run: npm run compile
+
+      - name: Package VSIX smoke (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run package:ci
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension-coverage-${{ matrix.os }}
+          path: packages/vscode-extension/coverage
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload VSIX artifact (ubuntu)
+        if: matrix.os == 'ubuntu-latest' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension-vsix-${{ matrix.os }}
+          path: packages/vscode-extension/artifacts/*.vsix
+          if-no-files-found: error
+          retention-days: 14
+
+  wsl-validation:
+    name: Extension WSL Validation (opt-in)
+    if: vars.ENABLE_WSL_CI == 'true'
+    runs-on:
+      - self-hosted
+      - linux
+      - wsl
+
+    defaults:
+      run:
+        working-directory: packages/vscode-extension
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/vscode-extension/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate governance contracts
+        shell: bash
+        working-directory: .
+        run: scripts/validate-governance.sh
+
+      - name: Validate onboarding asset mirror sync
+        run: npm run verify:onboarding-assets-sync
+
+      - name: Run tests with coverage gate
+        run: npm test
+
+      - name: Compile TypeScript
+        run: npm run compile

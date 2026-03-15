@@ -1,0 +1,126 @@
+{
+  "name": "codex-onboarding",
+  "displayName": "Codex Onboarding",
+  "description": "Apply managed Codex onboarding artifacts with safe install, repair, and remove workflows.",
+  "version": "0.0.1",
+  "publisher": "2ma",
+  "license": "MIT",
+  "author": {
+    "name": "Mohammad Mahdi Ahmadi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow.git",
+    "directory": "packages/vscode-extension"
+  },
+  "homepage": "https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow/tree/develop/packages/vscode-extension",
+  "bugs": {
+    "url": "https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow/issues"
+  },
+  "qna": false,
+  "markdown": "github",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "openai",
+    "codex",
+    "onboarding",
+    "agent",
+    "instructions",
+    "governance",
+    "managed-files",
+    "safe-updates",
+    "dotnet",
+    "csharp"
+  ],
+  "galleryBanner": {
+    "color": "#0a0a0a",
+    "theme": "dark"
+  },
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCommand:codexOnboarding.install",
+    "onCommand:codexOnboarding.remove",
+    "onCommand:codexOnboarding.repair"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "codexOnboarding.install",
+        "title": "Codex Onboarding: Install"
+      },
+      {
+        "command": "codexOnboarding.remove",
+        "title": "Codex Onboarding: Remove"
+      },
+      {
+        "command": "codexOnboarding.repair",
+        "title": "Codex Onboarding: Repair"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "codexOnboarding.install"
+        },
+        {
+          "command": "codexOnboarding.remove"
+        },
+        {
+          "command": "codexOnboarding.repair"
+        }
+      ]
+    }
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "Requires a writable filesystem for managed onboarding files."
+    },
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Requires trusted workspace access to apply or modify managed files."
+    }
+  },
+  "files": [
+    "out/**",
+    "assets/**",
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "onboarding-assets/**"
+  ],
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\"",
+    "compile": "npm run clean && tsc -p tsconfig.build.json --noEmit && node ./scripts/build-bundle.js",
+    "watch": "tsc -watch -p tsconfig.build.json",
+    "verify:onboarding-assets-sync": "node ./scripts/sync-onboarding-assets.js --check",
+    "pretest": "npm run verify:onboarding-assets-sync",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
+    "package:ci": "node -e \"require('fs').mkdirSync('artifacts',{recursive:true})\" && npx vsce package --no-yarn --out artifacts/codex-onboarding.vsix",
+    "sync:onboarding-assets": "node ./scripts/sync-onboarding-assets.js",
+    "precompile": "npm run sync:onboarding-assets",
+    "prepackage:ci": "npm run compile"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/vscode": "^1.90.0",
+    "@vitest/coverage-v8": "^4.1.0",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.27.4",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.0",
+    "yaml": "^2.8.1"
+  },
+  "icon": "assets/branding/icon-128.png",
+  "publisherDisplayName": "Mohammad Mahdi Ahmadi"
+}

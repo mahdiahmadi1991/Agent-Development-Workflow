@@ -1,0 +1,153 @@
+name: Release Publish VSCode Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (with or without 'v' prefix)"
+        required: true
+        type: string
+      publish_to_marketplace:
+        description: "Publish VSIX to Visual Studio Marketplace"
+        required: true
+        default: false
+        type: boolean
+      create_github_release:
+        description: "Create GitHub release from docs/releases"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-release:
+    name: Prepare Release Artifacts
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        run: |
+          raw="${{ inputs.version }}"
+          version="${raw#v}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: ${version}"
+
+      - name: Verify release tag exists
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          git rev-parse -q --verify "refs/tags/${tag}" >/dev/null
+
+      - name: Validate release docs
+        run: scripts/validate-release-docs.sh "${{ steps.version.outputs.version }}"
+
+      - name: Validate package version
+        run: scripts/validate-vscode-extension-version.sh "${{ steps.version.outputs.version }}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/vscode-extension/package-lock.json
+
+      - name: Install dependencies
+        working-directory: packages/vscode-extension
+        run: npm ci
+
+      - name: Run tests
+        working-directory: packages/vscode-extension
+        run: npm test
+
+      - name: Compile
+        working-directory: packages/vscode-extension
+        run: npm run compile
+
+      - name: Package VSIX
+        working-directory: packages/vscode-extension
+        run: npm run package:ci
+
+      - name: Generate VSIX checksum
+        working-directory: packages/vscode-extension
+        run: sha256sum artifacts/codex-onboarding.vsix > artifacts/codex-onboarding.vsix.sha256
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate-${{ steps.version.outputs.version }}
+          path: |
+            packages/vscode-extension/artifacts/*.vsix
+            packages/vscode-extension/artifacts/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  publish-marketplace:
+    name: Publish To Marketplace
+    needs: prepare-release
+    if: ${{ inputs.publish_to_marketplace == true }}
+    runs-on: ubuntu-latest
+    environment: vscode-marketplace
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/vscode-extension/package-lock.json
+
+      - name: Install dependencies
+        working-directory: packages/vscode-extension
+        run: npm ci
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-candidate-${{ needs.prepare-release.outputs.version }}
+          path: packages/vscode-extension/artifacts
+
+      - name: Publish VSIX
+        working-directory: packages/vscode-extension
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx vsce publish --packagePath artifacts/codex-onboarding.vsix --pat "$VSCE_PAT"
+
+  create-github-release:
+    name: Create GitHub Release
+    needs: prepare-release
+    if: ${{ inputs.create_github_release == true }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-candidate-${{ needs.prepare-release.outputs.version }}
+          path: packages/vscode-extension/artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.prepare-release.outputs.version }}
+          name: Release v${{ needs.prepare-release.outputs.version }}
+          body_path: docs/releases/v${{ needs.prepare-release.outputs.version }}.md
+          files: |
+            packages/vscode-extension/artifacts/*.vsix
+            packages/vscode-extension/artifacts/*.sha256

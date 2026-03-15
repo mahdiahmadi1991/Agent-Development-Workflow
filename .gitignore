@@ -4,13 +4,22 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Local launcher/runtime artifacts
+# >>> codex-session-isolator >>>
+# Managed by Codex Session Isolator launcher wizard.
+vsc_launcher.*
 .vsc_launcher/
-
-# Codex local state and credentials
-.codex/
+.codex/*
+!.codex/config.toml
+# <<< codex-session-isolator <<<
 
 # Environment files
 .env
 .env.*
 *.local
+
+# Node / TypeScript
+node_modules/
+**/node_modules/
+packages/vscode-extension/out/
+packages/vscode-extension/coverage/
+packages/vscode-extension/artifacts/

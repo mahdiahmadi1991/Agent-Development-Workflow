@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/.codex-onboarding/contract.schema.json",
+  "title": "Codex Onboarding Contract",
+  "type": "object",
+  "required": [
+    "contractVersion",
+    "agent",
+    "language",
+    "paths",
+    "resolutionOrder",
+    "integrity"
+  ],
+  "properties": {
+    "contractVersion": { "type": "string" },
+    "agent": { "const": "codex" },
+    "language": { "const": "en" },
+    "paths": {
+      "type": "object",
+      "required": ["core", "overrides"],
+      "properties": {
+        "core": { "type": "string" },
+        "overrides": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "resolutionOrder": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "core" },
+        { "const": "overrides" }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "integrity": {
+      "type": "object",
+      "required": ["coreImmutable", "allowOverrideOnlyForOverridableKeys"],
+      "properties": {
+        "coreImmutable": { "type": "boolean" },
+        "allowOverrideOnlyForOverridableKeys": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
