@@ -31,6 +31,8 @@ This file records standing rules agreed in this project.
 18. Cross-platform behavior and test coverage are mandatory (Windows, WSL, Linux, macOS).
 19. Release documentation (`release notes` + `CHANGELOG.md`) is mandatory.
 20. Every approved change must keep the full workspace synchronized (code, docs, tests, assets, and validation scripts where impacted); partial updates are not allowed.
+21. Canonical onboarding assets live only under `.codex-onboarding/**`; `packages/vscode-extension/onboarding-assets/**` is generated mirror and must not be edited manually.
+22. Mirror parity is mandatory and must pass `npm run verify:onboarding-assets-sync`.
 
 ## Source-of-Truth Map
 - Product behavior: `docs/product/decision-log.md`

@@ -190,6 +190,7 @@ Downgrade behavior:
 - Post-install V1 baseline includes Outcome Snapshot, Before/After Map, First 3 Steps, Prompt Packs, Safe Boundaries, Lifecycle Playbook, and Action Bar quick actions.
 - `Git Tracking Details` is a conditional block shown only when ignore mode is selected and applied.
 - Onboarding file structure is locked by template standard and validator gate.
+- Canonical onboarding asset source is `.codex-onboarding/**`; extension `onboarding-assets/**` is generated runtime/package mirror.
 - Library storage and selection contracts are locked by validator gate.
 - Static bootstrap onboarding artifact is mandatory in every install/repair result.
 - Conflict-report escalation path is optional and fully user-controlled.

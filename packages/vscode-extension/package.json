@@ -102,6 +102,8 @@
     "clean": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\"",
     "compile": "npm run clean && tsc -p tsconfig.build.json",
     "watch": "tsc -watch -p tsconfig.build.json",
+    "verify:onboarding-assets-sync": "node ./scripts/sync-onboarding-assets.js --check",
+    "pretest": "npm run verify:onboarding-assets-sync",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "package:ci": "node -e \"require('fs').mkdirSync('artifacts',{recursive:true})\" && npx vsce package --no-yarn --out artifacts/codex-onboarding.vsix",

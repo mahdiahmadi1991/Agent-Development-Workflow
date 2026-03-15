@@ -61,6 +61,8 @@ This repository is focused on:
 - `docs/consumer/README.md`: consumer-facing behavior and impact summary.
 - `docs/consumer/AI-Quickstart.md`: consumer-facing AI interaction quick-start prompts.
 - `scripts/validate-onboarding-assets.sh`: onboarding template compliance validator.
+- `packages/vscode-extension/scripts/sync-onboarding-assets.js`: source-to-mirror sync utility for extension onboarding assets.
+- `npm --prefix packages/vscode-extension run verify:onboarding-assets-sync`: mirror parity validator.
 - `scripts/validate-governance.sh`: governance baseline validator.
 - `scripts/validate-release-docs.sh`: release docs validator (`CHANGELOG.md` + `docs/releases/`).
 - `scripts/validate-vscode-extension-version.sh`: release/package version alignment validator.
@@ -70,6 +72,7 @@ This repository is focused on:
 - `.codex-onboarding/library/`: source onboarding asset library for profile-based selection.
 - `.codex-onboarding/core/`: managed baseline artifacts (immutable by policy).
 - `.codex-onboarding/overrides/`: project-specific customization path.
+- `packages/vscode-extension/onboarding-assets/`: generated mirror used for extension runtime/package (do not edit directly).
 - `packages/vscode-extension/`: VS Code extension package implementation.
 
 ## Branching Model

@@ -9,6 +9,14 @@ Define a clean, scalable, and enforceable storage layout for onboarding assets i
 ## Canonical Library Root
 - `.codex-onboarding/library/`
 
+## Extension Packaging Mirror
+- Runtime/package mirror path: `packages/vscode-extension/onboarding-assets/`
+- Mirror source-of-truth is `.codex-onboarding/**` only.
+- Mirror is generated and must not be edited directly.
+- Parity is enforced via:
+  - `npm --prefix packages/vscode-extension run sync:onboarding-assets`
+  - `npm --prefix packages/vscode-extension run verify:onboarding-assets-sync`
+
 ## Canonical Layout
 ```text
 .codex-onboarding/library/

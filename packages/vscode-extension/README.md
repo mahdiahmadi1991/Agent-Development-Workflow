@@ -49,6 +49,15 @@ Install flow runs in this order:
 
 Questionnaire and selection assets are loaded from extension-bundled onboarding assets.
 
+## Development Note (Asset Source Model)
+
+- Canonical onboarding source lives at repository root: `.codex-onboarding/**`
+- Extension runtime/package consumes generated mirror: `packages/vscode-extension/onboarding-assets/**`
+- Do not edit mirror files directly.
+- Sync and verify with:
+  - `npm run sync:onboarding-assets`
+  - `npm run verify:onboarding-assets-sync`
+
 ## Logging
 
 Each lifecycle run opens the VS Code Output channel and streams trace logs in real time.

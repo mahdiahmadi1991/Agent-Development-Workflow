@@ -57,6 +57,13 @@ Detailed model is documented in `docs/governance/override-model.md`.
 - These artifact roots must not be treated as governance policy sources for agent behavior decisions.
 - For governance decisions, use only sources listed in `docs/governance/context-boundary-map.yaml`.
 
+## Onboarding Asset Source Model
+- Canonical onboarding asset source is `.codex-onboarding/**` only.
+- `packages/vscode-extension/onboarding-assets/**` is a generated mirror for extension runtime/package.
+- Generated mirror must never be edited directly.
+- Any change to canonical assets must be propagated via `npm run sync:onboarding-assets`.
+- Mirror parity must pass `npm run verify:onboarding-assets-sync`.
+
 ## Dynamic Question Model
 - Operational Questions: extension runtime/operation questions (root selection, Git mode, safety choices).
 - Profile Selection Questions: dynamic questions loaded from questionnaire definition files.

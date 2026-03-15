@@ -15,7 +15,8 @@ required_paths=(
   "docs/product/decision-log.md"
   "docs/product/question-model-contract.md"
   ".codex-onboarding/core/README.md"
-  ".codex-onboarding/core/AGENT-ONBOARDING.md"
+  ".codex-onboarding/core/AGENTS.md"
+  ".codex-onboarding/core/ISSUE-REPORTING.md"
   ".codex-onboarding/overrides/README.md"
   ".codex-onboarding/contract.json"
   ".codex-onboarding/schemas/contract.schema.json"
@@ -47,5 +48,7 @@ else
   echo "Missing executable validator: scripts/validate-onboarding-assets.sh"
   exit 1
 fi
+
+node packages/vscode-extension/scripts/sync-onboarding-assets.js --check
 
 echo "Governance validation passed."
