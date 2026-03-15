@@ -45,6 +45,7 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 2. `Project Technology Family` (dynamic, conditional)
 - Load family list from questionnaire registry.
 - Ask only when multiple families are available in registry.
+- Skip this step completely when registry has no families configured.
 
 3. `Technology Selection Wizard` (dynamic tree)
 - Load node graph from questionnaire definitions and do not hardcode in command handlers.
@@ -52,6 +53,7 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - Follow progressive `next` links based on prior selections.
 - Keep depth unbounded (`N` layers).
 - Map option `emits` and answer tags into resolver inputs.
+- Skip this step when questionnaire catalog has no families (core-only apply path).
 
 4. `Pre-Install Transparency Check`
 - Show behavior-impact summary and a compact selection explainability summary before apply.

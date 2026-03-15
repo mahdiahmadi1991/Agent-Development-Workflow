@@ -404,6 +404,37 @@ describe("runInstall", () => {
     );
   });
 
+  it("skips technology question flow when questionnaire catalog has no families", async () => {
+    vi.mocked(loadQuestionnaireCatalog).mockResolvedValue({
+      version: 1,
+      indexPath: "index.yaml",
+      families: []
+    });
+    vi.mocked(hasGitRepository).mockResolvedValue(false);
+
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
+
+    expect(loadQuestionnaireAssets).not.toHaveBeenCalled();
+    expect(runDynamicQuestionFlow).not.toHaveBeenCalled();
+    expect(resolveProfileFromHints).not.toHaveBeenCalled();
+    expect(resolveSelectionPlan).not.toHaveBeenCalled();
+    expect(requireUpdateConsentIfNeeded).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bundleId: "core-only",
+        bundleVersion: "0"
+      }),
+      expect.any(Object)
+    );
+    expect(applyManagedInstall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bundleId: "core-only",
+        bundleVersion: "0",
+        selectedTopics: []
+      }),
+      expect.any(Object)
+    );
+  });
+
   it("falls back to output logger when trace logger cannot be created", async () => {
     createTraceLoggerMock.mockRejectedValue("trace-create-failed");
     const logger = { log: vi.fn(), show: vi.fn() };

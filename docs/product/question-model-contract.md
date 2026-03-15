@@ -26,6 +26,7 @@ Define a stable and scalable question system without hardcoding project/topic lo
 ## Runtime Requirements
 1. Ask Operational Questions first when required by operation context.
 2. For install flow, resolve selected profile family and load Profile Selection Questions flow dynamically.
+  - If questionnaire catalog has no configured families, skip Profile Selection Questions and continue install with core-only managed artifacts.
 3. Execute tree traversal progressively based on selected option `next` links.
 4. For install flow, map selected options to capability/profile signals using both answer tags and option `emits`.
 5. Preserve deterministic output for identical questionnaire, context, and answers.

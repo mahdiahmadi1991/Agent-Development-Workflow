@@ -10,13 +10,14 @@ Build a VS Code extension that applies Codex onboarding files to a user's curren
 1. User runs the extension command in VS Code.
 2. Extension asks Operational Questions required for safe execution context.
 3. Extension loads questionnaire catalog dynamically from registry and resolves target technology family.
-4. Extension loads Profile Selection Questions dynamically from selected family questionnaire files.
-5. User completes Technology Selection Wizard (dynamic tree, progressive branching, `single`/`multi` nodes).
-6. Extension presents behavior-impact summary plus selection explainability preview, then requires explicit acknowledgement.
-7. Extension copies predefined onboarding files for that target into predefined paths in the current project.
-8. Extension shows a success message with a summary of applied files.
-9. Extension opens a dedicated post-install `WebviewPanel` in VS Code with fixed V1 section order, professional onboarding guidance blocks, and deterministic change report data.
-10. Extension installs managed advisory guidance for user-controlled issue escalation recommendations.
+4. If catalog families exist, extension loads Profile Selection Questions from selected family questionnaire files.
+5. If catalog families exist, user completes Technology Selection Wizard (dynamic tree, progressive branching, `single`/`multi` nodes).
+6. If questionnaire catalog is empty, install skips technology questions and continues with core-only onboarding apply.
+7. Extension presents behavior-impact summary plus selection explainability preview, then requires explicit acknowledgement.
+8. Extension copies predefined onboarding files for that target into predefined paths in the current project.
+9. Extension shows a success message with a summary of applied files.
+10. Extension opens a dedicated post-install `WebviewPanel` in VS Code with fixed V1 section order, professional onboarding guidance blocks, and deterministic change report data.
+11. Extension installs managed advisory guidance for user-controlled issue escalation recommendations.
 
 ## Command Surface
 - Minimal command set:
@@ -53,6 +54,7 @@ Catalog design principles:
 - Profile Selection Questions question definitions are loaded dynamically from:
   - `.codex-onboarding/library/questionnaires/index.yaml`
   - `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
+- If questionnaire catalog has no families, install skips Profile Selection Questions and proceeds with core-only artifacts.
 - Questionnaire flows are tree-based and support:
   - unbounded depth (`N` layers)
   - mixed `single` and `multi` node modes

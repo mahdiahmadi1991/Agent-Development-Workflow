@@ -1,7 +1,0 @@
-version: 1
-profile_id: dotnet-csharp-web-api-simple
-family: dotnet-csharp
-inherits: dotnet-csharp-baseline
-questionnaire_ref: .codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml
-baseline_topics: []
-default_capabilities: [tech.backend.dotnet.webapi]

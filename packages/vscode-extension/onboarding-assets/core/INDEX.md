@@ -40,6 +40,7 @@ Provide a deterministic entry point so Codex can discover onboarding scope with 
 - Prefer concise summaries before deep dives.
 
 ## Root Project Integration (Optional, Manual)
-- Extension does not auto-edit root `AGENTS.md`.
-- If the user wants stronger discoverability, they can add a manual note in project-root `AGENTS.md` that points to:
+- If root `AGENTS.md` does not exist, extension creates it automatically.
+- If root `AGENTS.md` already exists, extension asks permission before editing it.
+- If permission is denied, post-install guidance provides a manual snippet that points to:
   - `.codex-onboarding/INDEX.md`

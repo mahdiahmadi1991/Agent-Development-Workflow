@@ -118,10 +118,15 @@ function toFamilyDisplayName(family: string): string {
     .join(" ");
 }
 
+type QuestionnaireFamilyResolution =
+  | { status: "none" }
+  | { status: "selected"; family: string }
+  | { status: "cancelled" };
+
 async function resolveQuestionnaireFamily(
   extensionPath: string,
   traceLogger: OperationTraceLogger
-): Promise<string | undefined> {
+): Promise<QuestionnaireFamilyResolution> {
   const catalog = await loadQuestionnaireCatalog(extensionPath);
   traceLogger.log("debug", "dynamic_catalog_loaded", {
     catalog_version: catalog.version,
@@ -129,13 +134,23 @@ async function resolveQuestionnaireFamily(
     catalog_index_path: catalog.indexPath
   });
 
+  if (catalog.families.length === 0) {
+    traceLogger.log("debug", "dynamic_catalog_skipped", {
+      reason: "no_catalog_families_configured"
+    });
+    return { status: "none" };
+  }
+
   if (catalog.families.length === 1) {
     const only = catalog.families[0]!;
     traceLogger.log("debug", "dynamic_catalog_family_resolved", {
       selected_family: only.family,
       selection_mode: "auto_single_family"
     });
-    return only.family;
+    return {
+      status: "selected",
+      family: only.family
+    };
   }
 
   const pick = await vscode.window.showQuickPick(
@@ -155,14 +170,17 @@ async function resolveQuestionnaireFamily(
     traceLogger.log("warning", "operation_blocked", {
       reason: "catalog_family_selection_cancelled"
     });
-    return undefined;
+    return { status: "cancelled" };
   }
 
   traceLogger.log("debug", "dynamic_catalog_family_resolved", {
     selected_family: pick.entry.family,
     selection_mode: "quick_pick"
   });
-  return pick.entry.family;
+  return {
+    status: "selected",
+    family: pick.entry.family
+  };
 }
 
 function buildGitTrackingSummaryLines(input: {
@@ -237,67 +255,89 @@ export async function runInstall(
     });
     targetRootPath = target.uri.fsPath;
 
-    const family = await resolveQuestionnaireFamily(context.extensionPath, traceLogger);
-    if (!family) {
+    const familyResolution = await resolveQuestionnaireFamily(context.extensionPath, traceLogger);
+    if (familyResolution.status === "cancelled") {
       void vscode.window.showInformationMessage("Install canceled at Project Technology Family.");
       return;
     }
 
     const gitRepositoryAvailable = await hasGitRepository(target.uri.fsPath);
     const gitTrackingQuestionSkipped = !gitRepositoryAvailable;
-    const workspaceSignals = await detectWorkspaceSignals(target.uri.fsPath);
+    let selectedProfileId = "core-only";
+    let bundleId = "core-only";
+    let bundleVersion = "0";
+    let selectionPlan = {
+      profile_id: "core-only",
+      capability_tags: [] as string[],
+      selected_topics: [] as Array<{
+        file_id: string;
+        path: string;
+        category: string;
+        required: boolean;
+        reasons: string[];
+      }>
+    };
 
-    traceLogger.log("debug", "workspace_signals_detected", {
-      signal_count: workspaceSignals.signals.length,
-      signal_keys: workspaceSignals.signals.join(",")
-    });
+    if (familyResolution.status === "selected") {
+      const family = familyResolution.family;
+      const workspaceSignals = await detectWorkspaceSignals(target.uri.fsPath);
 
-    const questionnaire = await loadQuestionnaireAssets(context.extensionPath, family);
-
-    traceLogger.log("debug", "dynamic_question_flow_loaded", {
-      family: questionnaire.family,
-      index_path: questionnaire.indexPath,
-      flow_path: questionnaire.flowPath
-    });
-
-    const profileSelectionAnswers = await runDynamicQuestionFlow(
-      questionnaire.flow,
-      traceLogger,
-      operationId,
-      {
-        env: {
-          git_available: gitRepositoryAvailable
-        },
-        detect: workspaceSignals.asFacts
-      }
-    );
-    if (!profileSelectionAnswers) {
-      traceLogger.log("warning", "operation_blocked", {
-        reason: "profile_selection_questions_cancelled"
+      traceLogger.log("debug", "workspace_signals_detected", {
+        signal_count: workspaceSignals.signals.length,
+        signal_keys: workspaceSignals.signals.join(",")
       });
-      void vscode.window.showInformationMessage("Install canceled at Project Profile.");
-      return;
-    }
 
-    const resolvedProfile = await resolveProfileFromHints(
-      context.extensionPath,
-      family,
-      profileSelectionAnswers.profile_hints
-    );
+      const questionnaire = await loadQuestionnaireAssets(context.extensionPath, family);
 
-    const selectionPlan = await resolveSelectionPlan(
-      {
-        extensionPath: context.extensionPath,
+      traceLogger.log("debug", "dynamic_question_flow_loaded", {
+        family: questionnaire.family,
+        index_path: questionnaire.indexPath,
+        flow_path: questionnaire.flowPath
+      });
+
+      const profileSelectionAnswers = await runDynamicQuestionFlow(
+        questionnaire.flow,
+        traceLogger,
+        operationId,
+        {
+          env: {
+            git_available: gitRepositoryAvailable
+          },
+          detect: workspaceSignals.asFacts
+        }
+      );
+      if (!profileSelectionAnswers) {
+        traceLogger.log("warning", "operation_blocked", {
+          reason: "profile_selection_questions_cancelled"
+        });
+        void vscode.window.showInformationMessage("Install canceled at Project Profile.");
+        return;
+      }
+
+      const resolvedProfile = await resolveProfileFromHints(
+        context.extensionPath,
         family,
-        profileId: resolvedProfile.profile_id,
-        baselineTopicIds: resolvedProfile.baseline_topics,
-        defaultCapabilities: resolvedProfile.default_capabilities,
-        questionAnswers: profileSelectionAnswers.answers,
-        wizardCapabilityTags: profileSelectionAnswers.capability_tags,
-        wizardTopicTags: profileSelectionAnswers.topic_tags
-      },
-      traceLogger
-    );
+        profileSelectionAnswers.profile_hints
+      );
+
+      selectionPlan = await resolveSelectionPlan(
+        {
+          extensionPath: context.extensionPath,
+          family,
+          profileId: resolvedProfile.profile_id,
+          baselineTopicIds: resolvedProfile.baseline_topics,
+          defaultCapabilities: resolvedProfile.default_capabilities,
+          questionAnswers: profileSelectionAnswers.answers,
+          wizardCapabilityTags: profileSelectionAnswers.capability_tags,
+          wizardTopicTags: profileSelectionAnswers.topic_tags
+        },
+        traceLogger
+      );
+
+      selectedProfileId = resolvedProfile.profile_id;
+      bundleId = resolvedProfile.profile_id;
+      bundleVersion = String(questionnaire.flow.version);
+    }
 
     const repositoryUrl = resolveRepositoryUrl(context.extension.packageJSON);
     const transparencyResult = await requirePreInstallTransparencyAcknowledgement(
@@ -382,8 +422,8 @@ export async function runInstall(
       {
         command: "install",
         targetRootPath: target.uri.fsPath,
-        bundleId: resolvedProfile.profile_id,
-        bundleVersion: String(questionnaire.flow.version),
+        bundleId,
+        bundleVersion,
         extensionVersion,
         repositoryUrl
       },
@@ -413,8 +453,8 @@ export async function runInstall(
       {
         extensionPath: context.extensionPath,
         targetRootPath: target.uri.fsPath,
-        bundleId: resolvedProfile.profile_id,
-        bundleVersion: String(questionnaire.flow.version),
+        bundleId,
+        bundleVersion,
         extensionVersion,
         selectedTopics: selectionPlan.selected_topics
       },
@@ -441,7 +481,7 @@ export async function runInstall(
         gitTrackingUpdated: gitTrackingResult.updated,
         gitQuestionSkipped: gitTrackingQuestionSkipped
       }),
-      `Selected profile (Project Profile): ${resolvedProfile.profile_id}`,
+      `Selected profile (Project Profile): ${selectedProfileId}`,
       `Selected topics (resolver): ${selectionPlan.selected_topics.length}`,
       `Applied files: ${installResult.appliedFiles.length}`,
       `Skipped files: ${installResult.skippedFiles.length}`,
@@ -459,7 +499,7 @@ export async function runInstall(
 
     void vscode.window.showInformationMessage(summary, { modal: false });
     traceLogger.log("debug", "success_notification_shown", {
-      target_profile: resolvedProfile.profile_id,
+      target_profile: selectedProfileId,
       selected_topic_count: selectionPlan.selected_topics.length,
       git_tracking_strategy: gitTrackingResult.strategy,
       applied_count: installResult.appliedFiles.length,
@@ -469,7 +509,7 @@ export async function runInstall(
 
     const postInstallPanelOpened = await openPostInstallGuidancePage({
       targetRootPath: target.uri.fsPath,
-      selectedProfile: resolvedProfile.profile_id,
+      selectedProfile: selectedProfileId,
       logFilePath: traceLogger.logFilePath,
       managedStatePath: installResult.statePath,
       gitMode: gitTrackingSelection.gitMode,
@@ -479,8 +519,8 @@ export async function runInstall(
       skippedCount: installResult.skippedFiles.length,
       removedStaleCount: installResult.removedStaleFiles.length,
       extensionVersion,
-      bundleId: resolvedProfile.profile_id,
-      bundleVersion: String(questionnaire.flow.version),
+      bundleId,
+      bundleVersion,
       capabilityTags: selectionPlan.capability_tags,
       selectedTopics: selectionPlan.selected_topics.map((topic) => ({
         fileId: topic.file_id,
@@ -496,12 +536,12 @@ export async function runInstall(
     });
 
     traceLogger.log("debug", postInstallPanelOpened ? "post_install_page_opened" : "post_install_page_fallback", {
-      target_profile: resolvedProfile.profile_id
+      target_profile: selectedProfileId
     });
 
     traceLogger.log("debug", "operation_completed", {
       result_code: installResult.resultCode ?? (installResult.appliedFiles.length > 0 ? "applied" : "completed_with_skips"),
-      target_profile: resolvedProfile.profile_id
+      target_profile: selectedProfileId
     });
   } catch (error) {
     logger.show();
