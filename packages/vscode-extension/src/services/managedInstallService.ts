@@ -22,6 +22,8 @@ interface ManagedInstallInput {
   selectedTopics: SelectedTopic[];
   mode?: ManagedApplyMode;
   forceResetModifiedManagedFiles?: boolean;
+  // Testability hook: allows deterministic simulation of post-preflight drift races.
+  afterPreflightHook?: () => Promise<void> | void;
 }
 
 export interface ManagedInstallResult {
@@ -260,14 +262,10 @@ async function removeEmptyParentDirs(targetRootPath: string, relativePath: strin
   const stopAt = path.join(targetRootPath, ".codex-onboarding");
   let current = path.dirname(path.join(targetRootPath, relativePath));
 
-  while (current.startsWith(stopAt)) {
+  while (current.startsWith(stopAt) && current !== stopAt) {
     try {
       await fs.rmdir(current);
     } catch {
-      break;
-    }
-
-    if (current === stopAt) {
       break;
     }
 
@@ -623,6 +621,10 @@ export async function applyManagedInstall(
     mode,
     forceResetModifiedManagedFiles
   );
+
+  if (input.afterPreflightHook) {
+    await input.afterPreflightHook();
+  }
 
   for (const file of desiredFiles) {
     await applySingleManagedFile(

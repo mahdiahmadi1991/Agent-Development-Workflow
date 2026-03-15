@@ -127,12 +127,6 @@ async function resolveInheritedProfile(
   const inheritedSlug = profile.inherits.replace(new RegExp(`^${family}-`), "");
   const baseProfile = await loadSingleProfileFile(assetRoot, family, inheritedSlug);
 
-  if (baseProfile.family !== family) {
-    throw new Error(
-      `Base profile family mismatch for '${baseProfile.profile_id}'. Expected '${family}', got '${baseProfile.family}'.`
-    );
-  }
-
   const baseline_topics = dedupeStrings([...baseProfile.baseline_topics, ...profile.baseline_topics]);
   const default_capabilities = dedupeStrings([
     ...baseProfile.default_capabilities,
@@ -159,7 +153,7 @@ function combineProfiles(family: string, profiles: ProfileDefinition[]): Profile
     version: 1,
     profile_id: combinedId,
     family,
-    questionnaire_ref: sortedProfiles[0]?.questionnaire_ref ?? "",
+    questionnaire_ref: sortedProfiles[0]!.questionnaire_ref,
     baseline_topics,
     default_capabilities
   };

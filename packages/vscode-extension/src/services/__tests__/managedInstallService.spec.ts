@@ -498,6 +498,51 @@ describe("applyManagedInstall", () => {
     await expect(fs.readFile(managedPath, "utf8")).resolves.not.toContain("# local drift");
   });
 
+  it("repair mode recreates missing tracked managed files when forced", async () => {
+    const fixture = await createFixturePaths("managed-repair-force-recreate-missing");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+
+    const logger = { log: vi.fn() };
+
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    const managedPath = path.join(
+      fixture.targetRoot,
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+    );
+    await fs.unlink(managedPath);
+
+    const repaired = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo],
+        mode: "repair",
+        forceResetModifiedManagedFiles: true
+      },
+      logger
+    );
+
+    expect(repaired.appliedFiles).toContain(".codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
+    await expect(fs.readFile(managedPath, "utf8")).resolves.toContain("artifact_id: repo-guidance");
+  });
+
   it("keeps tracked files up to date without rewriting unchanged content", async () => {
     const fixture = await createFixturePaths("managed-install-up-to-date");
     cleanups.push(fixture.tempRoot);
@@ -623,5 +668,474 @@ describe("applyManagedInstall", () => {
         "utf8"
       )
     ).resolves.toContain("bundle_id: dotnet-csharp-web-api-simple");
+  });
+
+  it("normalizes topic path aliases starting with .codex-onboarding/library/topics", async () => {
+    const fixture = await createFixturePaths("managed-install-topic-alias-dot-prefix");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeAssetFile(
+      fixture.assetRoot,
+      "library/topics/cross-cutting/repo-guidance.md",
+      [
+        "<!--",
+        "artifact_id: repo-guidance",
+        "managed: true",
+        "schema_version: 1",
+        "bundle_id: TBD",
+        "bundle_version: TBD",
+        "extension_version: TBD",
+        "-->",
+        "",
+        "# repo-guidance"
+      ].join("\n")
+    );
+
+    const topicWithDotPrefix: SelectedTopic = {
+      ...topicRepo,
+      path: ".codex-onboarding/library/topics/cross-cutting/repo-guidance.md"
+    };
+
+    const logger = { log: vi.fn() };
+    const result = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicWithDotPrefix]
+      },
+      logger
+    );
+
+    expect(result.appliedFiles).toContain(".codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
+  });
+
+  it("keeps raw topic path when alias prefix is absent", async () => {
+    const fixture = await createFixturePaths("managed-install-topic-raw-path");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeAssetFile(
+      fixture.assetRoot,
+      "library/topics/cross-cutting/repo-guidance.md",
+      [
+        "<!--",
+        "artifact_id: repo-guidance",
+        "managed: true",
+        "schema_version: 1",
+        "bundle_id: TBD",
+        "bundle_version: TBD",
+        "extension_version: TBD",
+        "-->",
+        "",
+        "# repo-guidance"
+      ].join("\n")
+    );
+
+    const rawPathTopic: SelectedTopic = {
+      ...topicRepo,
+      path: "cross-cutting/repo-guidance.md"
+    };
+
+    const logger = { log: vi.fn() };
+    const result = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [rawPathTopic]
+      },
+      logger
+    );
+
+    expect(result.appliedFiles).toContain(".codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
+  });
+
+  it("supports core-only installation when no topics are selected", async () => {
+    const fixture = await createFixturePaths("managed-install-core-only");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+
+    const logger = { log: vi.fn() };
+
+    const result = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "core-only",
+        bundleVersion: "0",
+        extensionVersion: "0.0.1",
+        selectedTopics: []
+      },
+      logger
+    );
+
+    expect(result.appliedFiles.sort()).toEqual([
+      ".codex-onboarding/.gitignore",
+      ".codex-onboarding/AGENTS.md",
+      ".codex-onboarding/INDEX.md",
+      ".codex-onboarding/ISSUE-REPORTING.md"
+    ]);
+  });
+
+  it("rewrites state when existing managed file set length differs (duplicate legacy entries)", async () => {
+    const fixture = await createFixturePaths("managed-install-state-length-mismatch");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+
+    const logger = { log: vi.fn() };
+    const first = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    const stateRaw = await fs.readFile(first.statePath, "utf8");
+    const state = JSON.parse(stateRaw) as {
+      bundle_id: string;
+      bundle_version: string;
+      extension_version: string;
+      applied_at_utc: string;
+      managed_files: Array<Record<string, unknown>>;
+    };
+    state.managed_files.push({ ...state.managed_files[0]! });
+    await fs.writeFile(first.statePath, JSON.stringify(state, null, 2), "utf8");
+
+    const second = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    expect(second.stateRewritten).toBe(true);
+    expect(second.resultCode).toBe("synchronized");
+  });
+
+  it("rewrites state when managed file metadata shape differs", async () => {
+    const fixture = await createFixturePaths("managed-install-state-entry-mismatch");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+
+    const logger = { log: vi.fn() };
+    const first = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    const stateRaw = await fs.readFile(first.statePath, "utf8");
+    const state = JSON.parse(stateRaw) as {
+      managed_files: Array<{
+        relative_path: string;
+        metadata_mode: string;
+        metadata_format: string;
+      }>;
+    };
+    const agentsEntry = state.managed_files.find(
+      (item) => item.relative_path === ".codex-onboarding/AGENTS.md"
+    );
+    expect(agentsEntry).toBeDefined();
+    agentsEntry!.metadata_format = "none";
+    await fs.writeFile(first.statePath, JSON.stringify(state, null, 2), "utf8");
+
+    const second = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    expect(second.stateRewritten).toBe(true);
+    expect(second.resultCode).toBe("synchronized");
+  });
+
+  it("surfaces non-ENOENT preflight read errors", async () => {
+    const fixture = await createFixturePaths("managed-install-preflight-read-error");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+
+    const logger = { log: vi.fn() };
+
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    const targetManagedPath = path.join(fixture.targetRoot, ".codex-onboarding", "AGENTS.md");
+    await fs.chmod(targetManagedPath, 0o000);
+
+    await expect(
+      applyManagedInstall(
+        {
+          extensionPath: fixture.extensionPath,
+          targetRootPath: fixture.targetRoot,
+          bundleId: "dotnet-csharp-web-api-simple",
+          bundleVersion: "2",
+          extensionVersion: "0.0.2",
+          selectedTopics: [topicRepo]
+        },
+        logger
+      )
+    ).rejects.toMatchObject({ code: expect.stringMatching(/EACCES|EPERM/) });
+
+    await fs.chmod(targetManagedPath, 0o644);
+  });
+
+  it("surfaces non-ENOENT stale-read errors during reconcile", async () => {
+    const fixture = await createFixturePaths("managed-install-reconcile-read-error");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+    await writeTopic(fixture.assetRoot, topicAuth.path, topicAuth.file_id);
+
+    const logger = { log: vi.fn() };
+
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo, topicAuth]
+      },
+      logger
+    );
+
+    const stalePath = path.join(
+      fixture.targetRoot,
+      ".codex-onboarding/core/topics/dotnet/csharp/security/auth-guidance.md"
+    );
+    await fs.chmod(stalePath, 0o000);
+
+    await expect(
+      applyManagedInstall(
+        {
+          extensionPath: fixture.extensionPath,
+          targetRootPath: fixture.targetRoot,
+          bundleId: "dotnet-csharp-web-api-simple",
+          bundleVersion: "2",
+          extensionVersion: "0.0.2",
+          selectedTopics: [topicRepo]
+        },
+        logger
+      )
+    ).rejects.toMatchObject({ code: expect.stringMatching(/EACCES|EPERM/) });
+
+    await fs.chmod(stalePath, 0o644);
+  });
+
+  it("detects post-preflight missing tracked file drift race", async () => {
+    const fixture = await createFixturePaths("managed-install-post-preflight-missing-race");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+
+    const logger = { log: vi.fn() };
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    const trackedPath = path.join(fixture.targetRoot, ".codex-onboarding/AGENTS.md");
+    await expect(
+      applyManagedInstall(
+        {
+          extensionPath: fixture.extensionPath,
+          targetRootPath: fixture.targetRoot,
+          bundleId: "dotnet-csharp-web-api-simple",
+          bundleVersion: "1",
+          extensionVersion: "0.0.1",
+          selectedTopics: [topicRepo],
+          afterPreflightHook: async () => {
+            await fs.unlink(trackedPath);
+          }
+        },
+        logger
+      )
+    ).rejects.toThrow("Managed missing file detected");
+  });
+
+  it("detects post-preflight modified tracked file drift race", async () => {
+    const fixture = await createFixturePaths("managed-install-post-preflight-modified-race");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+
+    const logger = { log: vi.fn() };
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    const trackedPath = path.join(fixture.targetRoot, ".codex-onboarding/AGENTS.md");
+    await expect(
+      applyManagedInstall(
+        {
+          extensionPath: fixture.extensionPath,
+          targetRootPath: fixture.targetRoot,
+          bundleId: "dotnet-csharp-web-api-simple",
+          bundleVersion: "1",
+          extensionVersion: "0.0.1",
+          selectedTopics: [topicRepo],
+          afterPreflightHook: async () => {
+            await fs.appendFile(trackedPath, "\n# drift-after-preflight", "utf8");
+          }
+        },
+        logger
+      )
+    ).rejects.toThrow("Managed drift detected");
+  });
+
+  it("uses repair_action logging when syncing tracked files in repair mode", async () => {
+    const fixture = await createFixturePaths("managed-install-repair-sync-log");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+
+    const logger = { log: vi.fn() };
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "2",
+        extensionVersion: "0.0.2",
+        selectedTopics: [topicRepo],
+        mode: "repair"
+      },
+      logger
+    );
+
+    expect(logger.log).toHaveBeenCalledWith(
+      "debug",
+      "repair_action",
+      expect.objectContaining({
+        reason: "managed_file_synced"
+      })
+    );
+  });
+
+  it("uses repair_action logging when removing stale managed files in repair mode", async () => {
+    const fixture = await createFixturePaths("managed-install-repair-stale-log");
+    cleanups.push(fixture.tempRoot);
+
+    const secondCrossCuttingTopic: SelectedTopic = {
+      file_id: "repo-guidance-2",
+      path: "topics/cross-cutting/repo-guidance-2.md",
+      category: "cross-cutting",
+      required: false,
+      reasons: ["selected_by_capability"]
+    };
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+    await writeTopic(fixture.assetRoot, secondCrossCuttingTopic.path, secondCrossCuttingTopic.file_id);
+
+    const logger = { log: vi.fn() };
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo, secondCrossCuttingTopic]
+      },
+      logger
+    );
+
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "2",
+        extensionVersion: "0.0.2",
+        selectedTopics: [topicRepo],
+        mode: "repair"
+      },
+      logger
+    );
+
+    expect(logger.log).toHaveBeenCalledWith(
+      "debug",
+      "repair_action",
+      expect.objectContaining({
+        reason: "stale_managed_removed"
+      })
+    );
   });
 });

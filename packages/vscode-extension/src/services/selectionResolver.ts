@@ -244,10 +244,7 @@ export async function resolveSelectionPlan(
   }
 
   for (const selected of Array.from(selectedMap.values())) {
-    const topic = topicMap.get(selected.file_id);
-    if (!topic) {
-      continue;
-    }
+    const topic = topicMap.get(selected.file_id)!;
 
     for (const dependencyId of topic.requires) {
       const dependency = topicMap.get(dependencyId);
@@ -274,10 +271,7 @@ export async function resolveSelectionPlan(
   }
 
   for (const selected of Array.from(selectedMap.values())) {
-    const topic = topicMap.get(selected.file_id);
-    if (!topic) {
-      continue;
-    }
+    const topic = topicMap.get(selected.file_id)!;
 
     for (const conflictId of topic.conflicts_with) {
       const conflict = selectedMap.get(conflictId);
