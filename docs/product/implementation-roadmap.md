@@ -32,7 +32,7 @@ Provide an operational, decision-aligned roadmap to ensure implementation stays 
 16. Successful install must show completion summary and open post-install WebviewPanel with quick-start usage tips.
 17. Every install/repair result must include the static bootstrap onboarding artifact.
 18. Conflict escalation to upstream issues must remain optional and user-controlled.
-19. Question flow must use two groups: Operational Questions and dynamic Profile Selection Questions.
+19. Install question flow must use two groups: Operational Questions and dynamic Profile Selection Questions; repair flow must be state-driven.
 
 ## Phase Plan
 
@@ -112,7 +112,7 @@ Reference: `docs/product/recovery-policy.md`
 - Define post-install completion UX (success summary + dedicated WebviewPanel).
 - Split post-install Webview implementation into independent execution phases (A-G) as defined in `docs/product/post-install-success-experience.md`.
 - Enforce the V1 professional UX baseline blocks and fixed section order from `docs/product/post-install-success-experience.md`.
-- Define issue-escalation UX for conflict reporting (explicit consent, permission-aware direct submission, manual fallback).
+- Define advisory conflict-escalation guidance artifact behavior for Codex/user interactions.
 - Define operational vs dynamic question UX and state handling.
 
 Exit criteria:

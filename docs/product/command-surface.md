@@ -16,13 +16,21 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 
 2. `Codex Onboarding: Remove`
 - Clears managed state.
-- Removes extension-owned managed files only when they are unchanged from managed integrity state.
-- Never deletes unmanaged consumer files or consumer-modified managed files.
-- Reports remaining files that were intentionally not removed.
+- Runs pre-remove scan on `.codex-onboarding/` to detect:
+  - managed-file drift (modified or missing tracked managed files)
+  - additional user-created files not owned by extension
+- If no changes are detected, remove executes directly with no confirmation.
+- If changes are detected, show a destructive `QuickPick` warning.
+- If user confirms destructive mode, remove deletes entire `.codex-onboarding/` root.
+- If user declines, remove is canceled.
 
 3. `Codex Onboarding: Repair`
-- Repairs missing/corrupt managed state and managed-file consistency.
-- Rebuilds managed state from selected target/bundle contract.
+- Runs only when managed onboarding evidence already exists in selected workspace root.
+- If no managed onboarding evidence exists, operation is blocked and user is redirected to `Install`.
+- Performs state-driven reset using the current managed bundle/version already recorded in project state.
+- If managed state is missing/corrupt/empty but managed files are intact, repair recovers source metadata from managed files and rebuilds state.
+- If tracked managed files are edited/missing, show a destructive-reset `QuickPick` warning before overwrite.
+- If tracked managed files are unchanged, run repair without extra confirmation.
 
 ## Install Prompt Model
 1. `Installation Scope`
@@ -31,15 +39,14 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 2. `Project Profile` (dynamic)
 - Load from questionnaire definitions and do not hardcode in command handlers.
 
-3. `Review & Apply: Git Tracking`
+3. `Git Tracking Preference`
 - Ask whether managed files should be tracked in Git or ignored via repository-local `.git/info/exclude` only when Git repository exists at selected root.
-
-4. `Review & Apply`
-- Final confirmation with concise summary and topic preview before changes are written.
+- No additional final preview confirmation is shown after this step; install proceeds with non-destructive managed-write rules.
 
 ## Command Policy
 - No broad option explosion in command palette.
-- Update behavior is lifecycle logic under install/repair flows, not a separate user command.
-- Issue escalation actions are optional UI quick actions, not additional command-palette commands.
-- Project profile questions are dynamic data-driven flows, not separate commands.
+- Update behavior is lifecycle logic under install flow, not a separate user command.
+- Upstream issue escalation is advisory guidance only (instruction artifact), not a dedicated extension command.
+- Project profile questions are dynamic data-driven flows for install command, not separate commands.
 - All commands must produce deterministic operation reports.
+- Running any lifecycle command auto-opens Output channel for live trace diagnostics.

@@ -117,7 +117,7 @@ describe("install command multi-root smoke", () => {
     vi.mocked(applyManagedInstall).mockResolvedValue({
       statePath: "/workspace/app-b/.codex-onboarding/.managed/state.json",
       managedRootPath: "/workspace/app-b/.codex-onboarding/.managed",
-      appliedFiles: [".codex-onboarding/core/AGENT-ONBOARDING.md"],
+      appliedFiles: [".codex-onboarding/AGENTS.md"],
       skippedFiles: [],
       recoveredTrackedFiles: [],
       removedStaleFiles: []
@@ -161,9 +161,7 @@ describe("install command multi-root smoke", () => {
         value: "track"
       } as never);
 
-    vi.spyOn(vscode.window, "showInformationMessage")
-      .mockResolvedValueOnce("Apply Installation" as never)
-      .mockResolvedValue(undefined);
+    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue(undefined);
     vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue(undefined);
     vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
 

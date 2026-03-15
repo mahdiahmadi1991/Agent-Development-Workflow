@@ -50,19 +50,21 @@ describe("extension activation", () => {
     });
 
     const outputLogSpy = vi.spyOn(OutputLogger.prototype, "log");
+    const outputShowSpy = vi.spyOn(OutputLogger.prototype, "show");
 
     const context = buildContext();
 
     activate(context);
 
-    expect(vscode.commands.registerCommand).toHaveBeenCalledTimes(5);
+    expect(vscode.commands.registerCommand).toHaveBeenCalledTimes(6);
     expect(callbacks.has("codexOnboarding.install")).toBe(true);
     expect(callbacks.has("codexOnboarding.remove")).toBe(true);
     expect(callbacks.has("codexOnboarding.repair")).toBe(true);
+    expect(callbacks.has(postInstallActions.openManagedRoot)).toBe(true);
+    expect(callbacks.has(postInstallActions.openOperationLog)).toBe(true);
     expect(callbacks.has(postInstallActions.copyStarterPrompt)).toBe(true);
-    expect(callbacks.has(postInstallActions.reportIssue)).toBe(true);
 
-    expect(context.subscriptions).toHaveLength(6);
+    expect(context.subscriptions).toHaveLength(7);
 
     expect(outputLogSpy).toHaveBeenCalledWith("debug", "extension_activated", {
       extension_id: "publisher.codex-onboarding"
@@ -87,6 +89,7 @@ describe("extension activation", () => {
     expect(installLoggerArg).toBeInstanceOf(OutputLogger);
     expect(removeLoggerArg).toBe(installLoggerArg);
     expect(repairLoggerArg).toBe(installLoggerArg);
+    expect(outputShowSpy).toHaveBeenCalledTimes(3);
   });
 
   it("copies starter prompt via internal post-install action", async () => {
@@ -108,6 +111,51 @@ describe("extension activation", () => {
     expect(infoSpy).toHaveBeenCalledWith("Starter prompt copied to clipboard.");
   });
 
+  it("reveals managed root from internal post-install action", async () => {
+    const callbacks = new Map<string, (...args: unknown[]) => unknown>();
+
+    vi.spyOn(vscode.commands, "registerCommand").mockImplementation((id, callback) => {
+      callbacks.set(id, callback as (...args: unknown[]) => unknown);
+      return { dispose: vi.fn() } as unknown as vscode.Disposable;
+    });
+
+    const executeSpy = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+
+    activate(buildContext());
+
+    await callbacks.get(postInstallActions.openManagedRoot)?.("/workspace/project/.codex-onboarding");
+
+    expect(executeSpy).toHaveBeenCalledWith(
+      "revealInExplorer",
+      expect.objectContaining({ fsPath: "/workspace/project/.codex-onboarding" })
+    );
+  });
+
+  it("opens operation log in editor via internal post-install action", async () => {
+    const callbacks = new Map<string, (...args: unknown[]) => unknown>();
+
+    vi.spyOn(vscode.commands, "registerCommand").mockImplementation((id, callback) => {
+      callbacks.set(id, callback as (...args: unknown[]) => unknown);
+      return { dispose: vi.fn() } as unknown as vscode.Disposable;
+    });
+
+    const openTextDocumentSpy = vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({
+      uri: vscode.Uri.file("/tmp/storage/operation-logs/install-log.jsonl")
+    } as unknown as vscode.TextDocument);
+    const showTextDocumentSpy = vi.spyOn(vscode.window, "showTextDocument").mockResolvedValue(
+      {} as unknown as vscode.TextEditor
+    );
+
+    activate(buildContext());
+
+    await callbacks.get(postInstallActions.openOperationLog)?.("/tmp/storage/operation-logs/install-log.jsonl");
+
+    expect(openTextDocumentSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ fsPath: "/tmp/storage/operation-logs/install-log.jsonl" })
+    );
+    expect(showTextDocumentSpy).toHaveBeenCalledTimes(1);
+  });
+
   it("shows warning when copy-starter action has no prompt payload", async () => {
     const callbacks = new Map<string, (...args: unknown[]) => unknown>();
 
@@ -125,25 +173,6 @@ describe("extension activation", () => {
 
     expect(writeTextSpy).not.toHaveBeenCalled();
     expect(warningSpy).toHaveBeenCalledWith("Starter prompt is unavailable.");
-  });
-
-  it("opens external issue url via report-issue action", async () => {
-    const callbacks = new Map<string, (...args: unknown[]) => unknown>();
-
-    vi.spyOn(vscode.commands, "registerCommand").mockImplementation((id, callback) => {
-      callbacks.set(id, callback as (...args: unknown[]) => unknown);
-      return { dispose: vi.fn() } as unknown as vscode.Disposable;
-    });
-
-    const openExternalSpy = vi.spyOn(vscode.env, "openExternal").mockResolvedValue(true);
-
-    activate(buildContext());
-
-    await callbacks.get(postInstallActions.reportIssue)?.();
-
-    expect(openExternalSpy).toHaveBeenCalledTimes(1);
-    const uriArg = openExternalSpy.mock.calls[0][0] as { toString: () => string };
-    expect(uriArg.toString()).toContain("https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow/issues/new");
   });
 
   it("deactivate is a safe no-op", () => {

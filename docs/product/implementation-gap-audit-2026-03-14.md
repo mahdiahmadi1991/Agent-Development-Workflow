@@ -30,7 +30,7 @@ Most important unresolved areas:
 - Resolution note:
   - Ignore behavior no longer edits consumer project files such as root `.gitignore`; it uses repository-local Git metadata.
 
-### F-02: Update consent policy is runtime-enforced in install/repair (Resolved)
+### F-02: Update consent policy is runtime-enforced in install flow (Resolved)
 - Severity: Resolved
 - Contract references:
   - `docs/product/update-consent-policy.md`
@@ -38,53 +38,54 @@ Most important unresolved areas:
   - `docs/product/decision-log.md` (D-038)
 - Implementation evidence:
   - `packages/vscode-extension/src/services/updateConsentService.ts` checks managed-state version drift and enforces update gate.
-  - Install/repair commands call update-consent gate before apply operations.
+  - Install command calls update-consent gate before apply operations.
   - Update gate requires opening both Release Notes and Changelog before `Continue Update`.
 - Resolution note:
   - Update synchronization now requires explicit user approval after release-doc review; no silent apply path remains.
 
-### F-03: Scenario S-06 behavior mismatch (missing managed file)
-- Severity: Critical
+### F-03: Scenario S-06 behavior mismatch (missing managed file) (Resolved)
+- Severity: Resolved
 - Contract references:
   - `docs/product/scenario-matrix.md` (S-06)
 - Implementation evidence:
-  - `packages/vscode-extension/src/services/managedInstallService.ts` writes missing managed files as new files.
-- Gap:
-  - Contract says update should block when tracked managed file is missing.
-- Required action:
-  - Distinguish first install vs update mode and enforce fail-fast on missing tracked file in update mode.
+  - `packages/vscode-extension/src/services/managedInstallService.ts` now preflights tracked managed files and blocks when tracked files are missing.
+  - `packages/vscode-extension/src/scenarios/scenarioMatrix.smoke.spec.ts` includes explicit S-06 smoke coverage.
+  - `packages/vscode-extension/src/services/__tests__/managedInstallService.spec.ts` includes no-partial-write assertion for missing tracked file failure.
+- Resolution note:
+  - First install still creates new files as expected.
+  - Update/install with existing tracked state now fail-fast on missing tracked managed files.
 
-### F-04: Repair flow does not handle corrupt state rebuild path fully
-- Severity: Critical
+### F-04: Repair flow does not handle corrupt state rebuild path fully (Resolved)
+- Severity: Resolved
 - Contract references:
   - `docs/product/scenario-matrix.md` (S-10)
   - `docs/product/recovery-policy.md`
 - Implementation evidence:
-  - `readExistingState` in managed install throws on corrupt JSON; repair command has no corrupt-state recovery branch.
-- Gap:
-  - Repair is expected to reconstruct state safely for missing/corrupt state cases.
-- Required action:
-  - Add explicit corrupt-state recovery path with ownership-safe reconstruction behavior.
+  - `packages/vscode-extension/src/commands/repairCommand.ts` now handles `missing/corrupt` state as recoverable when managed files are intact.
+  - `packages/vscode-extension/src/commands/repairCommand.spec.ts` covers missing/corrupt/empty-state recovery paths.
+- Resolution note:
+  - Repair reconstructs source metadata from managed files and rebuilds state in repair mode.
+  - If managed evidence is absent, repair remains blocked with install-first guidance.
 
-### F-05: Issue escalation contract is partially implemented
-- Severity: Critical
+### F-05: Issue escalation behavior scope was over-implemented in runtime (Resolved)
+- Severity: Resolved
 - Contract references:
-  - `docs/product/issue-escalation-policy.md`
-  - `docs/product/decision-log.md` (D-059, D-060, D-061)
+  - `docs/product/decision-log.md` (D-059, D-060, D-061, D-085)
+  - `docs/product/bootstrap-onboarding-file-contract.md`
 - Implementation evidence:
-  - `codexOnboarding.reportIssue` only opens GitHub issue URL.
-- Gap:
-  - Missing draft payload, explicit submit confirmation, direct-submit mode, manual fallback mode, result-state logs.
-- Required action:
-  - Implement escalation service with draft generation, consent gate, permission-aware submit, and fallback UX.
+  - Runtime report-issue command and service were removed from extension code-path.
+  - Managed advisory artifact `.codex-onboarding/ISSUE-REPORTING.md` was added.
+  - `.codex-onboarding/AGENTS.md` now indexes the advisory artifact explicitly.
+- Resolution note:
+  - Escalation remains explicit and user-controlled as advisory guidance for Codex behavior, not extension-driven network submission logic.
 
-### F-06: Dynamic option catalog target family is still hardcoded
+### F-06: Dynamic option catalog target family is still hardcoded in install
 - Severity: High
 - Contract references:
   - `docs/product/living-spec.md` (Option model)
   - `docs/product/decision-log.md` (D-008, D-009)
 - Implementation evidence:
-  - `family = "dotnet-csharp"` hardcoded in install/repair commands.
+  - `family = "dotnet-csharp"` hardcoded in install command.
 - Gap:
   - Target-family selection model is not runtime-dynamic yet.
 - Required action:
@@ -191,7 +192,7 @@ Implemented:
 - Trace logger with per-operation file and severity fields
 
 Missing or partial:
-- Full issue-escalation contract
+- Full advisory conflict-escalation coverage parity (docs + scenarios + consumer guidance)
 - Full scenario parity and CI gate parity
 - Full explainability and transparency coverage in runtime UI
 

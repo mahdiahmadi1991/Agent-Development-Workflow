@@ -22,14 +22,15 @@ This file records standing rules agreed in this project.
 11. Overrides are the only allowed customization mechanism for consumer exceptions.
 12. Dynamic strictness must be applied by risk level.
 13. Command surface must remain minimal (`install`, `remove`, `repair`).
-14. Dynamic question model is mandatory:
+14. Dynamic question model is mandatory for install flow:
 - Operational questions are extension-controlled.
 - Profile Selection questions are data-driven from questionnaire files.
-15. Governance decisions must ignore extension artifact roots as behavior-policy sources.
-16. Trace-level diagnostics and local-first privacy model are mandatory.
-17. Cross-platform behavior and test coverage are mandatory (Windows, WSL, Linux, macOS).
-18. Release documentation (`release notes` + `CHANGELOG.md`) is mandatory.
-19. Every approved change must keep the full workspace synchronized (code, docs, tests, assets, and validation scripts where impacted); partial updates are not allowed.
+15. Repair flow is state-driven and must not depend on Profile Selection questions.
+16. Governance decisions must ignore extension artifact roots as behavior-policy sources.
+17. Trace-level diagnostics and local-first privacy model are mandatory.
+18. Cross-platform behavior and test coverage are mandatory (Windows, WSL, Linux, macOS).
+19. Release documentation (`release notes` + `CHANGELOG.md`) is mandatory.
+20. Every approved change must keep the full workspace synchronized (code, docs, tests, assets, and validation scripts where impacted); partial updates are not allowed.
 
 ## Source-of-Truth Map
 - Product behavior: `docs/product/decision-log.md`

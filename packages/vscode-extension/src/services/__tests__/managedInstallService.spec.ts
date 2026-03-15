@@ -62,13 +62,13 @@ describe("applyManagedInstall", () => {
       logger
     );
 
-    expect(result.appliedFiles).toHaveLength(2);
+    expect(result.appliedFiles).toHaveLength(4);
     expect(result.skippedFiles).toHaveLength(0);
     expect(result.removedStaleFiles).toHaveLength(0);
 
     const bootstrapPath = path.join(
       fixture.targetRoot,
-      ".codex-onboarding/core/AGENT-ONBOARDING.md"
+      ".codex-onboarding/AGENTS.md"
     );
     const topicPath = path.join(
       fixture.targetRoot,
@@ -84,7 +84,9 @@ describe("applyManagedInstall", () => {
     };
 
     expect(state.managed_files.map((item) => item.relative_path).sort()).toEqual([
-      ".codex-onboarding/core/AGENT-ONBOARDING.md",
+      ".codex-onboarding/.gitignore",
+      ".codex-onboarding/AGENTS.md",
+      ".codex-onboarding/ISSUE-REPORTING.md",
       ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
     ]);
   });
@@ -119,7 +121,7 @@ describe("applyManagedInstall", () => {
     );
 
     expect(result.skippedFiles).toContain(".codex-onboarding/core/topics/cross-cutting/repo-guidance.md");
-    expect(result.appliedFiles).toContain(".codex-onboarding/core/AGENT-ONBOARDING.md");
+    expect(result.appliedFiles).toContain(".codex-onboarding/AGENTS.md");
     await expect(fs.readFile(destinationPath, "utf8")).resolves.toContain("consumer owned file");
   });
 
@@ -294,7 +296,7 @@ describe("applyManagedInstall", () => {
 
     expect(repaired.recoveredTrackedFiles).toEqual(
       expect.arrayContaining([
-        ".codex-onboarding/core/AGENT-ONBOARDING.md",
+        ".codex-onboarding/AGENTS.md",
         ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
       ])
     );
@@ -387,6 +389,99 @@ describe("applyManagedInstall", () => {
         logger
       )
     ).rejects.toThrow("Managed drift detected");
+  });
+
+  it("fails fast when tracked managed file is missing during update and performs no partial writes", async () => {
+    const fixture = await createFixturePaths("managed-install-tracked-missing");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+
+    const logger = { log: vi.fn() };
+
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    const managedTopicPath = path.join(
+      fixture.targetRoot,
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+    );
+    await fs.unlink(managedTopicPath);
+
+    await expect(
+      applyManagedInstall(
+        {
+          extensionPath: fixture.extensionPath,
+          targetRootPath: fixture.targetRoot,
+          bundleId: "dotnet-csharp-web-api-simple",
+          bundleVersion: "2",
+          extensionVersion: "0.0.2",
+          selectedTopics: [topicRepo]
+        },
+        logger
+      )
+    ).rejects.toThrow("Managed missing file detected");
+
+    await expect(
+      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/AGENTS.md"), "utf8")
+    ).resolves.toContain("extension_version: 0.0.1");
+  });
+
+  it("repair mode can reset tracked managed drift when forced by explicit confirmation", async () => {
+    const fixture = await createFixturePaths("managed-repair-force-reset");
+    cleanups.push(fixture.tempRoot);
+
+    await writeBootstrap(fixture.assetRoot);
+    await writeTopic(fixture.assetRoot, topicRepo.path, topicRepo.file_id);
+
+    const logger = { log: vi.fn() };
+
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo]
+      },
+      logger
+    );
+
+    const managedPath = path.join(
+      fixture.targetRoot,
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+    );
+    await fs.appendFile(managedPath, "\n# local drift\n", "utf8");
+
+    const repaired = await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        selectedTopics: [topicRepo],
+        mode: "repair",
+        forceResetModifiedManagedFiles: true
+      },
+      logger
+    );
+
+    expect(repaired.appliedFiles).toContain(
+      ".codex-onboarding/core/topics/cross-cutting/repo-guidance.md"
+    );
+    await expect(fs.readFile(managedPath, "utf8")).resolves.not.toContain("# local drift");
   });
 
   it("keeps tracked files up to date without rewriting unchanged content", async () => {

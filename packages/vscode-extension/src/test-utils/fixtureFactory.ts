@@ -24,6 +24,21 @@ function bootstrapContent(): string {
   ].join("\n");
 }
 
+function issueReportingContent(): string {
+  return [
+    "<!--",
+    "artifact_id: core-issue-reporting-guidance",
+    "managed: true",
+    "schema_version: 1",
+    "bundle_id: TBD",
+    "bundle_version: TBD",
+    "extension_version: TBD",
+    "-->",
+    "",
+    "# Issue Reporting"
+  ].join("\n");
+}
+
 function topicContent(fileId: string): string {
   return [
     "<!--",
@@ -57,9 +72,10 @@ export async function createFixturePaths(prefix: string): Promise<FixturePaths> 
 }
 
 export async function writeBootstrap(assetRoot: string): Promise<void> {
-  const filePath = path.join(assetRoot, "core", "AGENT-ONBOARDING.md");
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(filePath, bootstrapContent(), "utf8");
+  const coreRoot = path.join(assetRoot, "core");
+  await fs.mkdir(coreRoot, { recursive: true });
+  await fs.writeFile(path.join(coreRoot, "AGENTS.md"), bootstrapContent(), "utf8");
+  await fs.writeFile(path.join(coreRoot, "ISSUE-REPORTING.md"), issueReportingContent(), "utf8");
 }
 
 export async function writeTopic(assetRoot: string, topicRelativePath: string, fileId: string): Promise<void> {

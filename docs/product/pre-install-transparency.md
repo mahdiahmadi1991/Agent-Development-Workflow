@@ -17,8 +17,8 @@ Ensure users can review extension behavior and impact before onboarding files ar
 - If selected root has no Git repository, Git tracking question is skipped as not applicable.
 - Supported, tested, and unsupported runtime environments.
 - Mandatory static bootstrap onboarding artifact path and role.
-- Conflict-escalation path (optional upstream issue reporting as user-controlled action).
-- Issue-submission modes: permission-aware direct submit (with explicit confirmation) and manual fallback.
+- Conflict-escalation path (optional upstream issue suggestion as user-controlled action).
+- Advisory guidance file path for conflict escalation: `.codex-onboarding/ISSUE-REPORTING.md`.
 - Question model visibility: Operational questions vs Profile Selection questions.
 
 ## Required Documentation Artifact

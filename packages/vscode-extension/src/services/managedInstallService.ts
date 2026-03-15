@@ -21,6 +21,7 @@ interface ManagedInstallInput {
   extensionVersion: string;
   selectedTopics: SelectedTopic[];
   mode?: ManagedApplyMode;
+  forceResetModifiedManagedFiles?: boolean;
 }
 
 export interface ManagedInstallResult {
@@ -40,6 +41,14 @@ interface DesiredManagedFile {
   metadata_mode: "embedded" | "sidecar";
   metadata_format: "comment_block" | "none";
 }
+
+const MANAGED_ROOT_GITIGNORE_RELATIVE_PATH = ".codex-onboarding/.gitignore";
+const MANAGED_ROOT_GITIGNORE_CONTENT = [
+  "# Managed by Codex Onboarding extension.",
+  "# Add future extension-managed ignore rules below.",
+  ".managed/logs/*.jsonl",
+  ""
+].join("\n");
 
 function digestSha256(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex");
@@ -121,7 +130,7 @@ async function buildDesiredManagedFiles(
 ): Promise<DesiredManagedFile[]> {
   const desired: DesiredManagedFile[] = [];
 
-  const sourceBootstrapPath = path.join(assetRoot, "core", "AGENT-ONBOARDING.md");
+  const sourceBootstrapPath = path.join(assetRoot, "core", "AGENTS.md");
   const bootstrapRaw = await fs.readFile(sourceBootstrapPath, "utf8");
   const bootstrapContent = renderManagedMetadata(
     bootstrapRaw,
@@ -133,10 +142,37 @@ async function buildDesiredManagedFiles(
   desired.push({
     file_id: "core-agent-onboarding",
     source_path: sourceBootstrapPath,
-    relative_path: ".codex-onboarding/core/AGENT-ONBOARDING.md",
+    relative_path: ".codex-onboarding/AGENTS.md",
     content: bootstrapContent,
     metadata_mode: "embedded",
     metadata_format: "comment_block"
+  });
+
+  const sourceIssueReportingPath = path.join(assetRoot, "core", "ISSUE-REPORTING.md");
+  const issueReportingRaw = await fs.readFile(sourceIssueReportingPath, "utf8");
+  const issueReportingContent = renderManagedMetadata(
+    issueReportingRaw,
+    input.bundleId,
+    input.bundleVersion,
+    input.extensionVersion
+  );
+
+  desired.push({
+    file_id: "core-issue-reporting-guidance",
+    source_path: sourceIssueReportingPath,
+    relative_path: ".codex-onboarding/ISSUE-REPORTING.md",
+    content: issueReportingContent,
+    metadata_mode: "embedded",
+    metadata_format: "comment_block"
+  });
+
+  desired.push({
+    file_id: "managed-root-gitignore",
+    source_path: "generated://managed-root-gitignore",
+    relative_path: MANAGED_ROOT_GITIGNORE_RELATIVE_PATH,
+    content: MANAGED_ROOT_GITIGNORE_CONTENT,
+    metadata_mode: "sidecar",
+    metadata_format: "none"
   });
 
   for (const topic of input.selectedTopics) {
@@ -195,7 +231,8 @@ async function applySingleManagedFile(
   appliedFiles: string[],
   skippedFiles: string[],
   recoveredTrackedFiles: string[],
-  mode: ManagedApplyMode
+  mode: ManagedApplyMode,
+  forceResetModifiedManagedFiles: boolean
 ): Promise<void> {
   await ensureParentDirectory(targetRootPath, desired.relative_path);
 
@@ -218,6 +255,28 @@ async function applySingleManagedFile(
   }
 
   if (!destinationExists) {
+    if (trackedEntry) {
+      if (mode === "repair" && forceResetModifiedManagedFiles) {
+        await fs.writeFile(destinationPath, desired.content, "utf8");
+        appliedFiles.push(desired.relative_path);
+
+        logger.log("debug", "repair_action", {
+          managed_file: desired.relative_path,
+          reason: "managed_file_recreated_after_drift_confirmation",
+          content_digest_sha256: desiredDigest
+        });
+
+        return;
+      }
+
+      logger.log("error", "drift_detected", {
+        managed_file: desired.relative_path,
+        reason: "managed_file_missing"
+      });
+
+      throw new Error(`Managed missing file detected for '${desired.relative_path}'.`);
+    }
+
     await fs.writeFile(destinationPath, desired.content, "utf8");
     appliedFiles.push(desired.relative_path);
 
@@ -235,6 +294,19 @@ async function applySingleManagedFile(
 
   if (trackedEntry) {
     if (trackedEntry.content_digest_sha256 !== existingDigest) {
+      if (mode === "repair" && forceResetModifiedManagedFiles) {
+        await fs.writeFile(destinationPath, desired.content, "utf8");
+        appliedFiles.push(desired.relative_path);
+
+        logger.log("debug", "repair_action", {
+          managed_file: desired.relative_path,
+          reason: "managed_file_reset_after_drift_confirmation",
+          content_digest_sha256: desiredDigest
+        });
+
+        return;
+      }
+
       logger.log("error", "drift_detected", {
         managed_file: desired.relative_path,
         reason: "managed_file_modified"
@@ -287,6 +359,58 @@ async function applySingleManagedFile(
     managed_file: desired.relative_path,
     reason: "already_exists_non_destructive"
   });
+}
+
+async function preflightTrackedManagedFiles(
+  targetRootPath: string,
+  desiredFiles: DesiredManagedFile[],
+  stateMap: Map<string, ManagedFileState>,
+  logger: ManagedInstallLogger,
+  mode: ManagedApplyMode,
+  forceResetModifiedManagedFiles: boolean
+): Promise<void> {
+  for (const desired of desiredFiles) {
+    const trackedEntry = stateMap.get(desired.relative_path);
+    if (!trackedEntry) {
+      continue;
+    }
+
+    const destinationPath = path.join(targetRootPath, desired.relative_path);
+
+    let existingContent: string;
+    try {
+      existingContent = await fs.readFile(destinationPath, "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        if (mode === "repair" && forceResetModifiedManagedFiles) {
+          continue;
+        }
+
+        logger.log("error", "drift_detected", {
+          managed_file: desired.relative_path,
+          reason: "managed_file_missing"
+        });
+
+        throw new Error(`Managed missing file detected for '${desired.relative_path}'.`);
+      }
+
+      throw error;
+    }
+
+    const existingDigest = digestSha256(existingContent);
+    if (existingDigest !== trackedEntry.content_digest_sha256) {
+      if (mode === "repair" && forceResetModifiedManagedFiles) {
+        continue;
+      }
+
+      logger.log("error", "drift_detected", {
+        managed_file: desired.relative_path,
+        reason: "managed_file_modified"
+      });
+
+      throw new Error(`Managed drift detected for '${desired.relative_path}'.`);
+    }
+  }
 }
 
 async function reconcileStaleManagedFiles(
@@ -354,6 +478,7 @@ export async function applyManagedInstall(
   logger: ManagedInstallLogger
 ): Promise<ManagedInstallResult> {
   const mode = input.mode ?? "install";
+  const forceResetModifiedManagedFiles = input.forceResetModifiedManagedFiles ?? false;
   const assetRoot = await resolveOnboardingAssetRoot(input.extensionPath);
 
   const onboardingRootPath = path.join(input.targetRootPath, ".codex-onboarding");
@@ -371,6 +496,15 @@ export async function applyManagedInstall(
   const desiredFiles = await buildDesiredManagedFiles(assetRoot, input);
   const desiredRelativePaths = new Set(desiredFiles.map((item) => item.relative_path));
 
+  await preflightTrackedManagedFiles(
+    input.targetRootPath,
+    desiredFiles,
+    managedFileMap,
+    logger,
+    mode,
+    forceResetModifiedManagedFiles
+  );
+
   for (const file of desiredFiles) {
     await applySingleManagedFile(
       input.targetRootPath,
@@ -380,7 +514,8 @@ export async function applyManagedInstall(
       appliedFiles,
       skippedFiles,
       recoveredTrackedFiles,
-      mode
+      mode,
+      forceResetModifiedManagedFiles
     );
 
     managedFileMap.set(file.relative_path, {

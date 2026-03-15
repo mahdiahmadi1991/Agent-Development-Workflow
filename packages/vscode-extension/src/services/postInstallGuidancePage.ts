@@ -11,14 +11,18 @@ export interface PostInstallGuidanceInput {
   appliedCount: number;
   skippedCount: number;
   removedStaleCount: number;
+  extensionVersion: string;
+  bundleId: string;
+  bundleVersion: string;
+  capabilityTags: string[];
+  operationId: string;
 }
 
 export const POST_INSTALL_PANEL_VIEW_TYPE = "codexOnboarding.postInstall";
 export const POST_INSTALL_PANEL_TITLE = "Codex Onboarding Installed";
+export const OPEN_MANAGED_ROOT_COMMAND = "codexOnboarding.openManagedRoot";
+export const OPEN_OPERATION_LOG_COMMAND = "codexOnboarding.openOperationLog";
 export const COPY_STARTER_PROMPT_COMMAND = "codexOnboarding.copyStarterPrompt";
-export const REPORT_ISSUE_COMMAND = "codexOnboarding.reportIssue";
-
-const REPORT_ISSUE_URL = "https://github.com/mahdiahmadi1991/Codex-Onboarding-Workflow/issues/new";
 
 function escapeHtml(value: string): string {
   return value
@@ -44,7 +48,7 @@ function buildPromptPacks(onboardingRoot: string): {
   starter: string;
 } {
   const discover =
-    `Read ${onboardingRoot}/core/AGENT-ONBOARDING.md and summarize active constraints for this project.`;
+    `Read ${onboardingRoot}/AGENTS.md and summarize active constraints for this project.`;
   const implement =
     "Before writing code, explain which onboarding boundaries apply and how your plan stays compliant.";
   const validate =
@@ -60,7 +64,7 @@ function buildPromptPacks(onboardingRoot: string): {
 
 function buildWebviewHtml(input: PostInstallGuidanceInput): string {
   const onboardingRoot = `${input.targetRootPath}/.codex-onboarding`;
-  const bootstrapFile = `${onboardingRoot}/core/AGENT-ONBOARDING.md`;
+  const bootstrapFile = `${onboardingRoot}/AGENTS.md`;
   const isIgnoreMode = input.gitMode === "ignore";
   const ignoreApplied = isIgnoreMode && input.gitTrackingStrategy === "git_info_exclude";
   const shouldRenderGitTrackingDetails = ignoreApplied;
@@ -81,12 +85,11 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
 
   const prompts = buildPromptPacks(onboardingRoot);
 
-  const openManagedRootHref = commandUri("revealFileInOS", [vscode.Uri.file(onboardingRoot)]);
-  const openLogHref = commandUri("revealFileInOS", [vscode.Uri.file(input.logFilePath)]);
+  const openManagedRootHref = commandUri(OPEN_MANAGED_ROOT_COMMAND, [onboardingRoot]);
+  const openLogHref = commandUri(OPEN_OPERATION_LOG_COMMAND, [input.logFilePath]);
   const runRepairHref = commandUri("codexOnboarding.repair");
   const runRemoveHref = commandUri("codexOnboarding.remove");
   const copyStarterPromptHref = commandUri(COPY_STARTER_PROMPT_COMMAND, [prompts.starter]);
-  const reportIssueHref = commandUri(REPORT_ISSUE_COMMAND);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -102,6 +105,15 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
       :root {
         color-scheme: light dark;
       }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
       body {
         margin: 0;
         padding: 20px;
@@ -111,6 +123,7 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
         line-height: 1.5;
       }
       .surface {
+        width: 100%;
         max-width: 980px;
         margin: 0 auto;
       }
@@ -126,6 +139,7 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
         border: 1px solid var(--vscode-panel-border);
         border-radius: 10px;
         background: var(--vscode-sideBar-background);
+        min-width: 0;
       }
       .action {
         text-decoration: none;
@@ -155,6 +169,7 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
         border-radius: 10px;
         padding: 14px;
         background: var(--vscode-editorWidget-background);
+        min-width: 0;
       }
       .card h2 {
         margin: 0 0 10px;
@@ -168,6 +183,11 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
       code, pre {
         font-family: var(--vscode-editor-font-family);
         font-size: 12px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      code {
+        white-space: pre-wrap;
       }
       pre {
         margin: 8px 0 0;
@@ -176,6 +196,7 @@ function buildWebviewHtml(input: PostInstallGuidanceInput): string {
         border-radius: 6px;
         border: 1px solid var(--vscode-panel-border);
         background: var(--vscode-textCodeBlock-background);
+        white-space: pre-wrap;
       }
       details {
         margin-top: 8px;
@@ -252,7 +273,7 @@ ${gitTrackingSectionHtml}
         <section class="card">
           <h2>First 3 Steps</h2>
           <ol>
-            <li>Ask Codex to read <code>.codex-onboarding/core/AGENT-ONBOARDING.md</code> first.</li>
+            <li>Ask Codex to read <code>.codex-onboarding/AGENTS.md</code> first.</li>
             <li>Ask Codex to explain which constraints apply before code changes.</li>
             <li>If a conflict exists, request an override plan instead of editing managed core files.</li>
           </ol>
@@ -311,9 +332,8 @@ ${gitTrackingSectionHtml}
           <h2>Secondary Quick Actions</h2>
           <div class="actions-secondary">
             <a class="link" href="${escapeHtml(copyStarterPromptHref)}">Copy Starter Prompt</a>
-            <a class="link" href="${escapeHtml(reportIssueHref)}">Report Onboarding Issue</a>
           </div>
-          <p class="muted">Issue reports open a pre-filled issue page in the project repository.</p>
+          <p class="muted">If a conflict appears between onboarding guidance and project intent, ask Codex to follow <code>.codex-onboarding/ISSUE-REPORTING.md</code> and propose a user-approved issue escalation path.</p>
         </section>
       </div>
     </div>
@@ -345,7 +365,7 @@ export async function openPostInstallGuidancePage(input: PostInstallGuidanceInpu
 }
 
 export const postInstallActions = {
+  openManagedRoot: OPEN_MANAGED_ROOT_COMMAND,
+  openOperationLog: OPEN_OPERATION_LOG_COMMAND,
   copyStarterPrompt: COPY_STARTER_PROMPT_COMMAND,
-  reportIssue: REPORT_ISSUE_COMMAND,
-  reportIssueUrl: REPORT_ISSUE_URL
 };

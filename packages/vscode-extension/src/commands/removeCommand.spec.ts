@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runRemove } from "./removeCommand";
 import { applyGitTrackingMode } from "../services/gitTrackingService";
-import { removeManagedOnboarding } from "../services/managedRemoveService";
+import {
+  analyzeManagedRemoveImpact,
+  removeManagedOnboarding
+} from "../services/managedRemoveService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 const { createTraceLoggerMock } = vi.hoisted(() => ({
@@ -22,6 +25,7 @@ vi.mock("../services/workspaceRootResolver", () => ({
 }));
 
 vi.mock("../services/managedRemoveService", () => ({
+  analyzeManagedRemoveImpact: vi.fn(),
   removeManagedOnboarding: vi.fn()
 }));
 
@@ -51,9 +55,9 @@ describe("runRemove", () => {
     });
 
     vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue(undefined);
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue(undefined);
     vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue(undefined);
     vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
-    vi.spyOn(vscode.window, "showInputBox").mockResolvedValue(undefined);
 
     vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
       uri: { fsPath: "/workspace/project" }
@@ -64,9 +68,21 @@ describe("runRemove", () => {
       hadState: true,
       stateCleared: true,
       stateCorrupt: false,
-      removedFiles: [".codex-onboarding/core/AGENT-ONBOARDING.md"],
-      preservedModifiedFiles: [],
-      missingManagedFiles: []
+      removedFiles: [".codex-onboarding/AGENTS.md"],
+      missingManagedFiles: [],
+      skippedChangedManagedFiles: [],
+      removedManagedRoot: false,
+      removeMode: "safe_state_cleanup"
+    });
+    vi.mocked(analyzeManagedRemoveImpact).mockResolvedValue({
+      statePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      managedRootPath: "/workspace/project/.codex-onboarding",
+      hadState: true,
+      stateCorrupt: false,
+      modifiedManagedFiles: [],
+      missingManagedFiles: [],
+      untrackedFiles: [],
+      requiresConfirmation: false
     });
     vi.mocked(applyGitTrackingMode).mockResolvedValue({
       mode: "track",
@@ -84,6 +100,7 @@ describe("runRemove", () => {
     expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
       "No workspace folder is available for remove operation."
     );
+    expect(analyzeManagedRemoveImpact).not.toHaveBeenCalled();
     expect(removeManagedOnboarding).not.toHaveBeenCalled();
     expect(applyGitTrackingMode).not.toHaveBeenCalled();
 
@@ -93,8 +110,18 @@ describe("runRemove", () => {
     });
   });
 
-  it("blocks when remove confirmation is declined", async () => {
-    vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue(undefined);
+  it("blocks when remove confirmation is declined after change detection", async () => {
+    vi.mocked(analyzeManagedRemoveImpact).mockResolvedValue({
+      statePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      managedRootPath: "/workspace/project/.codex-onboarding",
+      hadState: true,
+      stateCorrupt: false,
+      modifiedManagedFiles: [".codex-onboarding/AGENTS.md"],
+      missingManagedFiles: [],
+      untrackedFiles: [],
+      requiresConfirmation: true
+    });
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue(undefined);
 
     await runRemove(buildContext(), { log: vi.fn() } as any);
 
@@ -103,33 +130,23 @@ describe("runRemove", () => {
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
-      reason: "remove_confirmation_declined"
+      reason: "remove_confirmation_declined_after_drift_warning"
     });
   });
 
-  it("blocks when typed confirmation is cancelled", async () => {
-    vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue("Continue" as any);
-    vi.spyOn(vscode.window, "showInputBox").mockResolvedValue(undefined);
+  it("removes managed onboarding without confirmation when no changes were detected", async () => {
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue(undefined);
 
     await runRemove(buildContext(), { log: vi.fn() } as any);
 
-    expect(removeManagedOnboarding).not.toHaveBeenCalled();
-
-    const trace = await createTraceLoggerMock.mock.results[0]?.value;
-    expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
-      reason: "remove_confirmation_declined"
-    });
-  });
-
-  it("removes managed onboarding and shows completion summary", async () => {
-    vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue("Continue" as any);
-    vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("REMOVE" as any);
-
-    await runRemove(buildContext(), { log: vi.fn() } as any);
-
-    expect(removeManagedOnboarding).toHaveBeenCalledWith(
+    expect(analyzeManagedRemoveImpact).toHaveBeenCalledWith(
       "/workspace/project",
       expect.any(Object)
+    );
+    expect(removeManagedOnboarding).toHaveBeenCalledWith(
+      "/workspace/project",
+      expect.any(Object),
+      { removeWholeManagedRoot: false }
     );
     expect(applyGitTrackingMode).toHaveBeenCalledWith(
       {
@@ -142,6 +159,7 @@ describe("runRemove", () => {
     expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
       expect.stringContaining("Remove operation completed.")
     );
+    expect(vscode.window.showQuickPick).not.toHaveBeenCalled();
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
     expect(trace.log).toHaveBeenCalledWith("debug", "operation_completed", {
@@ -150,9 +168,42 @@ describe("runRemove", () => {
     expect(trace.flush).toHaveBeenCalledTimes(1);
   });
 
+  it("uses full-root reset remove mode when changes are detected and user confirms", async () => {
+    vi.mocked(analyzeManagedRemoveImpact).mockResolvedValue({
+      statePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      managedRootPath: "/workspace/project/.codex-onboarding",
+      hadState: true,
+      stateCorrupt: false,
+      modifiedManagedFiles: [".codex-onboarding/core/topics/cross-cutting/base-topic.md"],
+      missingManagedFiles: [],
+      untrackedFiles: [".codex-onboarding/custom/user-note.md"],
+      requiresConfirmation: true
+    });
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
+      label: "Remove Entire .codex-onboarding Folder (Discard Changes)"
+    } as any);
+    vi.mocked(removeManagedOnboarding).mockResolvedValue({
+      statePath: "/workspace/project/.codex-onboarding/.managed/state.json",
+      hadState: true,
+      stateCleared: true,
+      stateCorrupt: false,
+      removedFiles: [".codex-onboarding/AGENTS.md", ".codex-onboarding/custom/user-note.md"],
+      missingManagedFiles: [],
+      skippedChangedManagedFiles: [],
+      removedManagedRoot: true,
+      removeMode: "full_root_reset"
+    });
+
+    await runRemove(buildContext(), { log: vi.fn() } as any);
+
+    expect(removeManagedOnboarding).toHaveBeenCalledWith(
+      "/workspace/project",
+      expect.any(Object),
+      { removeWholeManagedRoot: true }
+    );
+  });
+
   it("shows error message when remove fails", async () => {
-    vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue("Continue" as any);
-    vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("REMOVE" as any);
     vi.mocked(removeManagedOnboarding).mockRejectedValue(new Error("remove boom"));
 
     await runRemove(buildContext(), { log: vi.fn() } as any);

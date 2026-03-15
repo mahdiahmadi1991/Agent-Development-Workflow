@@ -8,7 +8,7 @@ Define safe behavior when operations fail or managed-file drift is detected.
 - On drift or integrity mismatch, stop without writing changes.
 
 2. `Repair Managed State`
-- Reconstruct managed state when state file is missing/corrupt and managed files are intact.
+- Reconstruct managed state when state file is missing/corrupt/empty and managed files are intact.
 
 3. `Reinstall Managed Set`
 - Reapply full managed set for selected profile when user explicitly approves reset.

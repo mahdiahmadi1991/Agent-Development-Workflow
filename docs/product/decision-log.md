@@ -46,7 +46,7 @@ This file records accepted planning decisions and open decisions.
 | D-039 | User can choose whether managed onboarding paths are tracked in Git or ignored via repository-local Git metadata. | Accepted | Git tracking mode is user-configurable without editing project files. |
 | D-040 | Every release must include release notes and changelog updates. | Accepted | Mandatory release documentation. |
 | D-041 | Downgrade is allowed only under the same integrity and ownership safeguards as upgrade. | Accepted | Fail-fast if safety checks fail. |
-| D-042 | Remove command must clear managed state and delete only untouched managed files. | Accepted | Modified files are not altered or removed. |
+| D-042 | Remove command must clear managed state and delete only untouched managed files. | Superseded | Replaced by D-083 remove impact-scan + destructive-confirm model. |
 | D-043 | Each lifecycle operation must write a dedicated unique trace log file. | Accepted | One log file per install/remove/repair run. |
 | D-044 | Supported and tested environments must be documented explicitly in user-facing docs. | Accepted | Avoid hidden compatibility assumptions. |
 | D-045 | Concurrent operation locking is deferred until a real conflict signal is observed. | Accepted | Not in current implementation scope. |
@@ -60,7 +60,7 @@ This file records accepted planning decisions and open decisions.
 | D-053 | Selection resolver must be deterministic and explainable (`why-selected` preview). | Accepted | Same inputs must produce same ordered output set. |
 | D-054 | Selection pipeline must use profile baseline + questionnaire capabilities + dependency/conflict resolution. | Accepted | Supports minimal required file-set composition. |
 | D-055 | Library storage and selection contracts are validator-enforced in local and CI checks. | Accepted | Non-compliant layout or metadata blocks validation. |
-| D-056 | A mandatory static bootstrap onboarding file must be installed in every target project. | Accepted | Canonical path: `.codex-onboarding/core/AGENT-ONBOARDING.md`. |
+| D-056 | A mandatory static bootstrap onboarding file must be installed in every target project. | Accepted | Canonical path: `.codex-onboarding/AGENTS.md`. |
 | D-057 | Static bootstrap onboarding content must remain generic and target-independent. | Accepted | No project-type-specific content in this artifact. |
 | D-058 | Extension must not auto-modify an existing root `AGENTS.md`; AGENTS integration is user-controlled. | Accepted | Non-destructive ownership boundary preserved. |
 | D-059 | Onboarding conflict reporting must use explicit user-controlled issue escalation only. | Accepted | No silent automatic external issue creation. |
@@ -81,5 +81,12 @@ This file records accepted planning decisions and open decisions.
 | D-074 | Published VSIX must be self-contained for runtime config loading: onboarding assets and YAML runtime dependency must be packaged with the extension. | Accepted | Enforced by package file inclusion and sync script before compile/package. |
 | D-075 | Post-install guidance experience must use a static-structure WebviewPanel with deterministic section order and runtime summary injection. | Accepted | Execution is phase-split in `docs/product/post-install-success-experience.md`; fallback must not fail install. |
 | D-076 | Post-install Webview must follow a professional V1 UX baseline: Outcome Snapshot, Before/After Map, First 3 Steps, Prompt Packs, Safe Boundaries, Lifecycle Playbook, Change Report, and Action Bar; `Git Tracking Details` is conditional. | Accepted | `Git Tracking Details` appears only when ignore mode is selected and applied. |
-| D-077 | Update consent gate requires explicit review of both release notes and changelog before `Continue Update` is accepted. | Accepted | Applies to install/repair update paths; no silent or one-click bypass. |
+| D-077 | Update consent gate requires explicit review of both release notes and changelog before `Continue Update` is accepted. | Accepted | Applies to install update paths; no silent or one-click bypass. |
 | D-078 | Git tracking question is asked only when selected root is a Git repository; otherwise it is skipped as not applicable. | Accepted | Avoids presenting irrelevant ignore/track choice in non-Git projects. |
+| D-079 | Repair command is valid only when prior managed onboarding evidence exists in selected workspace root. | Accepted | If evidence is missing, repair is blocked and user is directed to run install first. |
+| D-080 | Repair flow has no extra post-question confirmation gate. | Accepted | After required questions and checks, repair proceeds directly under non-destructive safeguards. |
+| D-081 | Repair command must be state-driven and restore only the currently recorded managed bundle/version in consumer state. | Accepted | Repair must not ask profile-selection flow or change bundle/profile selection. |
+| D-082 | Repair must detect managed drift by state digests; if drift exists, destructive reset requires explicit QuickPick confirmation. | Accepted | User-added untracked files are not treated as managed edits. |
+| D-083 | Remove command must run impact scan first; clean roots remove without prompt, and detected drift/additional files require destructive QuickPick confirmation before full `.codex-onboarding/` deletion. | Accepted | Aligns remove UX with repair-style explicit destructive confirmation while preserving fast path for clean roots. |
+| D-084 | Repair may recover managed source metadata from intact managed files when managed state is missing/corrupt/empty, then rebuild state through repair flow. | Accepted | If no managed evidence exists, repair remains blocked and install-first guidance is shown. |
+| D-085 | Issue escalation must be delivered as managed advisory guidance (`.codex-onboarding/ISSUE-REPORTING.md`) instead of dedicated extension runtime submission flows. | Accepted | Extension remains non-destructive and local-first; Codex may only suggest escalation and offer user-approved help. |

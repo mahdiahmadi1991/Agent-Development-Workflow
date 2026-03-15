@@ -4,9 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   COPY_STARTER_PROMPT_COMMAND,
+  OPEN_MANAGED_ROOT_COMMAND,
+  OPEN_OPERATION_LOG_COMMAND,
   POST_INSTALL_PANEL_TITLE,
   POST_INSTALL_PANEL_VIEW_TYPE,
-  REPORT_ISSUE_COMMAND,
   openPostInstallGuidancePage
 } from "./postInstallGuidancePage";
 
@@ -34,7 +35,12 @@ describe("openPostInstallGuidancePage", () => {
       gitTrackingUpdated: true,
       appliedCount: 3,
       skippedCount: 1,
-      removedStaleCount: 2
+      removedStaleCount: 2,
+      extensionVersion: "1.2.3",
+      bundleId: "dotnet-csharp-web-api-simple",
+      bundleVersion: "7",
+      capabilityTags: ["cap.base", "answer.root.web_api_simple"],
+      operationId: "install-123"
     });
 
     expect(opened).toBe(true);
@@ -62,11 +68,13 @@ describe("openPostInstallGuidancePage", () => {
     expect(panel.webview.html).toContain("Open Operation Log");
     expect(panel.webview.html).toContain("Run Repair");
     expect(panel.webview.html).toContain("Run Remove");
+    expect(panel.webview.html).toContain("command:" + OPEN_MANAGED_ROOT_COMMAND);
+    expect(panel.webview.html).toContain("command:" + OPEN_OPERATION_LOG_COMMAND);
     expect(panel.webview.html).toContain("command:codexOnboarding.repair");
     expect(panel.webview.html).toContain("command:codexOnboarding.remove");
 
     expect(panel.webview.html).toContain("command:" + COPY_STARTER_PROMPT_COMMAND);
-    expect(panel.webview.html).toContain("command:" + REPORT_ISSUE_COMMAND);
+    expect(panel.webview.html).toContain("ISSUE-REPORTING.md");
 
     expect(panel.webview.html).toContain("Discover");
     expect(panel.webview.html).toContain("Implement");
@@ -116,7 +124,12 @@ describe("openPostInstallGuidancePage", () => {
       gitTrackingUpdated: false,
       appliedCount: 3,
       skippedCount: 1,
-      removedStaleCount: 2
+      removedStaleCount: 2,
+      extensionVersion: "1.2.3",
+      bundleId: "dotnet-csharp-web-api-simple",
+      bundleVersion: "7",
+      capabilityTags: [],
+      operationId: "install-123"
     });
 
     expect(opened).toBe(false);
@@ -144,7 +157,12 @@ describe("openPostInstallGuidancePage", () => {
       gitTrackingUpdated: false,
       appliedCount: 1,
       skippedCount: 0,
-      removedStaleCount: 0
+      removedStaleCount: 0,
+      extensionVersion: "1.2.3",
+      bundleId: "dotnet-csharp-web-api-simple",
+      bundleVersion: "7",
+      capabilityTags: [],
+      operationId: "install-123"
     });
 
     expect(opened).toBe(true);
@@ -171,7 +189,12 @@ describe("openPostInstallGuidancePage", () => {
       gitTrackingUpdated: false,
       appliedCount: 1,
       skippedCount: 0,
-      removedStaleCount: 0
+      removedStaleCount: 0,
+      extensionVersion: "1.2.3",
+      bundleId: "dotnet-csharp-web-api-simple",
+      bundleVersion: "7",
+      capabilityTags: [],
+      operationId: "install-123"
     });
 
     expect(opened).toBe(true);

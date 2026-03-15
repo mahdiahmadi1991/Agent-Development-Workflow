@@ -1,15 +1,14 @@
+import * as crypto from "node:crypto";
+import * as fs from "node:fs/promises";
+import * as os from "node:os";
+import * as path from "node:path";
 import * as vscode from "vscode";
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runRepair } from "./repairCommand";
 import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
-import { loadResolvedProfile } from "../services/profileAssetService";
-import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
-import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
-import { resolveSelectionPlan } from "../services/selectionResolver";
-import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 const { createTraceLoggerMock } = vi.hoisted(() => ({
@@ -26,22 +25,6 @@ vi.mock("../services/workspaceRootResolver", () => ({
   resolveTargetWorkspaceFolder: vi.fn()
 }));
 
-vi.mock("../services/questionnaireAssetService", () => ({
-  loadQuestionnaireAssets: vi.fn()
-}));
-
-vi.mock("../services/questionnaireFlowRunner", () => ({
-  runDynamicQuestionFlow: vi.fn()
-}));
-
-vi.mock("../services/profileAssetService", () => ({
-  loadResolvedProfile: vi.fn()
-}));
-
-vi.mock("../services/selectionResolver", () => ({
-  resolveSelectionPlan: vi.fn()
-}));
-
 vi.mock("../services/managedInstallService", () => ({
   applyManagedInstall: vi.fn()
 }));
@@ -49,10 +32,6 @@ vi.mock("../services/managedInstallService", () => ({
 vi.mock("../services/gitTrackingService", () => ({
   applyGitTrackingMode: vi.fn(),
   hasGitRepository: vi.fn()
-}));
-
-vi.mock("../services/updateConsentService", () => ({
-  requireUpdateConsentIfNeeded: vi.fn()
 }));
 
 function buildContext(): vscode.ExtensionContext {
@@ -66,7 +45,131 @@ function buildContext(): vscode.ExtensionContext {
   } as unknown as vscode.ExtensionContext;
 }
 
+function digestSha256(content: string): string {
+  return crypto.createHash("sha256").update(content).digest("hex");
+}
+
+interface ManagedFixture {
+  targetRoot: string;
+  statePath: string;
+}
+
+async function createManagedFixture(options: {
+  withState?: boolean;
+  emptyState?: boolean;
+  driftTrackedFile?: boolean;
+  missingTrackedFile?: boolean;
+  withManagedArtifacts?: boolean;
+  corruptState?: boolean;
+} = {}): Promise<ManagedFixture> {
+  const targetRoot = await fs.mkdtemp(path.join(os.tmpdir(), "repair-command-test-"));
+  const onboardingRoot = path.join(targetRoot, ".codex-onboarding");
+  const managedRoot = path.join(onboardingRoot, ".managed");
+  const topicPath = path.join(
+    onboardingRoot,
+    "core",
+    "topics",
+    "cross-cutting",
+    "base-topic.md"
+  );
+  const bootstrapPath = path.join(onboardingRoot, "AGENTS.md");
+  const statePath = path.join(managedRoot, "state.json");
+  const withManagedArtifacts = options.withManagedArtifacts !== false;
+
+  if (withManagedArtifacts) {
+    await fs.mkdir(path.dirname(topicPath), { recursive: true });
+    await fs.mkdir(path.dirname(bootstrapPath), { recursive: true });
+    await fs.mkdir(managedRoot, { recursive: true });
+  }
+
+  const bootstrapContent = [
+    "<!--",
+    "artifact_id: core-agent-onboarding",
+    "managed: true",
+    "schema_version: 1",
+    "bundle_id: dotnet-csharp-web-api-simple",
+    "bundle_version: 1",
+    "extension_version: 0.0.1",
+    "-->",
+    "",
+    "# AGENTS"
+  ].join("\n");
+  const topicContent = [
+    "<!--",
+    "artifact_id: base-topic",
+    "managed: true",
+    "schema_version: 1",
+    "bundle_id: dotnet-csharp-web-api-simple",
+    "bundle_version: 1",
+    "extension_version: 0.0.1",
+    "-->",
+    "",
+    "# Base Topic"
+  ].join("\n");
+
+  if (withManagedArtifacts) {
+    await fs.writeFile(bootstrapPath, bootstrapContent, "utf8");
+    await fs.writeFile(topicPath, topicContent, "utf8");
+  }
+
+  if (withManagedArtifacts && options.corruptState) {
+    await fs.writeFile(statePath, "{ invalid", "utf8");
+  } else if (options.withState !== false) {
+    const managedFiles = options.emptyState
+      ? []
+      : [
+          {
+            file_id: "core-agent-onboarding",
+            relative_path: ".codex-onboarding/AGENTS.md",
+            content_digest_sha256: digestSha256(bootstrapContent),
+            sync_marker: "1|0.0.1",
+            metadata_mode: "embedded",
+            metadata_format: "comment_block"
+          },
+          {
+            file_id: "base-topic",
+            relative_path: ".codex-onboarding/core/topics/cross-cutting/base-topic.md",
+            content_digest_sha256: digestSha256(topicContent),
+            sync_marker: "1|0.0.1",
+            metadata_mode: "embedded",
+            metadata_format: "comment_block"
+          }
+        ];
+
+    await fs.writeFile(
+      statePath,
+      JSON.stringify(
+        {
+          bundle_id: "dotnet-csharp-web-api-simple",
+          bundle_version: "1",
+          extension_version: "0.0.1",
+          applied_at_utc: new Date().toISOString(),
+          managed_files: managedFiles
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+  }
+
+  if (options.driftTrackedFile) {
+    await fs.appendFile(topicPath, "\n# user edit", "utf8");
+  }
+
+  if (options.missingTrackedFile) {
+    await fs.rm(topicPath, { force: true });
+  }
+
+  return {
+    targetRoot,
+    statePath
+  };
+}
+
 describe("runRepair", () => {
+  const cleanupRoots: string[] = [];
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -81,174 +184,30 @@ describe("runRepair", () => {
     vi.spyOn(vscode.window, "showWarningMessage").mockResolvedValue(undefined);
     vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
 
-    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
-      uri: { fsPath: "/workspace/project" }
-    } as unknown as vscode.WorkspaceFolder);
-
-    vi.mocked(loadQuestionnaireAssets).mockResolvedValue({
-      family: "dotnet-csharp",
-      indexPath: "index.yaml",
-      flowPath: "flow.yaml",
-      flow: {
-        version: 9,
-        family: "dotnet-csharp",
-        entrypoint: "root",
-        nodes: []
-      }
-    });
-
-    vi.mocked(runDynamicQuestionFlow).mockResolvedValue({
-      answers: {
-        root: "web_api_simple"
-      }
-    });
-
-    vi.mocked(loadResolvedProfile).mockResolvedValue({
-      version: 1,
-      profile_id: "dotnet-csharp-web-api-simple",
-      family: "dotnet-csharp",
-      questionnaire_ref: "library/questionnaires/dotnet-csharp/install-flow.yaml",
-      baseline_topics: ["base-topic"],
-      default_capabilities: ["cap.base"]
-    });
-
-    vi.mocked(resolveSelectionPlan).mockResolvedValue({
-      profile_id: "dotnet-csharp-web-api-simple",
-      capability_tags: ["cap.base", "answer.root.web_api_simple"],
-      selected_topics: [
-        {
-          file_id: "base-topic",
-          path: "topics/cross-cutting/base-topic.md",
-          category: "00-core",
-          required: true,
-          reasons: ["selected_by_profile_baseline"]
-        }
-      ]
-    });
-
-    vi.mocked(applyManagedInstall).mockResolvedValue({
-      statePath: "/workspace/project/.codex-onboarding/.managed/state.json",
-      managedRootPath: "/workspace/project/.codex-onboarding/.managed",
-      appliedFiles: [".codex-onboarding/core/AGENT-ONBOARDING.md"],
-      skippedFiles: [],
-      recoveredTrackedFiles: [],
-      removedStaleFiles: []
-    });
+    vi.mocked(hasGitRepository).mockResolvedValue(true);
     vi.mocked(applyGitTrackingMode).mockResolvedValue({
       mode: "track",
       strategy: "git_info_exclude",
       updated: true,
-      excludePath: "/workspace/project/.git/info/exclude"
+      excludePath: "/tmp/project/.git/info/exclude"
     });
-    vi.mocked(hasGitRepository).mockResolvedValue(true);
-    vi.mocked(requireUpdateConsentIfNeeded).mockResolvedValue({
-      updateAvailable: false,
-      blocked: false,
-      reason: "no_managed_state"
-    });
-  });
-
-  it("blocks when operational questions are cancelled", async () => {
-    await runRepair(buildContext(), { log: vi.fn() } as any);
-
-    expect(applyManagedInstall).not.toHaveBeenCalled();
-    expect(requireUpdateConsentIfNeeded).not.toHaveBeenCalled();
-    expect(hasGitRepository).toHaveBeenCalledTimes(1);
-
-    const trace = await createTraceLoggerMock.mock.results[0]?.value;
-    expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
-      reason: "operational_questions_cancelled"
-    });
-    expect(trace.flush).toHaveBeenCalledTimes(1);
-  });
-
-  it("blocks when repair confirmation is declined", async () => {
-    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
-      label: "Track managed files",
-      value: "track"
-    } as any);
-
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue(undefined);
-
-    await runRepair(buildContext(), { log: vi.fn() } as any);
-
-    expect(applyManagedInstall).not.toHaveBeenCalled();
-
-    const trace = await createTraceLoggerMock.mock.results[0]?.value;
-    expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
-      reason: "repair_confirmation_declined"
+    vi.mocked(applyManagedInstall).mockResolvedValue({
+      statePath: "/tmp/project/.codex-onboarding/.managed/state.json",
+      managedRootPath: "/tmp/project/.codex-onboarding/.managed",
+      appliedFiles: [".codex-onboarding/AGENTS.md"],
+      skippedFiles: [],
+      recoveredTrackedFiles: [],
+      removedStaleFiles: []
     });
   });
 
-  it("runs repair flow and applies managed install in repair mode", async () => {
-    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
-      label: "Track managed files",
-      value: "track"
-    } as any);
-
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Apply Repair" as any);
-
-    await runRepair(buildContext(), { log: vi.fn() } as any);
-
-    expect(applyManagedInstall).toHaveBeenCalledWith(
-      expect.objectContaining({
-        targetRootPath: "/workspace/project",
-        bundleId: "dotnet-csharp-web-api-simple",
-        bundleVersion: "9",
-        extensionVersion: "1.2.3",
-        mode: "repair"
-      }),
-      expect.any(Object)
-    );
-    expect(requireUpdateConsentIfNeeded).toHaveBeenCalledWith(
-      expect.objectContaining({
-        command: "repair",
-        targetRootPath: "/workspace/project",
-        bundleId: "dotnet-csharp-web-api-simple",
-        bundleVersion: "9",
-        extensionVersion: "1.2.3"
-      }),
-      expect.any(Object)
-    );
-    expect(applyGitTrackingMode).toHaveBeenCalledWith(
-      {
-        targetRootPath: "/workspace/project",
-        mode: "track"
-      },
-      expect.any(Object)
-    );
-
-    expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
-      expect.stringContaining("Repair operation completed.")
-    );
-
-    const trace = await createTraceLoggerMock.mock.results[0]?.value;
-    expect(trace.log).toHaveBeenCalledWith("debug", "operation_completed", {
-      result_code: "repaired"
-    });
-    expect(trace.flush).toHaveBeenCalledTimes(1);
-  });
-
-  it("shows error message when repair fails", async () => {
-    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
-      label: "Track managed files",
-      value: "track"
-    } as any);
-
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Apply Repair" as any);
-    vi.mocked(applyManagedInstall).mockRejectedValue(new Error("repair boom"));
-
-    await runRepair(buildContext(), { log: vi.fn() } as any);
-
-    expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Repair failed: repair boom");
-
-    const trace = await createTraceLoggerMock.mock.results[0]?.value;
-    expect(trace.log).toHaveBeenCalledWith(
-      "error",
-      "operation_completed",
-      expect.objectContaining({ result_code: "failed", reason: "repair boom" })
-    );
-    expect(trace.flush).toHaveBeenCalledTimes(1);
+  afterEach(async () => {
+    while (cleanupRoots.length > 0) {
+      const root = cleanupRoots.pop();
+      if (root) {
+        await fs.rm(root, { recursive: true, force: true });
+      }
+    }
   });
 
   it("blocks when no workspace folder is available", async () => {
@@ -259,92 +218,215 @@ describe("runRepair", () => {
     expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
       "No workspace folder is available for repair operation."
     );
-    expect(applyManagedInstall).not.toHaveBeenCalled();
-    expect(applyGitTrackingMode).not.toHaveBeenCalled();
-    expect(requireUpdateConsentIfNeeded).not.toHaveBeenCalled();
     expect(hasGitRepository).not.toHaveBeenCalled();
-
-    const trace = await createTraceLoggerMock.mock.results[0]?.value;
-    expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
-      reason: "no_workspace_folder"
-    });
+    expect(applyManagedInstall).not.toHaveBeenCalled();
   });
 
-  it("blocks when profile selection questions are cancelled", async () => {
-    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
-      label: "Track managed files",
-      value: "track"
-    } as any);
+  it("blocks when prior install evidence (state) is missing", async () => {
+    const fixture = await createManagedFixture({ withState: false, withManagedArtifacts: false });
+    cleanupRoots.push(fixture.targetRoot);
 
-    vi.mocked(runDynamicQuestionFlow).mockResolvedValue(undefined);
+    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
+      uri: { fsPath: fixture.targetRoot }
+    } as unknown as vscode.WorkspaceFolder);
 
     await runRepair(buildContext(), { log: vi.fn() } as any);
 
-    expect(applyManagedInstall).not.toHaveBeenCalled();
-
-    const trace = await createTraceLoggerMock.mock.results[0]?.value;
-    expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
-      reason: "profile_selection_questions_cancelled"
-    });
-  });
-
-  it("falls back to output logger when trace logger cannot be created", async () => {
-    createTraceLoggerMock.mockRejectedValue("trace-create-failed");
-    const logger = { log: vi.fn() };
-
-    await runRepair(buildContext(), logger as any);
-
-    expect(logger.log).toHaveBeenCalledWith(
-      "error",
-      "operation_completed",
-      expect.objectContaining({
-        command: "repair",
-        result_code: "failed",
-        reason: "unknown_error"
-      })
+    expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+      "No existing managed onboarding artifacts were found in this workspace. Run Install first."
     );
-
-    expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Repair failed: unknown error");
+    expect(hasGitRepository).not.toHaveBeenCalled();
+    expect(applyManagedInstall).not.toHaveBeenCalled();
   });
 
-  it("blocks when update review is declined", async () => {
+  it("recovers repair source when state file is missing but managed artifacts exist", async () => {
+    const fixture = await createManagedFixture({ withState: false });
+    cleanupRoots.push(fixture.targetRoot);
+
+    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
+      uri: { fsPath: fixture.targetRoot }
+    } as unknown as vscode.WorkspaceFolder);
     vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
-      label: "Track managed files",
+      label: "Track managed files (Recommended)",
       value: "track"
     } as any);
 
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Apply Repair" as any);
+    await runRepair(buildContext(), { log: vi.fn() } as any);
 
-    vi.mocked(requireUpdateConsentIfNeeded).mockResolvedValue({
-      updateAvailable: true,
-      blocked: true,
-      reason: "update_consent_declined",
-      releaseNotesUrl: "https://example.com/release",
-      changelogUrl: "https://example.com/changelog"
-    });
+    expect(applyManagedInstall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        mode: "repair"
+      }),
+      expect.any(Object)
+    );
+  });
+
+  it("recovers repair source when state file is corrupt but managed artifacts exist", async () => {
+    const fixture = await createManagedFixture({ corruptState: true });
+    cleanupRoots.push(fixture.targetRoot);
+
+    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
+      uri: { fsPath: fixture.targetRoot }
+    } as unknown as vscode.WorkspaceFolder);
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
+      label: "Track managed files (Recommended)",
+      value: "track"
+    } as any);
 
     await runRepair(buildContext(), { log: vi.fn() } as any);
 
-    expect(applyGitTrackingMode).not.toHaveBeenCalled();
-    expect(applyManagedInstall).not.toHaveBeenCalled();
-
-    const trace = await createTraceLoggerMock.mock.results[0]?.value;
-    expect(trace.flush).toHaveBeenCalledTimes(1);
+    expect(applyManagedInstall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        mode: "repair"
+      }),
+      expect.any(Object)
+    );
   });
 
-  it("skips repair git-tracking question when root has no git repository", async () => {
+  it("recovers repair source when state exists but managed file list is empty", async () => {
+    const fixture = await createManagedFixture({ emptyState: true });
+    cleanupRoots.push(fixture.targetRoot);
+
+    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
+      uri: { fsPath: fixture.targetRoot }
+    } as unknown as vscode.WorkspaceFolder);
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
+      label: "Track managed files (Recommended)",
+      value: "track"
+    } as any);
+
+    await runRepair(buildContext(), { log: vi.fn() } as any);
+
+    expect(applyManagedInstall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetRootPath: fixture.targetRoot,
+        mode: "repair"
+      }),
+      expect.any(Object)
+    );
+  });
+
+  it("runs state-driven repair without drift confirmation when managed files are unchanged", async () => {
+    const fixture = await createManagedFixture();
+    cleanupRoots.push(fixture.targetRoot);
+
+    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
+      uri: { fsPath: fixture.targetRoot }
+    } as unknown as vscode.WorkspaceFolder);
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
+      label: "Track managed files (Recommended)",
+      value: "track"
+    } as any);
+
+    await runRepair(buildContext(), { log: vi.fn() } as any);
+
+    expect(applyManagedInstall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetRootPath: fixture.targetRoot,
+        bundleId: "dotnet-csharp-web-api-simple",
+        bundleVersion: "1",
+        extensionVersion: "0.0.1",
+        mode: "repair",
+        forceResetModifiedManagedFiles: false
+      }),
+      expect.any(Object)
+    );
+    expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+      expect.stringContaining("Repair operation completed.")
+    );
+  });
+
+  it("shows drift warning QuickPick and cancels when user declines reset", async () => {
+    const fixture = await createManagedFixture({ driftTrackedFile: true });
+    cleanupRoots.push(fixture.targetRoot);
+
+    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
+      uri: { fsPath: fixture.targetRoot }
+    } as unknown as vscode.WorkspaceFolder);
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
+      label: "Cancel Repair",
+      value: "cancel"
+    } as any);
+
+    await runRepair(buildContext(), { log: vi.fn() } as any);
+
+    expect(applyManagedInstall).not.toHaveBeenCalled();
+    expect(vscode.window.showInformationMessage).toHaveBeenCalledWith("Repair canceled.");
+  });
+
+  it("resets drifted managed files after explicit user confirmation", async () => {
+    const fixture = await createManagedFixture({ driftTrackedFile: true, missingTrackedFile: true });
+    cleanupRoots.push(fixture.targetRoot);
+
+    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
+      uri: { fsPath: fixture.targetRoot }
+    } as unknown as vscode.WorkspaceFolder);
+    vi.spyOn(vscode.window, "showQuickPick")
+      .mockResolvedValueOnce({
+        label: "Reset Managed Files (Discard Local Changes)",
+        value: "reset"
+      } as any)
+      .mockResolvedValueOnce({
+        label: "Track managed files (Recommended)",
+        value: "track"
+      } as any);
+
+    await runRepair(buildContext(), { log: vi.fn() } as any);
+
+    expect(applyManagedInstall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetRootPath: fixture.targetRoot,
+        mode: "repair",
+        forceResetModifiedManagedFiles: true
+      }),
+      expect.any(Object)
+    );
+  });
+
+  it("skips git question when selected root has no git repository", async () => {
+    const fixture = await createManagedFixture();
+    cleanupRoots.push(fixture.targetRoot);
+
+    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
+      uri: { fsPath: fixture.targetRoot }
+    } as unknown as vscode.WorkspaceFolder);
     vi.mocked(hasGitRepository).mockResolvedValue(false);
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Apply Repair" as any);
 
     await runRepair(buildContext(), { log: vi.fn() } as any);
 
     expect(vscode.window.showQuickPick).toHaveBeenCalledTimes(0);
     expect(applyGitTrackingMode).toHaveBeenCalledWith(
       {
-        targetRootPath: "/workspace/project",
+        targetRootPath: fixture.targetRoot,
         mode: "track"
       },
       expect.any(Object)
     );
+  });
+
+  it("shows error message when repair apply fails", async () => {
+    const fixture = await createManagedFixture();
+    cleanupRoots.push(fixture.targetRoot);
+
+    vi.mocked(resolveTargetWorkspaceFolder).mockResolvedValue({
+      uri: { fsPath: fixture.targetRoot }
+    } as unknown as vscode.WorkspaceFolder);
+    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
+      label: "Track managed files (Recommended)",
+      value: "track"
+    } as any);
+    vi.mocked(applyManagedInstall).mockRejectedValue(new Error("repair boom"));
+
+    await runRepair(buildContext(), { log: vi.fn() } as any);
+
+    expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Repair failed: repair boom");
   });
 });

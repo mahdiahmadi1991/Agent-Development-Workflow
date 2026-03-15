@@ -9,14 +9,31 @@ interface ManagedRemoveLogger {
   log(level: LogLevel, message: string, fields?: Record<string, LogValue>): void;
 }
 
+export interface ManagedRemoveImpact {
+  statePath: string;
+  managedRootPath: string;
+  hadState: boolean;
+  stateCorrupt: boolean;
+  modifiedManagedFiles: string[];
+  missingManagedFiles: string[];
+  untrackedFiles: string[];
+  requiresConfirmation: boolean;
+}
+
 export interface ManagedRemoveResult {
   statePath: string;
   hadState: boolean;
   stateCleared: boolean;
   stateCorrupt: boolean;
   removedFiles: string[];
-  preservedModifiedFiles: string[];
   missingManagedFiles: string[];
+  skippedChangedManagedFiles: string[];
+  removedManagedRoot: boolean;
+  removeMode: "safe_state_cleanup" | "full_root_reset";
+}
+
+interface ManagedRemoveOptions {
+  removeWholeManagedRoot?: boolean;
 }
 
 function digestSha256(content: string): string {
@@ -46,6 +63,53 @@ async function tryReadState(statePath: string): Promise<{ state?: ManagedState; 
   }
 }
 
+function normalizeRelativePath(relativePath: string): string {
+  return relativePath.split(path.sep).join(path.posix.sep);
+}
+
+async function collectFilesRecursive(rootPath: string): Promise<string[]> {
+  const files: string[] = [];
+
+  async function walk(currentPath: string): Promise<void> {
+    let entries;
+    try {
+      entries = await fs.readdir(currentPath, { withFileTypes: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return;
+      }
+
+      throw error;
+    }
+
+    for (const entry of entries) {
+      const fullPath = path.join(currentPath, entry.name);
+
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+        continue;
+      }
+
+      if (!entry.isFile()) {
+        continue;
+      }
+
+      files.push(fullPath);
+    }
+  }
+
+  await walk(rootPath);
+  return files;
+}
+
+function isExtensionOwnedRuntimeFile(relativePath: string): boolean {
+  if (relativePath === ".codex-onboarding/.managed/state.json") {
+    return true;
+  }
+
+  return relativePath.startsWith(".codex-onboarding/.managed/logs/");
+}
+
 async function removeEmptyParentDirs(targetRootPath: string, relativePath: string): Promise<void> {
   const stopAt = path.join(targetRootPath, ".codex-onboarding");
   let current = path.dirname(path.join(targetRootPath, relativePath));
@@ -65,18 +129,161 @@ async function removeEmptyParentDirs(targetRootPath: string, relativePath: strin
   }
 }
 
-export async function removeManagedOnboarding(
+async function tryRemoveEmptyDirectory(directoryPath: string): Promise<void> {
+  try {
+    await fs.rmdir(directoryPath);
+  } catch {
+    // Directory is either missing or not empty; both are acceptable.
+  }
+}
+
+async function removeManagedRuntimeLogFiles(
+  targetRootPath: string,
+  managedRootPath: string,
+  logger: ManagedRemoveLogger,
+  removedFiles: string[]
+): Promise<void> {
+  const managedLogsPath = path.join(managedRootPath, ".managed", "logs");
+  const logFiles = await collectFilesRecursive(managedLogsPath);
+
+  for (const fullPath of logFiles) {
+    const relativePath = normalizeRelativePath(path.relative(targetRootPath, fullPath));
+
+    await fs.unlink(fullPath);
+    removedFiles.push(relativePath);
+
+    logger.log("debug", "file_removed", {
+      managed_file: relativePath,
+      reason: "managed_runtime_log_removed"
+    });
+  }
+
+  await fs.rm(managedLogsPath, { recursive: true, force: true });
+}
+
+export async function analyzeManagedRemoveImpact(
   targetRootPath: string,
   logger: ManagedRemoveLogger
+): Promise<ManagedRemoveImpact> {
+  const managedRootPath = path.join(targetRootPath, ".codex-onboarding");
+  const statePath = path.join(managedRootPath, ".managed", "state.json");
+  const { state, corrupt } = await tryReadState(statePath);
+  const hadState = Boolean(state) || corrupt;
+
+  const modifiedManagedFiles: string[] = [];
+  const missingManagedFiles: string[] = [];
+  const untrackedFiles: string[] = [];
+
+  const managedTrackedPaths = new Set<string>((state?.managed_files ?? []).map((item) => item.relative_path));
+
+  if (state) {
+    for (const item of state.managed_files) {
+      const fullPath = path.join(targetRootPath, item.relative_path);
+
+      try {
+        const content = await fs.readFile(fullPath, "utf8");
+        const digest = digestSha256(content);
+
+        if (digest !== item.content_digest_sha256) {
+          modifiedManagedFiles.push(item.relative_path);
+        }
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+          missingManagedFiles.push(item.relative_path);
+          continue;
+        }
+
+        throw error;
+      }
+    }
+  }
+
+  const existingManagedFiles = await collectFilesRecursive(managedRootPath);
+  for (const fullPath of existingManagedFiles) {
+    const relativePath = normalizeRelativePath(path.relative(targetRootPath, fullPath));
+
+    if (managedTrackedPaths.has(relativePath) || isExtensionOwnedRuntimeFile(relativePath)) {
+      continue;
+    }
+
+    untrackedFiles.push(relativePath);
+  }
+
+  const requiresConfirmation =
+    corrupt ||
+    modifiedManagedFiles.length > 0 ||
+    missingManagedFiles.length > 0 ||
+    untrackedFiles.length > 0;
+
+  logger.log("debug", "file_checked", {
+    reason: "remove_impact_scan_completed",
+    managed_modified_count: modifiedManagedFiles.length,
+    managed_missing_count: missingManagedFiles.length,
+    untracked_count: untrackedFiles.length,
+    state_corrupt: corrupt,
+    remove_requires_confirmation: requiresConfirmation
+  });
+
+  return {
+    statePath,
+    managedRootPath,
+    hadState,
+    stateCorrupt: corrupt,
+    modifiedManagedFiles,
+    missingManagedFiles,
+    untrackedFiles,
+    requiresConfirmation
+  };
+}
+
+export async function removeManagedOnboarding(
+  targetRootPath: string,
+  logger: ManagedRemoveLogger,
+  options: ManagedRemoveOptions = {}
 ): Promise<ManagedRemoveResult> {
-  const statePath = path.join(targetRootPath, ".codex-onboarding", ".managed", "state.json");
+  const managedRootPath = path.join(targetRootPath, ".codex-onboarding");
+  const statePath = path.join(managedRootPath, ".managed", "state.json");
+  const removeWholeManagedRoot = options.removeWholeManagedRoot ?? false;
 
   const removedFiles: string[] = [];
-  const preservedModifiedFiles: string[] = [];
   const missingManagedFiles: string[] = [];
+  const skippedChangedManagedFiles: string[] = [];
 
   const { state, corrupt } = await tryReadState(statePath);
   const hadState = Boolean(state) || corrupt;
+
+  if (removeWholeManagedRoot) {
+    const existingFiles = await collectFilesRecursive(managedRootPath);
+    removedFiles.push(
+      ...existingFiles.map((fullPath) =>
+        normalizeRelativePath(path.relative(targetRootPath, fullPath))
+      )
+    );
+
+    await fs.rm(managedRootPath, { recursive: true, force: true });
+
+    logger.log("debug", "file_removed", {
+      reason: "managed_root_removed",
+      removed_count: removedFiles.length
+    });
+
+    logger.log("debug", "state_rewritten", {
+      state_path: statePath,
+      state_cleared: true
+    });
+
+    return {
+      statePath,
+      hadState,
+      stateCleared: true,
+      stateCorrupt: corrupt,
+      removedFiles,
+      missingManagedFiles,
+      skippedChangedManagedFiles,
+      removedManagedRoot: true,
+      removeMode: "full_root_reset"
+    };
+  }
 
   if (state) {
     for (const item of state.managed_files) {
@@ -92,7 +299,7 @@ export async function removeManagedOnboarding(
         const digest = digestSha256(existing);
 
         if (digest !== item.content_digest_sha256) {
-          preservedModifiedFiles.push(item.relative_path);
+          skippedChangedManagedFiles.push(item.relative_path);
           logger.log("warning", "file_skipped", {
             managed_file: item.relative_path,
             reason: "consumer_modified_preserved"
@@ -144,13 +351,20 @@ export async function removeManagedOnboarding(
     state_cleared: stateCleared
   });
 
+  await removeManagedRuntimeLogFiles(targetRootPath, managedRootPath, logger, removedFiles);
+
+  await tryRemoveEmptyDirectory(path.join(targetRootPath, ".codex-onboarding", ".managed"));
+  await tryRemoveEmptyDirectory(path.join(targetRootPath, ".codex-onboarding"));
+
   return {
     statePath,
     hadState,
     stateCleared,
     stateCorrupt: corrupt,
     removedFiles,
-    preservedModifiedFiles,
-    missingManagedFiles
+    missingManagedFiles,
+    skippedChangedManagedFiles,
+    removedManagedRoot: false,
+    removeMode: "safe_state_cleanup"
   };
 }

@@ -1,7 +1,7 @@
 # Issue Escalation Policy (Consumer Conflict Reports)
 
 ## Goal
-Provide a safe, user-controlled way to report onboarding artifact conflicts back to this repository.
+Provide a safe, user-controlled guidance model for reporting onboarding conflicts back to this repository.
 
 ## Problem Type
 A conflict report is relevant when:
@@ -13,28 +13,26 @@ A conflict report is relevant when:
 - Reporting must be explicit and user-initiated.
 - No silent or automatic external issue submission.
 - No outbound telemetry side-channel.
-- Submission must respect the user's currently granted Codex/GitHub permissions.
+- Extension runtime does not implement direct submission workflows for this policy.
 
 ## Recommended Flow
 1. Codex explains the detected conflict and references the specific managed artifact.
 2. Codex proposes two paths:
 - local override path (consumer-controlled customization),
 - report upstream issue for template/policy correction.
-3. If user agrees, system prepares a pre-filled issue draft and shows full preview.
-4. Codex asks explicit confirmation for submission in the current turn.
-5. If required GitHub permissions are available, Codex submits directly on behalf of the user.
-6. If permissions are missing or submission fails, fallback to manual submit path with the prepared draft.
+3. If user agrees, Codex can prepare a structured issue draft.
+4. Codex asks explicit confirmation before any external action in the current user environment.
+5. If the user's Codex environment and permissions support it, Codex may assist submission under user approval.
+6. Otherwise, Codex provides manual-submit guidance and a ready draft payload.
 
 ## Submission Modes
-1. Direct submission (preferred when available)
-- Allowed only after explicit user confirmation on the prepared draft.
-- Requires valid GitHub auth and sufficient repository issue scope.
-- Must return created issue URL and include it in operation diagnostics.
+1. Advisory draft mode (default policy)
+- Codex prepares issue-ready content only.
+- User decides when and where to submit.
 
-2. Manual fallback
-- Provide ready-to-submit issue draft content.
-- Provide target repository issue link/template link.
-- User submits manually.
+2. User-environment execution mode (optional)
+- Only when user explicitly requests and grants permission in their own Codex environment.
+- This repository/extension policy does not require dedicated extension command support for this mode.
 
 ## Draft Payload Contract
 Issue draft should include:
@@ -52,10 +50,10 @@ Issue draft should include:
 - Prefer references (path + section) over raw content dumps.
 
 ## UX Requirements
-- Make escalation action visible in post-install guidance and error dialogs.
+- Keep escalation advisory visible in managed onboarding artifacts.
 - Label escalation as optional and user-controlled.
 - Keep escalation separate from install/remove/repair command surface.
-- Show explicit state/result messages for: `draft-ready`, `submitted`, `fallback-manual`.
+- Use `.codex-onboarding/ISSUE-REPORTING.md` as the managed guidance source in consumer projects.
 
 ## Governance
 Any change to escalation behavior requires synchronized updates in:

@@ -9,10 +9,11 @@ It is designed for safe, non-destructive onboarding flows where extension-manage
 ## What It Does
 
 - installs a managed onboarding baseline into `.codex-onboarding/`
-- supports `Install`, `Repair`, and `Remove` lifecycle commands
+- supports `Install`, `Repair`, and `Remove` commands
 - prevents unsafe overwrite of existing user-owned files
 - blocks updates when managed-file drift is detected
 - writes deterministic operation trace logs for debugging
+- includes managed AI guidance at `.codex-onboarding/ISSUE-REPORTING.md` for user-controlled upstream issue suggestion flow
 
 
 ## Command Surface
@@ -34,6 +35,7 @@ The extension intentionally keeps command surface minimal.
 - non-destructive by default
 - managed ownership boundary is strict
 - extension updates only extension-owned managed files
+- remove is impact-scan driven (clean remove without prompt, destructive full-root remove only after explicit confirmation)
 - drift detection is fail-fast
 - up-to-date runs skip unnecessary writes
 
@@ -44,13 +46,15 @@ Install flow runs in this order:
 1. Installation Scope
 2. Project Profile (dynamic, file-driven)
 3. Review & Apply Git Tracking
-4. Review & Apply confirmation
 
 Questionnaire and selection assets are loaded from extension-bundled onboarding assets.
 
 ## Logging
 
-Each lifecycle run creates a dedicated trace log file with structured events and severity levels.
+Each lifecycle run opens the VS Code Output channel and streams trace logs in real time.
+Each run also creates a dedicated trace log file with structured events and severity levels.
+On successful install/repair, a project mirror is written to `.codex-onboarding/.managed/logs/`.
+The extension manages `.codex-onboarding/.gitignore` so mirrored logs remain untracked by default.
 
 Severity categories:
 

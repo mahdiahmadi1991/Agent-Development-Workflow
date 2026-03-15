@@ -6,6 +6,10 @@ import { applyManagedInstall } from "../services/managedInstallService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
 import { openPostInstallGuidancePage } from "../services/postInstallGuidancePage";
+import {
+  buildProjectOperationLogPath,
+  mirrorOperationLogToProject
+} from "../services/projectOperationLogService";
 import { loadResolvedProfile } from "../services/profileAssetService";
 import { loadQuestionnaireAssets } from "../services/questionnaireAssetService";
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
@@ -54,7 +58,7 @@ async function askGitTrackingSelectionAtFinalStep(): Promise<OperationalSelectio
       }
     ],
     {
-      title: "Review & Apply: Git Tracking",
+      title: "Git Tracking Preference",
       placeHolder: "Should extension-managed onboarding files be tracked in Git?"
     }
   );
@@ -66,44 +70,6 @@ async function askGitTrackingSelectionAtFinalStep(): Promise<OperationalSelectio
   return { gitMode: gitMode.value };
 }
 
-async function askPreInstallAcknowledgement(input: {
-  targetRootPath: string;
-  selectedProfile: string;
-  gitModeSummary: string;
-  selectedTopicCount: number;
-  previewTopicIds: string[];
-}): Promise<boolean> {
-  const preview =
-    input.previewTopicIds.length > 0 ? input.previewTopicIds.map((item) => `- ${item}`).join("\n") : "- (none)";
-
-  const detail = [
-    "What will happen:",
-    "- Extension-managed onboarding artifacts will be applied.",
-    "- Existing files are not overwritten (non-destructive mode).",
-    "- Managed state will be written to .codex-onboarding/.managed/state.json.",
-    "",
-    "Selected configuration:",
-    `- Target root: ${input.targetRootPath}`,
-    `- Project profile: ${input.selectedProfile}`,
-    `- Git mode: ${input.gitModeSummary}`,
-    `- Selected topics: ${input.selectedTopicCount}`,
-    "",
-    "Topic preview:",
-    preview
-  ].join("\n");
-
-  const decision = await vscode.window.showInformationMessage(
-    "Review & Apply: confirm onboarding installation.",
-    {
-      modal: true,
-      detail
-    },
-    "Apply Installation"
-  );
-
-  return decision === "Apply Installation";
-}
-
 function buildGitTrackingSummaryLines(input: {
   gitMode: "track" | "ignore";
   gitTrackingStrategy: "git_info_exclude" | "no_git_repository";
@@ -111,7 +77,7 @@ function buildGitTrackingSummaryLines(input: {
   gitQuestionSkipped: boolean;
 }): string[] {
   const lines = [
-    `Git mode (Review & Apply): ${input.gitQuestionSkipped ? "not_applicable" : input.gitMode}`,
+    `Git mode: ${input.gitQuestionSkipped ? "not_applicable" : input.gitMode}`,
     `Git tracking strategy: ${input.gitTrackingStrategy}`,
     `Git tracking updated: ${input.gitTrackingUpdated ? "yes" : "no"}`
   ];
@@ -143,6 +109,9 @@ export async function runInstall(
 ): Promise<void> {
   const operationId = createOperationId();
   let traceLogger: OperationTraceLogger | undefined;
+  let targetRootPath: string | undefined;
+  let projectLogPath: string | undefined;
+  let shouldMirrorProjectLog = false;
 
   try {
     traceLogger = await OperationTraceLogger.create(context, logger, "install", operationId);
@@ -171,6 +140,7 @@ export async function runInstall(
     traceLogger.log("debug", "target_resolved", {
       target_root: target.uri.fsPath
     });
+    targetRootPath = target.uri.fsPath;
 
     const family = "dotnet-csharp";
     const questionnaire = await loadQuestionnaireAssets(context.extensionPath, family);
@@ -223,7 +193,7 @@ export async function runInstall(
         traceLogger.log("warning", "operation_blocked", {
           reason: "git_tracking_selection_cancelled"
         });
-        void vscode.window.showInformationMessage("Install canceled at Review & Apply (Git Tracking).");
+        void vscode.window.showInformationMessage("Install canceled at Git Tracking Preference.");
         return;
       }
 
@@ -238,24 +208,6 @@ export async function runInstall(
     traceLogger.log("debug", "git_tracking_selected", {
       git_mode: gitTrackingSelection.gitMode
     });
-
-    const topicPreview = selectionPlan.selected_topics.slice(0, 10).map((topic) => topic.file_id);
-
-    const acknowledged = await askPreInstallAcknowledgement({
-      targetRootPath: target.uri.fsPath,
-      selectedProfile: resolvedProfile.profile_id,
-      gitModeSummary: gitTrackingQuestionSkipped ? "not_applicable (no Git repository)" : gitTrackingSelection.gitMode,
-      selectedTopicCount: selectionPlan.selected_topics.length,
-      previewTopicIds: topicPreview
-    });
-
-    if (!acknowledged) {
-      traceLogger.log("warning", "operation_blocked", {
-        reason: "pre_install_acknowledgement_declined"
-      });
-      void vscode.window.showInformationMessage("Install canceled at Review & Apply.");
-      return;
-    }
 
     const extensionVersion =
       typeof context.extension.packageJSON?.version === "string"
@@ -305,6 +257,7 @@ export async function runInstall(
       },
       traceLogger
     );
+    projectLogPath = buildProjectOperationLogPath(target.uri.fsPath, traceLogger.logFilePath);
 
     const summary = [
       "Install foundation step completed.",
@@ -322,8 +275,11 @@ export async function runInstall(
       `Skipped files: ${installResult.skippedFiles.length}`,
       `Removed stale managed files: ${installResult.removedStaleFiles.length}`,
       `Managed state: ${installResult.statePath}`,
+      `Project operation log: ${projectLogPath}`,
       `Operation log: ${traceLogger.logFilePath}`
     ].join("\n");
+
+    shouldMirrorProjectLog = true;
 
     void vscode.window.showInformationMessage(summary, { modal: false });
     traceLogger.log("debug", "success_notification_shown", {
@@ -345,7 +301,12 @@ export async function runInstall(
       gitTrackingUpdated: gitTrackingResult.updated,
       appliedCount: installResult.appliedFiles.length,
       skippedCount: installResult.skippedFiles.length,
-      removedStaleCount: installResult.removedStaleFiles.length
+      removedStaleCount: installResult.removedStaleFiles.length,
+      extensionVersion,
+      bundleId: resolvedProfile.profile_id,
+      bundleVersion: String(questionnaire.flow.version),
+      capabilityTags: selectionPlan.capability_tags,
+      operationId
     });
 
     traceLogger.log("debug", postInstallPanelOpened ? "post_install_page_opened" : "post_install_page_fallback", {
@@ -377,6 +338,18 @@ export async function runInstall(
   } finally {
     if (traceLogger) {
       await traceLogger.flush();
+    }
+
+    if (traceLogger && shouldMirrorProjectLog && targetRootPath && projectLogPath) {
+      try {
+        await mirrorOperationLogToProject(targetRootPath, traceLogger.logFilePath, logger);
+      } catch (error) {
+        logger.log("warning", "operation_log_mirror_failed", {
+          command: "install",
+          target_root: targetRootPath,
+          reason: error instanceof Error ? error.message : "unknown_error"
+        });
+      }
     }
   }
 }

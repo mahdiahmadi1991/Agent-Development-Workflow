@@ -17,7 +17,7 @@ This file introduces Codex to the onboarding model applied in this project.
 - Managed artifacts are installed under `.codex-onboarding/`.
 
 ## Ownership Model
-- Managed baseline path: `.codex-onboarding/core/`
+- Managed baseline path: `.codex-onboarding/`
 - Consumer customization path: `.codex-onboarding/overrides/`
 - Managed baseline files must not be edited directly.
 
@@ -39,4 +39,9 @@ This file introduces Codex to the onboarding model applied in this project.
 
 ## Conflict Reporting
 - If onboarding behavior conflicts with your needs, use overrides first.
-- Optionally open an upstream issue using the extension's issue-escalation flow.
+- If conflict remains unresolved, follow `.codex-onboarding/ISSUE-REPORTING.md`.
+
+## Indexed Managed Instructions
+- `.codex-onboarding/ISSUE-REPORTING.md`:
+  - Guidance for Codex and user-controlled upstream issue suggestion flow.
+  - No automatic submission without explicit user approval.

@@ -15,15 +15,19 @@ Build a VS Code extension that applies Codex onboarding files to a user's curren
 6. Extension copies predefined onboarding files for that target into predefined paths in the current project.
 7. Extension shows a success message with a summary of applied files.
 8. Extension opens a dedicated post-install `WebviewPanel` in VS Code with fixed V1 section order, professional onboarding guidance blocks, and deterministic change report data.
-9. Extension exposes optional, user-controlled issue escalation actions for onboarding conflicts.
+9. Extension installs managed advisory guidance for user-controlled issue escalation recommendations.
 
 ## Command Surface
 - Minimal command set:
   - `Install Onboarding`
   - `Remove Onboarding`
   - `Repair Onboarding`
-- Lifecycle update/sync behavior is part of install/repair logic, not a separate user command.
+- Lifecycle update/sync behavior is part of install logic, not a separate user command.
 - Before install/apply actions, user must have access to a concise behavior-and-impact summary.
+- Remove is impact-scan driven: if `.codex-onboarding/` is clean, remove proceeds silently; if drift/additional files are detected, explicit destructive confirmation is required before full root deletion.
+- Repair is allowed only when prior managed onboarding evidence exists in selected root; otherwise flow stops with install-first guidance.
+- Repair is state-driven: restore uses existing managed state in selected root.
+- If managed state is missing/corrupt but managed files are intact, repair can recover source metadata from managed files and rebuild state.
 
 ## Update Consent and Transparency
 - Extension must notify user when a newer onboarding bundle/version is available.
@@ -48,7 +52,8 @@ Catalog design principles:
 - Profile Selection Questions question definitions are loaded dynamically from:
   - `.codex-onboarding/library/questionnaires/index.yaml`
   - `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
-- Profile Selection Questions must not be hardcoded in extension command handlers.
+- Profile Selection Questions must not be hardcoded in install command handlers.
+- Repair command uses managed state as source of truth and does not ask Profile Selection Questions.
 
 ## Instruction Asset Model
 - Instruction assets are modular and topic-based.
@@ -82,7 +87,7 @@ Examples of applicability intent:
 
 ## Static Bootstrap Artifact
 - A mandatory static onboarding file is always installed:
-  - `.codex-onboarding/core/AGENT-ONBOARDING.md`
+  - `.codex-onboarding/AGENTS.md`
 - Purpose: generic Codex onboarding orientation for any selected target.
 - The file is business-neutral and target-independent.
 - Root `AGENTS.md` must not be auto-modified if already present.
@@ -127,12 +132,11 @@ Downgrade behavior:
 ## Issue Escalation Model
 - If a policy/content conflict is detected, user must be offered:
   - local override path
-  - optional upstream issue escalation path
-- Upstream issue escalation is explicit user action only.
+  - advisory conflict escalation guidance path
+- Upstream issue escalation remains user-controlled and is guided by managed onboarding instructions.
 - No silent automatic issue creation.
-- Issue drafts should be pre-filled with deterministic diagnostics and redaction-safe context.
-- If user confirms and required GitHub permissions are available, Codex may submit the issue directly.
-- If permissions are missing or submission fails, flow must fallback to manual submission with prepared draft.
+- Issue drafts should use deterministic diagnostics and redaction-safe context.
+- Extension runtime responsibility is guidance delivery, not direct submission execution.
 
 ## Operational Roadmap Reference
 - Execution roadmap: `docs/product/implementation-roadmap.md`
@@ -156,7 +160,7 @@ Downgrade behavior:
 - Pre-install transparency contract: `docs/product/pre-install-transparency.md`
 - Post-install success experience: `docs/product/post-install-success-experience.md`
 - Static bootstrap onboarding file contract: `docs/product/bootstrap-onboarding-file-contract.md`
-- Issue escalation policy: `docs/product/issue-escalation-policy.md`
+- Issue escalation advisory policy: `docs/product/issue-escalation-policy.md`
 - Consumer behavior summary: `docs/consumer/README.md`
 - Consumer AI quickstart prompts: `docs/consumer/AI-Quickstart.md`
 - Git tracking option policy: `docs/product/git-tracking-option.md`
@@ -173,6 +177,7 @@ Downgrade behavior:
 - Root resolution is smart: single-root auto-select, multi-root prompt, no workspace file requirement.
 - Testing and CI/CD quality gates are mandatory.
 - Trace-level operation logging is mandatory for install/remove/repair.
+- Lifecycle commands auto-open the Output channel and stream trace logs live.
 - Release notes and changelog are mandatory for each release.
 - Release version must align with extension package version before publish.
 - Release flow stages are mandatory: validate/package first, then optional publish actions.
@@ -188,7 +193,9 @@ Downgrade behavior:
 - Library storage and selection contracts are locked by validator gate.
 - Static bootstrap onboarding artifact is mandatory in every install/repair result.
 - Conflict-report escalation path is optional and fully user-controlled.
-- Dynamic two-group question model is mandatory for install/repair flow behavior.
+- Conflict escalation is advisory-first via managed instruction artifacts; no dedicated extension submission runtime is required.
+- Dynamic two-group question model is mandatory for install flow behavior.
+- Repair flow is state-driven with Operational Questions only.
 - Execution gate is strict: no implementation action without explicit user execution command.
 - Implementation cadence is review-gated: one step per cycle, then stop for review and approval before commit and next step.
 - Governance decisions must ignore extension artifact roots as policy sources.

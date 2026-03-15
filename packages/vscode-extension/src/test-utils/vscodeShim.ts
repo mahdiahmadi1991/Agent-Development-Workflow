@@ -67,6 +67,9 @@ export const window = {
   async showInputBox(): Promise<unknown> {
     return undefined;
   },
+  async showTextDocument(): Promise<unknown> {
+    return undefined;
+  },
   createOutputChannel() {
     return {
       appendLine(): void {

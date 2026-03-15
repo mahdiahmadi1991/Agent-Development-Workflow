@@ -60,7 +60,8 @@ Detailed model is documented in `docs/governance/override-model.md`.
 ## Dynamic Question Model
 - Operational Questions: extension runtime/operation questions (root selection, Git mode, safety choices).
 - Profile Selection Questions: dynamic questions loaded from questionnaire definition files.
-- Profile Selection Questions must be driven by data from `.codex-onboarding/library/questionnaires/` and not hardcoded in extension logic.
+- Profile Selection Questions must be driven by data from `.codex-onboarding/library/questionnaires/` and not hardcoded in install command logic.
+- Repair flow is state-driven and uses existing managed state as source of truth.
 
 ## Change Management
 - Use ADR-style documentation for architecture decisions.

@@ -1,7 +1,7 @@
 # Question Model Contract
 
 ## Goal
-Define a stable and scalable question system for install/repair flows without hardcoding project/topic logic in extension code.
+Define a stable and scalable question system without hardcoding project/topic logic in extension code.
 
 ## Question Groups
 1. Operational Questions
@@ -21,9 +21,10 @@ Define a stable and scalable question system for install/repair flows without ha
 
 ## Runtime Requirements
 1. Ask Operational Questions first when required by operation context.
-2. Resolve selected profile family and load Profile Selection Questions flow dynamically.
-3. Map Profile Selection Questions answers to capability/profile signals for resolver input.
-4. Keep deterministic result for identical inputs.
+2. For install flow, resolve selected profile family and load Profile Selection Questions flow dynamically.
+3. For install flow, map Profile Selection Questions answers to capability/profile signals for resolver input.
+4. For repair flow, use existing managed state from selected workspace root as source of truth.
+5. Keep deterministic result for identical inputs.
 
 ## Safety Rules
 - Unknown/missing questionnaire definitions must fail fast with diagnostics.

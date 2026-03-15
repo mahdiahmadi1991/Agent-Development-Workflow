@@ -15,7 +15,7 @@ Define non-negotiable pipeline gates before any extension release.
 2. Scenario validation
 - Execute automated checks for scenario matrix cases.
 - Block release on any safety-rule regression.
-- Include issue-escalation direct/fallback and bootstrap artifact scenarios.
+- Include conflict-escalation advisory artifact and bootstrap artifact scenarios.
 
 3. Cross-platform validation
 - Run test matrix on Windows, Linux, and macOS.
@@ -35,7 +35,7 @@ Define non-negotiable pipeline gates before any extension release.
 - Unit/integration test pass thresholds.
 - Operation-log contract validation for install/remove/repair workflows.
 - Validate logging severity fields (`debug`, `warning`, `error`) in operation traces.
-- Validate issue-escalation log events and questionnaire-loading log events.
+- Validate questionnaire-loading log events and lifecycle trace event coverage.
 
 6. Release hygiene
 - Generate release notes from decision-linked changes.

@@ -6,7 +6,7 @@ This extension applies Codex onboarding files into your project. Review this sum
 ## What the Extension Manages
 - Only extension-owned files under `.codex-onboarding/` managed paths.
 - It does not modify unrelated project files.
-- A static bootstrap onboarding file is always included: `.codex-onboarding/core/AGENT-ONBOARDING.md`.
+- A static bootstrap onboarding file is always included: `.codex-onboarding/AGENTS.md`.
 
 ## Lifecycle Commands
 - `Install Onboarding`
@@ -16,8 +16,9 @@ This extension applies Codex onboarding files into your project. Review this sum
 ## Safety and Ownership
 - Non-destructive by default.
 - Managed updates stop if consumer modifications are detected in managed files.
-- Remove operation deletes only unchanged managed files.
-- Consumer-modified managed files are not removed or edited.
+- Remove runs an impact scan first.
+- If no changes are detected in `.codex-onboarding/`, remove runs without confirmation.
+- If managed drift or additional user files are detected in `.codex-onboarding/`, remove asks destructive confirmation and, when approved, deletes the full `.codex-onboarding/` root.
 
 ## Update Behavior
 - Update is never silently auto-applied.
@@ -34,15 +35,18 @@ During install, you can choose:
 - If selected root has no Git repository, this question is skipped as not applicable.
 
 ## Logging and Diagnostics
+- When you run Install/Repair/Remove, the extension opens the VS Code Output channel and streams operation logs live.
 - Each operation creates a unique trace log file.
 - Log severity levels: `debug`, `warning`, `error`.
+- Primary log path is extension global storage (`operation-logs`).
+- On successful install/repair, a project-local mirror log is written to `.codex-onboarding/.managed/logs/`.
+- `.codex-onboarding/.gitignore` is managed by the extension to keep mirrored log files untracked by default.
 
 ## Conflict Reporting
 - If installed onboarding guidance conflicts with your needs, use local overrides first.
-- You can optionally create an upstream issue report.
-- Upstream issue creation is always user-controlled (no silent automatic submission).
-- If GitHub permissions are available and you confirm, Codex can submit the issue directly for you.
-- If direct submission is unavailable, use the prepared draft for manual submit.
+- Follow `.codex-onboarding/ISSUE-REPORTING.md` for user-controlled escalation guidance.
+- Codex can suggest and prepare issue-ready draft content when you ask.
+- Any external submission remains explicit and user-controlled in your own Codex environment.
 - Issue drafts should include version/profile/log references, without sensitive file-content dumps.
 
 ## After Install
@@ -65,7 +69,6 @@ During install, you can choose:
   - `Run Remove`
 - Secondary quick actions:
   - `Copy Starter Prompt`
-  - `Report Onboarding Issue`
 - Additional prompt examples: `docs/consumer/AI-Quickstart.md`
 
 ## Runtime Support

@@ -13,8 +13,13 @@ Guarantee safe, deterministic extension behavior for install, remove, repair, an
 
 2. Integration tests
 - Install flow end-to-end with fixture projects
-- Remove flow ownership safety checks
+- Remove flow impact-scan behavior (clean path vs destructive-confirm path)
+- Remove destructive-confirm behavior (full `.codex-onboarding/` delete after approval)
 - Repair flow recovery behavior
+- Repair precondition checks (block when no prior managed onboarding evidence exists)
+- Repair state-driven restore behavior (use current managed state bundle/version)
+- Repair recovery behavior for missing/corrupt/empty state with intact managed files
+- Repair drift warning QuickPick behavior (confirm reset vs cancel)
 - Drift detection and fail-fast outcomes
 - Bootstrap artifact inclusion checks for install/repair
 - Pre-install acknowledgement behavior checks
@@ -23,7 +28,7 @@ Guarantee safe, deterministic extension behavior for install, remove, repair, an
 - Conditional post-install check: `Git Tracking Details` appears only when ignore mode is selected and applied.
 - Post-install Action Bar and secondary action availability checks
 - Post-install fallback behavior checks when Webview initialization fails
-- Issue escalation direct-submit and manual-fallback behavior checks
+- Managed conflict-escalation guidance artifact checks (`.codex-onboarding/ISSUE-REPORTING.md` + AGENTS index reference)
 - Multi-root and no-workspace-file root resolution checks
 - Dynamic Profile Selection Questions questionnaire loading checks (registry + family flow)
 - Downgrade safety and failure-path checks
@@ -39,7 +44,7 @@ Guarantee safe, deterministic extension behavior for install, remove, repair, an
 - Explicit checks for Action Bar command-link behavior (`Open Managed Root`, `Open Operation Log`, `Run Repair`, `Run Remove`)
 - Explicit checks for progressive disclosure behavior (summary-first, details-secondary)
 - Explicit checks for post-install fallback behavior when Webview initialization fails
-- Explicit checks for issue escalation submission/fallback event coverage
+- Explicit checks for managed advisory conflict-report guidance presence and consistency
 - Explicit checks for dynamic questionnaire resolution behavior
 
 4. Cross-platform tests

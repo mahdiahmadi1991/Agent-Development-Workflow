@@ -6,7 +6,7 @@ Set a clear default for diagnostics and data handling.
 ## Baseline Policy
 - No outbound telemetry in the current state.
 - Operational logs are local-first diagnostics.
-- Upstream issue escalation is user-initiated and consent-gated; direct submission via user permissions is allowed.
+- Upstream issue escalation guidance is user-initiated and advisory-only; no direct submission flow is implemented by extension runtime.
 - Any future telemetry change requires explicit governance approval and must be opt-in.
 
 ## If Telemetry Is Introduced Later

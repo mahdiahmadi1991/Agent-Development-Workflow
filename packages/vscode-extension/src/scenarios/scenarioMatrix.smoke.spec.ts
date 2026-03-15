@@ -28,7 +28,7 @@ afterEach(async () => {
 async function seedSmokeAssets(assetRoot: string): Promise<void> {
   await writeAssetFile(
     assetRoot,
-    "core/AGENT-ONBOARDING.md",
+    "core/AGENTS.md",
     [
       "<!--",
       "artifact_id: core-agent-onboarding",
@@ -39,7 +39,24 @@ async function seedSmokeAssets(assetRoot: string): Promise<void> {
       "extension_version: TBD",
       "-->",
       "",
-      "# AGENT-ONBOARDING"
+      "# AGENTS"
+    ].join("\n")
+  );
+
+  await writeAssetFile(
+    assetRoot,
+    "core/ISSUE-REPORTING.md",
+    [
+      "<!--",
+      "artifact_id: core-issue-reporting-guidance",
+      "managed: true",
+      "schema_version: 1",
+      "bundle_id: TBD",
+      "bundle_version: TBD",
+      "extension_version: TBD",
+      "-->",
+      "",
+      "# ISSUE REPORTING"
     ].join("\n")
   );
 
@@ -233,7 +250,7 @@ describe("scenario-matrix smoke", () => {
 
     expect(result.appliedFiles).toEqual(
       expect.arrayContaining([
-        ".codex-onboarding/core/AGENT-ONBOARDING.md",
+        ".codex-onboarding/AGENTS.md",
         ".codex-onboarding/core/topics/cross-cutting/base-topic.md",
         ".codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
       ])
@@ -245,11 +262,11 @@ describe("scenario-matrix smoke", () => {
     };
 
     expect(state.managed_files.map((item) => item.relative_path)).toContain(
-      ".codex-onboarding/core/AGENT-ONBOARDING.md"
+      ".codex-onboarding/AGENTS.md"
     );
 
     await expect(
-      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
+      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/AGENTS.md"), "utf8")
     ).resolves.toContain("bundle_id: dotnet-csharp-web-api-simple");
   });
 
@@ -294,7 +311,52 @@ describe("scenario-matrix smoke", () => {
     ).rejects.toThrow("Managed drift detected");
   });
 
-  it("S-09: remove keeps modified managed files and clears state", async () => {
+  it("S-06: missing tracked managed file blocks update (fail-fast)", async () => {
+    const fixture = await createFixturePaths("scenario-missing-managed-file");
+    cleanups.push(fixture.tempRoot);
+
+    await seedSmokeAssets(fixture.assetRoot);
+
+    const { questionnaire, profile, plan } = await resolveSelection(fixture.extensionPath);
+
+    await applyManagedInstall(
+      {
+        extensionPath: fixture.extensionPath,
+        targetRootPath: fixture.targetRoot,
+        bundleId: profile.profile_id,
+        bundleVersion: String(questionnaire.flow.version),
+        extensionVersion: "1.0.0",
+        selectedTopics: plan.selected_topics
+      },
+      { log: vi.fn() }
+    );
+
+    const missingPath = path.join(
+      fixture.targetRoot,
+      ".codex-onboarding/core/topics/cross-cutting/base-topic.md"
+    );
+    await fs.unlink(missingPath);
+
+    await expect(
+      applyManagedInstall(
+        {
+          extensionPath: fixture.extensionPath,
+          targetRootPath: fixture.targetRoot,
+          bundleId: profile.profile_id,
+          bundleVersion: "2",
+          extensionVersion: "1.1.0",
+          selectedTopics: plan.selected_topics
+        },
+        { log: vi.fn() }
+      )
+    ).rejects.toThrow("Managed missing file detected");
+
+    await expect(
+      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/AGENTS.md"), "utf8")
+    ).resolves.toContain("extension_version: 1.0.0");
+  });
+
+  it("S-09: full-root remove deletes modified managed files and user-added files", async () => {
     const fixture = await createFixturePaths("scenario-remove");
     cleanups.push(fixture.tempRoot);
 
@@ -320,12 +382,18 @@ describe("scenario-matrix smoke", () => {
     );
     await fs.appendFile(modifiedPath, "\n# consumer edit\n", "utf8");
 
-    const removed = await removeManagedOnboarding(fixture.targetRoot, { log: vi.fn() });
+    const userNotePath = path.join(fixture.targetRoot, ".codex-onboarding/custom/user-note.md");
+    await fs.mkdir(path.dirname(userNotePath), { recursive: true });
+    await fs.writeFile(userNotePath, "note", "utf8");
 
-    expect(removed.removedFiles).toContain(".codex-onboarding/core/AGENT-ONBOARDING.md");
-    expect(removed.preservedModifiedFiles).toContain(
-      ".codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
-    );
+    const removed = await removeManagedOnboarding(fixture.targetRoot, { log: vi.fn() }, {
+      removeWholeManagedRoot: true
+    });
+
+    expect(removed.removedFiles).toContain(".codex-onboarding/AGENTS.md");
+    expect(removed.removedFiles).toContain(".codex-onboarding/custom/user-note.md");
+    expect(removed.removeMode).toBe("full_root_reset");
+    expect(removed.removedManagedRoot).toBe(true);
 
     await expect(fs.readFile(installed.statePath, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
   });
@@ -372,11 +440,11 @@ describe("scenario-matrix smoke", () => {
     );
 
     expect(repaired.appliedFiles).toContain(".codex-onboarding/core/topics/cross-cutting/base-topic.md");
-    expect(repaired.recoveredTrackedFiles).toContain(".codex-onboarding/core/AGENT-ONBOARDING.md");
+    expect(repaired.recoveredTrackedFiles).toContain(".codex-onboarding/AGENTS.md");
 
     await expect(fs.readFile(installed.statePath, "utf8")).resolves.toContain("managed_files");
     await expect(
-      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
+      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/AGENTS.md"), "utf8")
     ).resolves.toContain("managed: true");
   });
 
@@ -414,7 +482,7 @@ describe("scenario-matrix smoke", () => {
 
     expect(downgraded.appliedFiles).toEqual(
       expect.arrayContaining([
-        ".codex-onboarding/core/AGENT-ONBOARDING.md",
+        ".codex-onboarding/AGENTS.md",
         ".codex-onboarding/core/topics/cross-cutting/base-topic.md",
         ".codex-onboarding/core/topics/dotnet/csharp/app-types/webapi-topic.md"
       ])
@@ -430,7 +498,7 @@ describe("scenario-matrix smoke", () => {
     expect(state.extension_version).toBe("1.0.0");
 
     await expect(
-      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/core/AGENT-ONBOARDING.md"), "utf8")
+      fs.readFile(path.join(fixture.targetRoot, ".codex-onboarding/AGENTS.md"), "utf8")
     ).resolves.toContain("extension_version: 1.0.0");
   });
 });

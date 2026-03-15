@@ -134,7 +134,7 @@ describe("runInstall", () => {
     vi.mocked(applyManagedInstall).mockResolvedValue({
       statePath: "/workspace/project/.codex-onboarding/.managed/state.json",
       managedRootPath: "/workspace/project/.codex-onboarding/.managed",
-      appliedFiles: [".codex-onboarding/core/AGENT-ONBOARDING.md"],
+      appliedFiles: [".codex-onboarding/AGENTS.md"],
       skippedFiles: [],
       recoveredTrackedFiles: [],
       removedStaleFiles: []
@@ -174,34 +174,11 @@ describe("runInstall", () => {
     expect(trace.flush).toHaveBeenCalledTimes(1);
   });
 
-  it("blocks when pre-install acknowledgement is declined", async () => {
-    vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
-      label: "Track managed files",
-      value: "track"
-    } as any);
-
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue(undefined);
-
-    await runInstall(buildContext(), { log: vi.fn() } as any);
-
-    expect(applyManagedInstall).not.toHaveBeenCalled();
-    expect(openPostInstallGuidancePage).not.toHaveBeenCalled();
-
-    const trace = await createTraceLoggerMock.mock.results[0]?.value;
-    expect(trace.log).toHaveBeenCalledWith("warning", "operation_blocked", {
-      reason: "pre_install_acknowledgement_declined"
-    });
-  });
-
   it("completes install flow and opens post-install guidance page", async () => {
     vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
       label: "Track managed files",
       value: "track"
     } as any);
-
-    vi.spyOn(vscode.window, "showInformationMessage")
-      .mockResolvedValueOnce("Apply Installation" as any)
-      .mockResolvedValueOnce(undefined);
 
     await runInstall(buildContext(), { log: vi.fn() } as any);
 
@@ -242,7 +219,12 @@ describe("runInstall", () => {
       gitTrackingUpdated: true,
       appliedCount: 1,
       skippedCount: 0,
-      removedStaleCount: 0
+      removedStaleCount: 0,
+      extensionVersion: "1.2.3",
+      bundleId: "dotnet-csharp-web-api-simple",
+      bundleVersion: "7",
+      capabilityTags: ["cap.base", "answer.root.web_api_simple"],
+      operationId: expect.stringMatching(/^install-\d+$/)
     });
 
     const trace = await createTraceLoggerMock.mock.results[0]?.value;
@@ -258,8 +240,6 @@ describe("runInstall", () => {
       label: "Track managed files",
       value: "track"
     } as any);
-
-    vi.spyOn(vscode.window, "showInformationMessage").mockResolvedValue("Apply Installation" as any);
 
     vi.mocked(applyManagedInstall).mockRejectedValue(new Error("boom"));
 
@@ -338,10 +318,6 @@ describe("runInstall", () => {
       value: "track"
     } as any);
 
-    vi.spyOn(vscode.window, "showInformationMessage")
-      .mockResolvedValueOnce("Apply Installation" as any)
-      .mockResolvedValueOnce(undefined);
-
     vi.mocked(openPostInstallGuidancePage).mockResolvedValue(false);
 
     await runInstall(buildContext(), { log: vi.fn() } as any);
@@ -365,10 +341,6 @@ describe("runInstall", () => {
       value: "track"
     } as any);
 
-    vi.spyOn(vscode.window, "showInformationMessage")
-      .mockResolvedValueOnce("Apply Installation" as any)
-      .mockResolvedValueOnce(undefined);
-
     vi.mocked(requireUpdateConsentIfNeeded).mockResolvedValue({
       updateAvailable: true,
       blocked: true,
@@ -390,10 +362,6 @@ describe("runInstall", () => {
   it("skips git tracking question when root has no git repository", async () => {
     vi.mocked(hasGitRepository).mockResolvedValue(false);
 
-    vi.spyOn(vscode.window, "showInformationMessage")
-      .mockResolvedValueOnce("Apply Installation" as any)
-      .mockResolvedValueOnce(undefined);
-
     await runInstall(buildContext(), { log: vi.fn() } as any);
 
     expect(vscode.window.showQuickPick).toHaveBeenCalledTimes(0);
@@ -412,10 +380,6 @@ describe("runInstall", () => {
       value: "ignore"
     } as any);
 
-    vi.spyOn(vscode.window, "showInformationMessage")
-      .mockResolvedValueOnce("Apply Installation" as any)
-      .mockResolvedValueOnce(undefined);
-
     vi.mocked(applyGitTrackingMode).mockResolvedValue({
       mode: "ignore",
       strategy: "git_info_exclude",
@@ -426,12 +390,12 @@ describe("runInstall", () => {
     await runInstall(buildContext(), { log: vi.fn() } as any);
 
     expect(vscode.window.showInformationMessage).toHaveBeenNthCalledWith(
-      2,
+      1,
       expect.stringContaining(".git/info/exclude"),
       { modal: false }
     );
     expect(vscode.window.showInformationMessage).toHaveBeenNthCalledWith(
-      2,
+      1,
       expect.stringContaining("How to exit ignore mode"),
       { modal: false }
     );

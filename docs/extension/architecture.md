@@ -5,16 +5,16 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 
 ## Product-Level Behavior
 1. User triggers extension command.
-2. Extension asks Operational questions required for runtime behavior.
-3. Extension loads Profile Selection question flow dynamically from questionnaire files.
+2. Install flow asks Operational questions required for runtime behavior.
+3. Install flow loads Profile Selection question flow dynamically from questionnaire files.
 4. Extension resolves selected target.
-5. Extension presents pre-install behavior summary and receives explicit acknowledgement.
-6. Extension offers Git tracking mode choice for managed paths.
+5. Install flow presents pre-install behavior summary and receives explicit acknowledgement.
+6. Install/repair flows offer Git tracking mode choice for managed paths.
 7. Extension applies predefined onboarding files into `.codex-onboarding/` paths.
 8. Extension follows non-destructive apply mode (no overwrite of existing files).
 9. Extension reports success, applied files, and skipped files summary.
 10. Extension opens a dedicated post-install WebviewPanel with the fixed V1 section baseline, quick-start usage tips, and runtime change summary.
-11. Extension offers optional user-controlled issue escalation actions for onboarding conflicts.
+11. Extension installs managed advisory guidance for user-controlled issue escalation recommendations.
 
 ## Command Surface
 - `Install Onboarding`
@@ -48,22 +48,23 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 
 ## Question System
 - Operational questions are extension-defined.
-- Profile Selection questions are file-driven and dynamic.
+- Install Profile Selection questions are file-driven and dynamic.
 - Profile Selection Questions source files:
   - `.codex-onboarding/library/questionnaires/index.yaml`
   - `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
-- Profile Selection question flows must not be hardcoded in extension command logic.
+- Install Profile Selection question flows must not be hardcoded in extension command logic.
+- Repair flow is state-driven and uses existing managed state as source of truth.
 
 ## Static Bootstrap Artifact
-- Every install/repair must include `.codex-onboarding/core/AGENT-ONBOARDING.md`.
+- Every install/repair must include `.codex-onboarding/AGENTS.md`.
 - The artifact content is generic and target-independent.
 - Existing consumer root `AGENTS.md` must not be auto-modified.
 
 ## Conflict Escalation Principle
 - Escalation to upstream issue reporting is optional and user-controlled.
 - No silent automatic external issue creation is allowed.
-- If explicit confirmation is granted and required permissions exist, Codex may submit issue directly.
-- If direct submission is unavailable, extension must provide a manual-submit fallback with prepared draft.
+- Guidance is delivered through managed artifacts (not a dedicated extension command surface).
+- Codex may offer draft/help in user-controlled environments only after explicit user request.
 
 ## Planning Constraints
 - Current phase focuses on extension infrastructure and behavior implementation planning.

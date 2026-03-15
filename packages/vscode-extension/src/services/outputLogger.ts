@@ -25,6 +25,6 @@ export class OutputLogger {
   }
 
   public show(): void {
-    this.channel.show(true);
+    this.channel.show(false);
   }
 }

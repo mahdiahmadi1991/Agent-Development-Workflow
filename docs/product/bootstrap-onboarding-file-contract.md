@@ -4,7 +4,7 @@
 Define a mandatory, generic, always-installed bootstrap artifact that introduces Codex to the onboarding system in consumer projects.
 
 ## Mandatory Artifact
-- Path: `.codex-onboarding/core/AGENT-ONBOARDING.md`
+- Path: `.codex-onboarding/AGENTS.md`
 - Type: managed core artifact.
 - Install policy: always included in every install/repair composition.
 - Content policy: generic and project-type independent.
@@ -17,6 +17,14 @@ The file must remain stable and business-neutral. Required sections:
 4. How to ask Codex to use installed onboarding assets effectively.
 5. Non-destructive lifecycle behavior summary (install/update/remove/repair).
 6. Where to report policy conflicts or quality issues.
+7. Index references to any managed supporting guidance files.
+
+## Managed Supporting Guidance
+- Path: `.codex-onboarding/ISSUE-REPORTING.md`
+- Type: managed core artifact.
+- Install policy: always included in every install/repair composition.
+- Purpose: advisory guidance that trains Codex to suggest user-controlled upstream issue escalation when conflict persists.
+- Runtime policy: no dedicated extension command or automatic network submission is required by this contract.
 
 ## Metadata Contract
 - Managed text metadata header format: `comment block`.

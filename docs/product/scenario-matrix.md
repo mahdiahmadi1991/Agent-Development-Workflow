@@ -66,17 +66,36 @@ Define expected behavior for installation and update scenarios.
 ### S-09 Remove Managed Onboarding
 - Preconditions: Managed state exists.
 - Expected:
-  - Remove only files listed as managed and unchanged.
-  - Preserve unmanaged files and consumer-modified managed files.
+  - Scan `.codex-onboarding/` for managed drift and additional user files.
+  - If no changes are detected, remove runs directly without confirmation.
+  - If changes are detected, show destructive `QuickPick` confirmation.
+  - If user confirms, delete full `.codex-onboarding/` root.
   - Clear managed state.
   - Report `removed`.
 
 ### S-10 Repair Managed Onboarding
-- Preconditions: Managed state missing/corrupt or managed set inconsistent.
+- Preconditions: Managed state exists from a prior install.
 - Expected:
-  - Validate ownership boundary.
-  - Reconstruct managed state and restore managed consistency.
+- Validate ownership boundary.
+- Use existing managed state bundle/version as restore source.
+- If tracked managed files are unchanged, run without extra confirmation.
+- If tracked managed files are modified/missing, show destructive-reset `QuickPick` confirmation before overwrite.
+- Restore managed consistency.
   - Report `repaired` with changed file summary.
+
+### S-10b Repair Without Prior Install Evidence
+- Preconditions: No managed onboarding evidence exists in selected workspace root.
+- Expected:
+  - Block repair before operation proceeds.
+  - Show actionable message to run install first.
+  - Do not modify files.
+
+### S-10c Repair With Missing/Corrupt State But Intact Managed Files
+- Preconditions: Managed onboarding files exist, but `state.json` is missing/corrupt/empty.
+- Expected:
+  - Recover repair source from managed file metadata.
+  - Rebuild managed state safely via repair flow.
+  - Continue lifecycle flow without profile-selection questions.
 
 ### S-11 Multi-Root Workspace
 - Preconditions: Multiple roots are open in VS Code.
@@ -124,26 +143,24 @@ Define expected behavior for installation and update scenarios.
 ### S-17 Bootstrap Artifact Mandatory Inclusion
 - Preconditions: Install or repair command runs successfully.
 - Expected:
-  - `.codex-onboarding/core/AGENT-ONBOARDING.md` exists after operation.
+  - `.codex-onboarding/AGENTS.md` exists after operation.
   - Artifact is tracked in managed ownership state.
 
-### S-18 Issue Escalation Direct Submission
-- Preconditions: Conflict detected, user approves escalation, GitHub permissions are available.
+### S-18 Conflict Escalation Guidance Artifact Presence
+- Preconditions: Install or repair command runs successfully.
 - Expected:
-  - Show issue draft preview.
-  - Ask explicit per-submit confirmation.
-  - Submit issue directly.
-  - Return created issue URL and log submission events.
+  - `.codex-onboarding/ISSUE-REPORTING.md` exists after operation.
+  - Artifact is tracked in managed ownership state.
+  - Artifact includes explicit user-consent language for any external issue submission.
 
-### S-19 Issue Escalation Manual Fallback
-- Preconditions: Conflict detected and direct submission is unavailable or fails.
+### S-19 AGENTS Index Coverage for Conflict Guidance
+- Preconditions: Install or repair command runs successfully.
 - Expected:
-  - Keep escalation user-controlled.
-  - Provide prepared issue draft and repository issue link.
-  - Log fallback-manual event.
+  - `.codex-onboarding/AGENTS.md` references `.codex-onboarding/ISSUE-REPORTING.md`.
+  - Guidance is advisory and user-controlled.
 
 ### S-20 Dynamic Question Flow Resolution
-- Preconditions: Install/repair requires Profile Selection questions.
+- Preconditions: Install requires Profile Selection questions.
 - Expected:
   - Load questionnaire flow from questionnaire registry and family file.
   - Do not use hardcoded Profile Selection Questions question graph.
@@ -165,7 +182,7 @@ Define expected behavior for installation and update scenarios.
 - Preconditions: Post-install WebviewPanel opened.
 - Expected:
   - Primary Action Bar exposes: `Open Managed Root`, `Open Operation Log`, `Run Repair`, `Run Remove`.
-  - Secondary quick actions expose: `Copy Starter Prompt`, `Report Onboarding Issue`.
+  - Secondary quick actions expose: `Copy Starter Prompt`.
   - All actions are explicit user-initiated actions.
 
 ### S-23 Post-Install Fallback Safety

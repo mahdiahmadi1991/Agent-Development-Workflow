@@ -30,8 +30,7 @@ Provide immediate, clear, and actionable guidance after onboarding installation 
 - Show how to ask the AI model to use installed onboarding files.
 - Include quick-start prompt examples.
 - Include links to managed paths and operation log.
-- Explain conflict-report path and when to use override vs upstream issue escalation.
-- Explain submission modes: direct submit (permission + confirmation) vs manual fallback.
+- Explain conflict-report path and when to use override vs user-controlled upstream issue suggestion.
 
 ## Baseline UX Pack (V1)
 The first implementation baseline must include these blocks.
@@ -78,6 +77,8 @@ The first implementation baseline must include these blocks.
 - `Open Operation Log`
 - `Run Repair`
 - `Run Remove`
+- `Open Managed Root` should prefer VS Code explorer reveal and fallback safely.
+- `Open Operation Log` should prefer opening the active trace log in an editor tab and fallback safely.
 
 ## Information Architecture (Fixed Order)
 Global persistent element:
@@ -99,11 +100,11 @@ This order is fixed for V1 and should stay stable unless explicitly revised.
 
 ## Secondary Quick Actions
 - `Copy Starter Prompt`
-- `Report Onboarding Issue`
 
 ## UI/UX Requirements
 - Use a single clear hierarchy with lightweight cards/sections.
 - Keep the page readable in dark, light, and high-contrast themes.
+- Layout must remain responsive without page-level horizontal scrolling.
 - Keep interaction minimal and explicit.
 - Avoid clutter and avoid command-surface expansion.
 - Use progressive disclosure for details: summary first, technical details second.
@@ -142,7 +143,6 @@ Primary:
 
 Secondary:
 - `Copy Starter Prompt`
-- `Report Onboarding Issue`
 
 All actions must remain explicit, user-initiated actions.
 
@@ -179,7 +179,7 @@ Exit criteria:
 ### Phase D: Change Report and Action Bar
 - Inject runtime summary data.
 - Implement action bar links for open-root, open-log, repair, and remove.
-- Implement secondary quick actions for copy prompt and issue escalation entry-point.
+- Implement secondary quick action for starter-prompt copy.
 - Ensure action semantics are explicit and safe.
 
 Exit criteria:

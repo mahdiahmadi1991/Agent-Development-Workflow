@@ -1,7 +1,10 @@
 import * as vscode from "vscode";
 
 import { applyGitTrackingMode } from "../services/gitTrackingService";
-import { removeManagedOnboarding } from "../services/managedRemoveService";
+import {
+  analyzeManagedRemoveImpact,
+  removeManagedOnboarding
+} from "../services/managedRemoveService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
@@ -10,41 +13,35 @@ function isWorkspaceSelectionCancelled(): boolean {
   return (vscode.workspace.workspaceFolders ?? []).length > 0;
 }
 
-async function askRemoveConfirmation(targetRootPath: string): Promise<boolean> {
-  const decision = await vscode.window.showWarningMessage(
-    "Review & Remove: remove managed onboarding artifacts from the selected workspace root?",
+async function askRemoveConfirmationForDetectedChanges(input: {
+  targetRootPath: string;
+  modifiedManagedCount: number;
+  missingManagedCount: number;
+  untrackedCount: number;
+  stateCorrupt: boolean;
+}): Promise<boolean> {
+  const decision = await vscode.window.showQuickPick(
+    [
+      {
+        label: "Remove Entire .codex-onboarding Folder (Discard Changes)",
+        description: "Delete managed files and all additional files currently under .codex-onboarding."
+      },
+      {
+        label: "No",
+        description: "Cancel remove operation."
+      }
+    ],
     {
-      modal: true,
-      detail: [
-        "Only unchanged managed files are removed.",
-        "Consumer-modified managed files are preserved.",
-        "Managed state will be cleared.",
-        `Target root: ${targetRootPath}`
-      ].join("\n")
-    },
-    "Continue"
+      title: "Remove Warning: Local Changes Detected",
+      placeHolder:
+        `Target root: ${input.targetRootPath} | modified: ${input.modifiedManagedCount}, ` +
+        `missing: ${input.missingManagedCount}, additional files: ${input.untrackedCount}, ` +
+        `state corrupt: ${input.stateCorrupt ? "yes" : "no"}`
+    }
   );
 
-  if (decision !== "Continue") {
-    void vscode.window.showInformationMessage("Remove canceled at Review & Remove.");
-    return false;
-  }
-
-  const typedConfirmation = await vscode.window.showInputBox({
-    title: "Remove Confirmation",
-    prompt: "Type REMOVE to confirm managed artifact removal.",
-    placeHolder: "REMOVE",
-    ignoreFocusOut: true,
-    validateInput: (value) => (value.trim() === "REMOVE" ? undefined : "Type REMOVE exactly to confirm.")
-  });
-
-  if (typedConfirmation === undefined) {
-    void vscode.window.showInformationMessage("Remove canceled at typed confirmation.");
-    return false;
-  }
-
-  if (typedConfirmation.trim() !== "REMOVE") {
-    void vscode.window.showWarningMessage("Remove canceled: confirmation text did not match.");
+  if (!decision || decision.label !== "Remove Entire .codex-onboarding Folder (Discard Changes)") {
+    void vscode.window.showInformationMessage("Remove canceled.");
     return false;
   }
 
@@ -86,12 +83,29 @@ export async function runRemove(
       target_root: target.uri.fsPath
     });
 
-    const confirmed = await askRemoveConfirmation(target.uri.fsPath);
-    if (!confirmed) {
-      traceLogger.log("warning", "operation_blocked", {
-        reason: "remove_confirmation_declined"
+    const removeImpact = await analyzeManagedRemoveImpact(target.uri.fsPath, traceLogger);
+    traceLogger.log("debug", "remove_impact_scan_completed", {
+      state_corrupt: removeImpact.stateCorrupt,
+      modified_managed_count: removeImpact.modifiedManagedFiles.length,
+      missing_managed_count: removeImpact.missingManagedFiles.length,
+      additional_files_count: removeImpact.untrackedFiles.length,
+      remove_requires_confirmation: removeImpact.requiresConfirmation
+    });
+
+    if (removeImpact.requiresConfirmation) {
+      const confirmed = await askRemoveConfirmationForDetectedChanges({
+        targetRootPath: target.uri.fsPath,
+        modifiedManagedCount: removeImpact.modifiedManagedFiles.length,
+        missingManagedCount: removeImpact.missingManagedFiles.length,
+        untrackedCount: removeImpact.untrackedFiles.length,
+        stateCorrupt: removeImpact.stateCorrupt
       });
-      return;
+      if (!confirmed) {
+        traceLogger.log("warning", "operation_blocked", {
+          reason: "remove_confirmation_declined_after_drift_warning"
+        });
+        return;
+      }
     }
 
     const gitTrackingResult = await applyGitTrackingMode(
@@ -102,16 +116,23 @@ export async function runRemove(
       traceLogger
     );
 
-    const result = await removeManagedOnboarding(target.uri.fsPath, traceLogger);
+    const result = await removeManagedOnboarding(target.uri.fsPath, traceLogger, {
+      removeWholeManagedRoot: removeImpact.requiresConfirmation
+    });
 
     const summary = [
       "Remove operation completed.",
       `Target root: ${target.uri.fsPath}`,
+      `Remove mode: ${result.removeMode}`,
       `Git tracking cleanup strategy: ${gitTrackingResult.strategy}`,
       `Git tracking cleanup updated: ${gitTrackingResult.updated ? "yes" : "no"}`,
+      `Detected modified managed files: ${removeImpact.modifiedManagedFiles.length}`,
+      `Detected missing managed files: ${removeImpact.missingManagedFiles.length}`,
+      `Detected additional user files: ${removeImpact.untrackedFiles.length}`,
       `Removed managed files: ${result.removedFiles.length}`,
-      `Preserved modified managed files: ${result.preservedModifiedFiles.length}`,
+      `Skipped changed managed files: ${result.skippedChangedManagedFiles.length}`,
       `Missing managed files in state: ${result.missingManagedFiles.length}`,
+      `Managed root removed: ${result.removedManagedRoot ? "yes" : "no"}`,
       `State cleared: ${result.stateCleared ? "yes" : "no"}`,
       `Operation log: ${traceLogger.logFilePath}`
     ].join("\n");
@@ -119,11 +140,13 @@ export async function runRemove(
     void vscode.window.showInformationMessage(summary);
 
     traceLogger.log("debug", "success_notification_shown", {
+      remove_mode: result.removeMode,
       removed_count: result.removedFiles.length,
       git_tracking_cleanup_strategy: gitTrackingResult.strategy,
-      preserved_modified_count: result.preservedModifiedFiles.length,
+      skipped_changed_count: result.skippedChangedManagedFiles.length,
       missing_count: result.missingManagedFiles.length,
-      state_cleared: result.stateCleared
+      state_cleared: result.stateCleared,
+      removed_managed_root: result.removedManagedRoot
     });
 
     traceLogger.log("debug", "operation_completed", {
