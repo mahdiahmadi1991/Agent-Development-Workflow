@@ -18,15 +18,21 @@ Define a stable and scalable question system without hardcoding project/topic lo
 - Registry file: `.codex-onboarding/library/questionnaires/index.yaml`
 - Family flow file pattern: `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
 - Extension must resolve flow definitions from registry/paths, not hardcoded switch logic.
+- Family flow is a tree contract with unbounded depth (`N` layers).
+- Each `select` node declares `selection_mode` (`single` or `multi`).
+- Multi-select constraints (`min_select` / `max_select`) are enforced at runtime.
+- Node/option visibility can be rule-gated by declarative expressions (`visible_when`, `required_when`, `enabled_when`).
 
 ## Runtime Requirements
 1. Ask Operational Questions first when required by operation context.
 2. For install flow, resolve selected profile family and load Profile Selection Questions flow dynamically.
-3. For install flow, map Profile Selection Questions answers to capability/profile signals for resolver input.
+3. Execute tree traversal progressively based on selected option `next` links.
+4. For install flow, map selected options to capability/profile signals using both answer tags and option `emits`.
+5. Preserve deterministic output for identical questionnaire, context, and answers.
 4. For repair flow, use existing managed state from selected workspace root as source of truth.
-5. Keep deterministic result for identical inputs.
 
 ## Safety Rules
 - Unknown/missing questionnaire definitions must fail fast with diagnostics.
 - No implicit fallback to hidden defaults for missing required questions.
 - Question flow changes must be reflected in scenario/test/CI contracts.
+- Rule expressions only allow approved fact namespaces (`answer.*`, `env.*`, `detect.*`).

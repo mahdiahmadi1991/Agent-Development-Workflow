@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runInstall } from "../commands/installCommand";
 import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
-import { loadResolvedProfile } from "../services/profileAssetService";
+import { resolveProfileFromHints } from "../services/profileAssetService";
 import {
   loadQuestionnaireAssets,
   loadQuestionnaireCatalog
@@ -13,6 +13,11 @@ import {
 import { runDynamicQuestionFlow } from "../services/questionnaireFlowRunner";
 import { resolveSelectionPlan } from "../services/selectionResolver";
 import { openPostInstallGuidancePage } from "../services/postInstallGuidancePage";
+import { requirePreInstallTransparencyAcknowledgement } from "../services/preInstallTransparencyService";
+import {
+  applyRootAgentsIntegration,
+  inspectRootAgentsIntegration
+} from "../services/rootAgentsIntegrationService";
 import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
 
 const { createTraceLoggerMock } = vi.hoisted(() => ({
@@ -35,7 +40,7 @@ vi.mock("../services/questionnaireFlowRunner", () => ({
 }));
 
 vi.mock("../services/profileAssetService", () => ({
-  loadResolvedProfile: vi.fn()
+  resolveProfileFromHints: vi.fn()
 }));
 
 vi.mock("../services/selectionResolver", () => ({
@@ -53,6 +58,15 @@ vi.mock("../services/gitTrackingService", () => ({
 
 vi.mock("../services/postInstallGuidancePage", () => ({
   openPostInstallGuidancePage: vi.fn()
+}));
+
+vi.mock("../services/preInstallTransparencyService", () => ({
+  requirePreInstallTransparencyAcknowledgement: vi.fn()
+}));
+
+vi.mock("../services/rootAgentsIntegrationService", () => ({
+  inspectRootAgentsIntegration: vi.fn(),
+  applyRootAgentsIntegration: vi.fn()
 }));
 
 vi.mock("../services/updateConsentService", () => ({
@@ -101,11 +115,19 @@ describe("install command multi-root smoke", () => {
 
     vi.mocked(runDynamicQuestionFlow).mockResolvedValue({
       answers: {
-        root: "web_api_simple"
-      }
+        root: ["backend"],
+        backend_stack: ["dotnet_web_api"]
+      },
+      selected_paths: ["root:backend", "root:backend>backend_stack:dotnet_web_api"],
+      capability_tags: ["tech.backend.dotnet.webapi"],
+      profile_hints: ["dotnet-csharp-web-api-simple"],
+      topic_tags: [],
+      family_keys: [],
+      why_selected: [],
+      why_skipped: []
     });
 
-    vi.mocked(loadResolvedProfile).mockResolvedValue({
+    vi.mocked(resolveProfileFromHints).mockResolvedValue({
       version: 1,
       profile_id: "dotnet-csharp-web-api-simple",
       family: "dotnet-csharp",
@@ -116,7 +138,7 @@ describe("install command multi-root smoke", () => {
 
     vi.mocked(resolveSelectionPlan).mockResolvedValue({
       profile_id: "dotnet-csharp-web-api-simple",
-      capability_tags: ["cap.base", "answer.root.web_api_simple"],
+      capability_tags: ["cap.base", "tech.backend.dotnet.webapi", "answer.backend_stack.dotnet_web_api"],
       selected_topics: [
         {
           file_id: "base-topic",
@@ -134,10 +156,16 @@ describe("install command multi-root smoke", () => {
       appliedFiles: [".codex-onboarding/AGENTS.md"],
       skippedFiles: [],
       recoveredTrackedFiles: [],
-      removedStaleFiles: []
+      removedStaleFiles: [],
+      stateRewritten: true,
+      resultCode: "applied"
     });
 
     vi.mocked(openPostInstallGuidancePage).mockResolvedValue(true);
+    vi.mocked(requirePreInstallTransparencyAcknowledgement).mockResolvedValue({
+      acknowledged: true,
+      openedSummary: false
+    });
     vi.mocked(requireUpdateConsentIfNeeded).mockResolvedValue({
       updateAvailable: false,
       blocked: false,
@@ -149,6 +177,15 @@ describe("install command multi-root smoke", () => {
       strategy: "git_info_exclude",
       updated: true,
       excludePath: "/workspace/app-b/.git/info/exclude"
+    });
+    vi.mocked(inspectRootAgentsIntegration).mockResolvedValue({
+      exists: false,
+      containsOnboardingReference: false,
+      rootAgentsPath: "/workspace/app-b/AGENTS.md"
+    });
+    vi.mocked(applyRootAgentsIntegration).mockResolvedValue({
+      status: "created",
+      rootAgentsPath: "/workspace/app-b/AGENTS.md"
     });
   });
 

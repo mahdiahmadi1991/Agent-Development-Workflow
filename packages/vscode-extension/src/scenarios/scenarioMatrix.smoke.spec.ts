@@ -98,6 +98,7 @@ async function seedSmokeAssets(assetRoot: string): Promise<void> {
       "nodes:",
       "  - id: root",
       "    type: select",
+      "    selection_mode: single",
       "    question: Choose project profile",
       "    options:",
       "      - id: web_api_simple",
@@ -230,8 +231,8 @@ async function resolveSelection(extensionPath: string) {
       baselineTopicIds: profile.baseline_topics,
       defaultCapabilities: profile.default_capabilities,
       questionAnswers: {
-        root: "web_api_simple"
-      }
+        root: ["web_api_simple"]
+      },
     },
     logger
   );

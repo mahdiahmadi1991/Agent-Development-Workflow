@@ -522,6 +522,8 @@ describe("applyManagedInstall", () => {
     expect(second.appliedFiles).toHaveLength(0);
     expect(second.skippedFiles).toHaveLength(0);
     expect(second.removedStaleFiles).toHaveLength(0);
+    expect(second.stateRewritten).toBe(false);
+    expect(second.resultCode).toBe("already_up_to_date");
   });
 
   it("fails when existing managed state shape is invalid", async () => {

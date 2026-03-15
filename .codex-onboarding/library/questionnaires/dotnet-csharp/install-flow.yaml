@@ -5,16 +5,150 @@ entrypoint: root
 nodes:
   - id: root
     type: select
-    question: Choose the target .NET/C# project profile.
+    selection_mode: multi
+    min_select: 1
+    max_select: 3
+    question: Select project domains to onboard.
     options:
-      - id: baseline
-        label: Baseline (Recommended)
-        description: Balanced baseline onboarding set for most .NET/C# repositories.
-        next: done
-      - id: web_api_simple
-        label: Web API (Simple)
-        description: API-focused onboarding set for straightforward service projects.
-        next: done
+      - id: backend
+        label: Backend
+        description: Server-side services, APIs, workers, and infrastructure concerns.
+        next: backend_stack
+      - id: frontend
+        label: Frontend
+        description: Client-side web UI concerns and supporting workflows.
+        next: frontend_stack
+
+  - id: backend_stack
+    type: select
+    selection_mode: multi
+    min_select: 1
+    question: Select backend technology focus.
+    visible_when:
+      any:
+        - fact: answer.root
+          in: [backend]
+    options:
+      - id: dotnet_web_api
+        label: .NET Web API (Recommended)
+        description: HTTP API-focused backend guidance.
+        next: backend_concerns
+        emits:
+          profile_hints: [dotnet-csharp-web-api-simple]
+          capability_tags:
+            - tech.backend.dotnet
+            - tech.backend.dotnet.webapi
+      - id: dotnet_general
+        label: .NET General Backend
+        description: Generic .NET backend guidance without strict API specialization.
+        next: backend_concerns
+        emits:
+          profile_hints: [dotnet-csharp-baseline]
+          capability_tags:
+            - tech.backend.dotnet
+
+  - id: backend_concerns
+    type: select
+    selection_mode: multi
+    required_when:
+      any:
+        - fact: answer.root
+          in: [backend]
+    min_select: 0
+    question: Select backend technical concerns.
+    options:
+      - id: backend_auth
+        label: Authentication and Authorization
+        emits:
+          capability_tags: [concern.backend.auth]
+      - id: backend_validation
+        label: Validation and Input Boundaries
+        emits:
+          capability_tags: [concern.backend.validation]
+      - id: backend_observability
+        label: Observability
+        emits:
+          capability_tags: [concern.backend.observability]
+      - id: backend_repo_hygiene
+        label: Repository Hygiene
+        next: shared_practices
+        emits:
+          capability_tags: [concern.repo.hygiene]
+
+  - id: frontend_stack
+    type: select
+    selection_mode: multi
+    required_when:
+      any:
+        - fact: answer.root
+          in: [frontend]
+    min_select: 1
+    question: Select frontend technology focus.
+    visible_when:
+      any:
+        - fact: answer.root
+          in: [frontend]
+    options:
+      - id: react
+        label: React (Recommended)
+        description: React frontend guidance and quality practices.
+        next: frontend_concerns
+        emits:
+          profile_hints: [dotnet-csharp-baseline]
+          capability_tags:
+            - tech.frontend.react
+      - id: vanilla_web
+        label: Vanilla Web Frontend
+        description: Generic frontend workflows without framework-specific depth.
+        next: frontend_concerns
+        emits:
+          profile_hints: [dotnet-csharp-baseline]
+          capability_tags:
+            - tech.frontend.generic
+
+  - id: frontend_concerns
+    type: select
+    selection_mode: multi
+    min_select: 0
+    required_when:
+      any:
+        - fact: answer.root
+          in: [frontend]
+    question: Select frontend technical concerns.
+    options:
+      - id: frontend_state
+        label: State Management
+        emits:
+          capability_tags: [concern.frontend.state]
+      - id: frontend_testing
+        label: UI and Component Testing
+        emits:
+          capability_tags: [concern.frontend.testing]
+      - id: frontend_repo_hygiene
+        label: Repository Hygiene
+        next: shared_practices
+        emits:
+          capability_tags: [concern.repo.hygiene]
+
+  - id: shared_practices
+    type: select
+    selection_mode: multi
+    min_select: 0
+    max_select: 3
+    question: Select shared engineering practices to include.
+    options:
+      - id: issue_escalation
+        label: Upstream Issue Escalation Guidance
+        emits:
+          capability_tags: [practice.issue.escalation]
+      - id: release_hygiene
+        label: Release and Change Documentation Hygiene
+        emits:
+          capability_tags: [practice.release.hygiene]
+      - id: ai_onboarding_bootstrap
+        label: AI Onboarding Bootstrap Discipline
+        emits:
+          capability_tags: [practice.ai.bootstrap]
 
   - id: done
     type: end

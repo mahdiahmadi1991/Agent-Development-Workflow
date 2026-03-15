@@ -40,6 +40,13 @@ describe("openPostInstallGuidancePage", () => {
       bundleId: "dotnet-csharp-web-api-simple",
       bundleVersion: "7",
       capabilityTags: ["cap.base", "answer.root.web_api_simple"],
+      selectedTopics: [
+        {
+          fileId: "fake-core-working-agreement",
+          category: "00-core",
+          reasons: ["selected_by_profile_baseline"]
+        }
+      ],
       operationId: "install-123"
     });
 
@@ -62,6 +69,7 @@ describe("openPostInstallGuidancePage", () => {
     expect(panel.webview.html).toContain("Prompt Packs");
     expect(panel.webview.html).toContain("Safe Boundaries");
     expect(panel.webview.html).toContain("Lifecycle Playbook");
+    expect(panel.webview.html).toContain("Selection Explainability");
     expect(panel.webview.html).toContain("Change Report");
     expect(panel.webview.html).toContain("Root AGENTS Integration");
 
@@ -130,6 +138,7 @@ describe("openPostInstallGuidancePage", () => {
       bundleId: "dotnet-csharp-web-api-simple",
       bundleVersion: "7",
       capabilityTags: [],
+      selectedTopics: [],
       operationId: "install-123"
     });
 
@@ -163,6 +172,7 @@ describe("openPostInstallGuidancePage", () => {
       bundleId: "dotnet-csharp-web-api-simple",
       bundleVersion: "7",
       capabilityTags: [],
+      selectedTopics: [],
       operationId: "install-123"
     });
 
@@ -195,6 +205,7 @@ describe("openPostInstallGuidancePage", () => {
       bundleId: "dotnet-csharp-web-api-simple",
       bundleVersion: "7",
       capabilityTags: [],
+      selectedTopics: [],
       operationId: "install-123"
     });
 
@@ -227,6 +238,7 @@ describe("openPostInstallGuidancePage", () => {
       bundleId: "dotnet-csharp-web-api-simple",
       bundleVersion: "7",
       capabilityTags: [],
+      selectedTopics: [],
       operationId: "install-123",
       rootAgentsPath: "/workspace/project/AGENTS.md",
       rootAgentsStatus: "skipped_user_declined",

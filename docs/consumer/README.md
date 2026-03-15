@@ -13,9 +13,9 @@ This extension applies Codex onboarding files into your project. Review this sum
   - if permission is denied, file remains unchanged and post-install page provides a manual snippet.
 
 ## Lifecycle Commands
-- `Install Onboarding`
-- `Remove Onboarding`
-- `Repair Onboarding`
+- `Codex Onboarding: Install`
+- `Codex Onboarding: Remove`
+- `Codex Onboarding: Repair`
 
 ## Safety and Ownership
 - Non-destructive by default.

@@ -67,6 +67,7 @@ describe("questionnaireAssetService", () => {
         "nodes:",
         "  - id: root",
         "    type: select",
+        "    selection_mode: single",
         "    question: Pick profile",
         "    options:",
         "      - id: web_api_simple",

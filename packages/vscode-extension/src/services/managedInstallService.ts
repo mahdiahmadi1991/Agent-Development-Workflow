@@ -31,6 +31,8 @@ export interface ManagedInstallResult {
   skippedFiles: string[];
   recoveredTrackedFiles: string[];
   removedStaleFiles: string[];
+  stateRewritten: boolean;
+  resultCode: "applied" | "synchronized" | "already_up_to_date";
 }
 
 interface DesiredManagedFile {
@@ -87,6 +89,35 @@ async function readExistingState(statePath: string): Promise<ManagedState | unde
 
     throw error;
   }
+}
+
+function normalizeStateFiles(items: ManagedFileState[]): ManagedFileState[] {
+  return [...items].sort((left, right) => left.relative_path.localeCompare(right.relative_path));
+}
+
+function areManagedFileSetsEqual(a: ManagedFileState[], b: ManagedFileState[]): boolean {
+  const left = normalizeStateFiles(a);
+  const right = normalizeStateFiles(b);
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  for (let i = 0; i < left.length; i += 1) {
+    const aItem = left[i]!;
+    const bItem = right[i]!;
+    if (
+      aItem.relative_path !== bItem.relative_path ||
+      aItem.file_id !== bItem.file_id ||
+      aItem.content_digest_sha256 !== bItem.content_digest_sha256 ||
+      aItem.sync_marker !== bItem.sync_marker ||
+      aItem.metadata_mode !== bItem.metadata_mode ||
+      aItem.metadata_format !== bItem.metadata_format
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function toStateMap(items: ManagedFileState[]): Map<string, ManagedFileState> {
@@ -504,6 +535,11 @@ export async function applyManagedInstall(
   const statePath = path.join(managedRootPath, "state.json");
 
   const existingState = await readExistingState(statePath);
+  logger.log("debug", "state_loaded", {
+    state_path: statePath,
+    state_status: existingState ? "loaded" : "missing",
+    managed_file_count: existingState?.managed_files.length ?? 0
+  });
   const managedFileMap = toStateMap(existingState?.managed_files ?? []);
 
   const appliedFiles: string[] = [];
@@ -557,20 +593,57 @@ export async function applyManagedInstall(
 
   await fs.mkdir(managedRootPath, { recursive: true });
 
+  const normalizedManagedFiles = normalizeStateFiles(Array.from(managedFileMap.values()));
   const state: ManagedState = {
     bundle_id: input.bundleId,
     bundle_version: input.bundleVersion,
     extension_version: input.extensionVersion,
     applied_at_utc: new Date().toISOString(),
-    managed_files: Array.from(managedFileMap.values())
+    managed_files: normalizedManagedFiles
   };
+
+  const skipStateRewriteAsUpToDate =
+    Boolean(existingState) &&
+    appliedFiles.length === 0 &&
+    skippedFiles.length === 0 &&
+    recoveredTrackedFiles.length === 0 &&
+    removedStaleFiles.length === 0 &&
+    existingState?.bundle_id === input.bundleId &&
+    existingState?.bundle_version === input.bundleVersion &&
+    existingState?.extension_version === input.extensionVersion &&
+    areManagedFileSetsEqual(existingState.managed_files, state.managed_files);
+
+  if (skipStateRewriteAsUpToDate) {
+    logger.log("debug", "state_rewritten", {
+      managed_file_count: state.managed_files.length,
+      state_path: statePath,
+      state_rewritten: false,
+      reason: "already_up_to_date"
+    });
+
+    return {
+      statePath,
+      managedRootPath,
+      appliedFiles,
+      skippedFiles,
+      recoveredTrackedFiles,
+      removedStaleFiles,
+      stateRewritten: false,
+      resultCode: "already_up_to_date"
+    };
+  }
 
   await fs.writeFile(statePath, JSON.stringify(state, null, 2), "utf8");
 
   logger.log("debug", "state_rewritten", {
     managed_file_count: state.managed_files.length,
-    state_path: statePath
+    state_path: statePath,
+    state_rewritten: true
   });
+
+  const resultCode = appliedFiles.length > 0 || removedStaleFiles.length > 0 || recoveredTrackedFiles.length > 0
+    ? "applied"
+    : "synchronized";
 
   return {
     statePath,
@@ -578,6 +651,8 @@ export async function applyManagedInstall(
     appliedFiles,
     skippedFiles,
     recoveredTrackedFiles,
-    removedStaleFiles
+    removedStaleFiles,
+    stateRewritten: true,
+    resultCode
   };
 }

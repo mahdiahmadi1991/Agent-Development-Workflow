@@ -1,6 +1,0 @@
-version: 1
-profile_id: dotnet-csharp-fake-baseline
-family: dotnet-csharp-fake
-questionnaire_ref: .codex-onboarding/library/questionnaires/dotnet-csharp-fake/install-flow.yaml
-baseline_topics: []
-default_capabilities: []

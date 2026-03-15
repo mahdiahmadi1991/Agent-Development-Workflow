@@ -166,7 +166,7 @@ describe("profile + selection resolution", () => {
         profileId: profile.profile_id,
         baselineTopicIds: profile.baseline_topics,
         defaultCapabilities: profile.default_capabilities,
-        questionAnswers: { root: "web_api_simple" }
+        questionAnswers: { root: ["web_api_simple"] }
       },
       logger
     );
@@ -226,7 +226,7 @@ describe("profile + selection resolution", () => {
         profileId: "x",
         baselineTopicIds: [],
         defaultCapabilities: [],
-        questionAnswers: { root: "web_api_simple" }
+        questionAnswers: { root: ["web_api_simple"] }
       },
       logger
     );
@@ -439,7 +439,7 @@ describe("profile + selection resolution", () => {
         profileId: "x",
         baselineTopicIds: [],
         defaultCapabilities: [],
-        questionAnswers: { root: "web_api_simple" }
+        questionAnswers: { root: ["web_api_simple"] }
       },
       logger
     );

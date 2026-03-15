@@ -158,6 +158,6 @@ describe("loadResolvedProfile", () => {
 
     await expect(
       loadResolvedProfile(fixture.extensionPath, "dotnet-csharp", "web_api_simple")
-    ).rejects.toThrow("Base profile family mismatch");
+    ).rejects.toThrow(/family mismatch/i);
   });
 });

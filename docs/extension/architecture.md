@@ -17,9 +17,9 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 11. Extension installs managed advisory guidance for user-controlled issue escalation recommendations.
 
 ## Command Surface
-- `Install Onboarding`
-- `Remove Onboarding`
-- `Repair Onboarding`
+- `Codex Onboarding: Install`
+- `Codex Onboarding: Remove`
+- `Codex Onboarding: Repair`
 - `Remove` clears managed state and removes only unchanged managed files.
 
 ## Managed Update Behavior
@@ -68,7 +68,7 @@ Define the planned behavior for a VS Code extension that applies Codex onboardin
 - Codex may offer draft/help in user-controlled environments only after explicit user request.
 
 ## Planning Constraints
-- Current phase focuses on extension infrastructure and behavior implementation planning.
+- Current phase focuses on extension infrastructure and behavior implementation/stabilization.
 - Managed-file versioning for extension-owned assets is in scope.
 - Onboarding topic content authoring is deferred.
 

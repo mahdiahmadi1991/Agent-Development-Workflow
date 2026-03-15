@@ -1,0 +1,126 @@
+version: 1
+matrix_file: docs/product/scenario-matrix.md
+entries:
+  - id: S-01
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/scenarios/scenarioMatrix.smoke.spec.ts::S-01 + S-17
+  - id: S-02
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/__tests__/updateConsentService.spec.ts::requires release notes and changelog review before allowing update
+      - packages/vscode-extension/src/services/__tests__/managedInstallService.spec.ts::removes stale managed files when profile/topic selection shrinks
+  - id: S-03
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/__tests__/managedInstallService.spec.ts::removes stale managed files when profile/topic selection shrinks
+  - id: S-04
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/__tests__/managedInstallService.spec.ts::keeps tracked files up to date without rewriting unchanged content
+  - id: S-05
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/scenarios/scenarioMatrix.smoke.spec.ts::S-05
+  - id: S-06
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/scenarios/scenarioMatrix.smoke.spec.ts::S-06
+  - id: S-07
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/__tests__/managedInstallService.spec.ts::keeps existing non-managed files untouched and skips them
+  - id: S-08
+    coverage: deferred
+    references:
+      - docs/product/scenario-matrix.md::S-08
+  - id: S-09
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/scenarios/scenarioMatrix.smoke.spec.ts::S-09
+      - packages/vscode-extension/src/commands/removeCommand.spec.ts::runRemove
+  - id: S-10
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/scenarios/scenarioMatrix.smoke.spec.ts::S-10
+      - packages/vscode-extension/src/commands/repairCommand.spec.ts::runRepair
+  - id: S-10b
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/commands/repairCommand.spec.ts::blocks repair when no managed evidence exists
+  - id: S-10c
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/commands/repairCommand.spec.ts::recovers repair source when state file is missing but managed artifacts exist
+      - packages/vscode-extension/src/commands/repairCommand.spec.ts::recovers repair source when state file is corrupt but managed artifacts exist
+  - id: S-11
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/scenarios/installCommand.multiRoot.smoke.spec.ts::S-11
+  - id: S-12
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/workspaceRootResolver.spec.ts::resolveTargetWorkspaceFolder
+  - id: S-13
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/__tests__/preInstallTransparencyService.spec.ts::requirePreInstallTransparencyAcknowledgement
+  - id: S-14
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/operationTraceLogger.spec.ts::OperationTraceLogger
+      - packages/vscode-extension/src/services/projectOperationLogService.spec.ts::mirrorOperationLogToProject
+  - id: S-15
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/scenarios/scenarioMatrix.smoke.spec.ts::S-15
+  - id: S-16
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/commands/installCommand.spec.ts::completes install flow and opens post-install guidance page
+      - packages/vscode-extension/src/services/postInstallGuidancePage.spec.ts::renders V1 post-install WebviewPanel with required sections and actions
+  - id: S-17
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/scenarios/scenarioMatrix.smoke.spec.ts::S-01 + S-17
+  - id: S-18
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/__tests__/managedInstallService.spec.ts::installs bootstrap and selected topics and writes managed state
+  - id: S-19
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/__tests__/managedInstallService.spec.ts::installs bootstrap and selected topics and writes managed state
+  - id: S-20
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/questionnaireAssetService.spec.ts::loadQuestionnaireAssets
+      - packages/vscode-extension/src/services/questionnaireFlowRunner.spec.ts::runDynamicQuestionFlow
+  - id: S-21
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/postInstallGuidancePage.spec.ts::renders V1 post-install WebviewPanel with required sections and actions
+  - id: S-22
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/postInstallGuidancePage.spec.ts::binds action bar commands to command URIs with explicit payloads
+  - id: S-23
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/postInstallGuidancePage.spec.ts::returns false and shows fallback message when panel creation fails
+  - id: S-24
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/postInstallGuidancePage.spec.ts::keeps base section order and inserts Git Tracking Details between Before/After and First 3 Steps
+  - id: S-25
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/commands/installCommand.spec.ts::blocks when root AGENTS permission is cancelled
+      - packages/vscode-extension/src/commands/installCommand.spec.ts::provides manual root AGENTS snippet when user declines edit
+      - packages/vscode-extension/src/services/__tests__/rootAgentsIntegrationService.spec.ts::applyRootAgentsIntegration
+  - id: S-26
+    coverage: automated
+    references:
+      - packages/vscode-extension/src/services/__tests__/rootAgentsIntegrationService.spec.ts::removeRootAgentsIntegration
+      - packages/vscode-extension/src/commands/removeCommand.spec.ts::runRemove
+      - packages/vscode-extension/src/commands/repairCommand.spec.ts::runRepair

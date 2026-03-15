@@ -28,6 +28,7 @@ V1 required events:
 - `file_removed`
 - `repair_action`
 - `drift_detected`
+- `state_loaded`
 - `operation_blocked`
 - `success_notification_shown`
 - `post_install_page_opened`

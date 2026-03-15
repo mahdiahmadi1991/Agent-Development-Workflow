@@ -46,14 +46,23 @@ Keep extension UX minimal and predictable while preserving safe lifecycle contro
 - Load family list from questionnaire registry.
 - Ask only when multiple families are available in registry.
 
-3. `Project Profile` (dynamic)
-- Load from questionnaire definitions and do not hardcode in command handlers.
+3. `Technology Selection Wizard` (dynamic tree)
+- Load node graph from questionnaire definitions and do not hardcode in command handlers.
+- Support `single` and `multi` selection nodes.
+- Follow progressive `next` links based on prior selections.
+- Keep depth unbounded (`N` layers).
+- Map option `emits` and answer tags into resolver inputs.
 
-4. `Git Tracking Preference`
+4. `Pre-Install Transparency Check`
+- Show behavior-impact summary and a compact selection explainability summary before apply.
+- Allow user to open detailed explainability preview or consumer summary and cancel current run safely.
+- Proceed only after explicit acknowledgement.
+
+5. `Git Tracking Preference`
 - Ask whether managed files should be tracked in Git or ignored via repository-local `.git/info/exclude` only when Git repository exists at selected root.
 - No additional final preview confirmation is shown after this step; install proceeds with non-destructive managed-write rules.
 
-5. `Root AGENTS.md Permission` (conditional)
+6. `Root AGENTS.md Permission` (conditional)
 - Ask only when root `AGENTS.md` already exists in selected target root.
 - If approved, append onboarding pointer snippet to root `AGENTS.md` when not already present.
 - If declined, keep root file unchanged and present manual snippet in post-install Webview.

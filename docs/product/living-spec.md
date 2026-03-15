@@ -11,8 +11,8 @@ Build a VS Code extension that applies Codex onboarding files to a user's curren
 2. Extension asks Operational Questions required for safe execution context.
 3. Extension loads questionnaire catalog dynamically from registry and resolves target technology family.
 4. Extension loads Profile Selection Questions dynamically from selected family questionnaire files.
-5. User selects the target project/profile path through the question flow.
-6. Extension presents behavior-impact summary and requires explicit acknowledgement.
+5. User completes Technology Selection Wizard (dynamic tree, progressive branching, `single`/`multi` nodes).
+6. Extension presents behavior-impact summary plus selection explainability preview, then requires explicit acknowledgement.
 7. Extension copies predefined onboarding files for that target into predefined paths in the current project.
 8. Extension shows a success message with a summary of applied files.
 9. Extension opens a dedicated post-install `WebviewPanel` in VS Code with fixed V1 section order, professional onboarding guidance blocks, and deterministic change report data.
@@ -20,9 +20,9 @@ Build a VS Code extension that applies Codex onboarding files to a user's curren
 
 ## Command Surface
 - Minimal command set:
-  - `Install Onboarding`
-  - `Remove Onboarding`
-  - `Repair Onboarding`
+  - `Codex Onboarding: Install`
+  - `Codex Onboarding: Remove`
+  - `Codex Onboarding: Repair`
 - Lifecycle update/sync behavior is part of install logic, not a separate user command.
 - Before install/apply actions, user must have access to a concise behavior-and-impact summary.
 - Remove is impact-scan driven: if `.codex-onboarding/` is clean, remove proceeds silently; if drift/additional files are detected, explicit destructive confirmation is required before full root deletion.
@@ -53,6 +53,11 @@ Catalog design principles:
 - Profile Selection Questions question definitions are loaded dynamically from:
   - `.codex-onboarding/library/questionnaires/index.yaml`
   - `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
+- Questionnaire flows are tree-based and support:
+  - unbounded depth (`N` layers)
+  - mixed `single` and `multi` node modes
+  - declarative rule-gated visibility (`visible_when`, `required_when`, `enabled_when`)
+  - option-level emitted tags (`capability_tags`, `profile_hints`, `topic_tags`)
 - Profile Selection Questions must not be hardcoded in install command handlers.
 - Repair command uses managed state as source of truth and does not ask Profile Selection Questions.
 
@@ -145,12 +150,14 @@ Downgrade behavior:
 - Managed protection strategy: `docs/product/managed-file-protection.md`
 - Managed state contract: `docs/product/managed-state-contract.md`
 - Onboarding template standard: `docs/product/onboarding-template-standard.md`
+- Topic authoring onboarding handbook: `docs/product/topic-authoring-onboarding-handbook.md`
 - Onboarding template proposal archive: `docs/product/onboarding-template-proposal.md`
 - Asset library storage standard: `docs/product/asset-library-storage-standard.md`
 - Selection and resolution standard: `docs/product/selection-resolution-standard.md`
 - Question model contract: `docs/product/question-model-contract.md`
 - Topics index contract: `docs/product/topics-index-contract.md`
 - Scenario matrix: `docs/product/scenario-matrix.md`
+- Scenario coverage map: `docs/product/scenario-coverage-map.yaml`
 - Command surface contract: `docs/product/command-surface.md`
 - Platform compatibility requirements: `docs/product/platform-compatibility.md`
 - Environment support matrix: `docs/product/environment-support-matrix.md`
@@ -194,6 +201,7 @@ Downgrade behavior:
 - Onboarding file structure is locked by template standard and validator gate.
 - Canonical onboarding asset source is `.codex-onboarding/**`; extension `onboarding-assets/**` is generated runtime/package mirror.
 - Library storage and selection contracts are locked by validator gate.
+- Topic library is currently placeholder-empty (`topics.index.yaml` has no production topics) until dedicated content-authoring phase.
 - Static bootstrap onboarding artifact is mandatory in every install/repair result.
 - Conflict-report escalation path is optional and fully user-controlled.
 - Conflict escalation is advisory-first via managed instruction artifacts; no dedicated extension submission runtime is required.

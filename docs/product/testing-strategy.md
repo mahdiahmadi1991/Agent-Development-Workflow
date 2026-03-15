@@ -9,6 +9,8 @@ Guarantee safe, deterministic extension behavior for install, remove, repair, an
 - Digest calculation
 - Resolver selection/composition logic
 - Command decision engine
+- Questionnaire tree parser and validation
+- Technology Selection Wizard traversal engine (`single`/`multi`, branching, rules, constraints)
 - Post-install view-model mapping and section contract generation
 
 2. Integration tests
@@ -31,10 +33,16 @@ Guarantee safe, deterministic extension behavior for install, remove, repair, an
 - Managed conflict-escalation guidance artifact checks (`.codex-onboarding/ISSUE-REPORTING.md` + AGENTS index reference)
 - Multi-root and no-workspace-file root resolution checks
 - Dynamic Profile Selection Questions questionnaire loading checks (registry + family flow)
+- Dynamic Technology Selection Wizard checks:
+  - multi-select constraints (`min_select`/`max_select`)
+  - rule-gated node/option visibility
+  - deterministic payload generation (`selected_paths`, emitted tags)
 - Downgrade safety and failure-path checks
 
 3. Scenario tests
-- Full coverage of `docs/product/scenario-matrix.md`
+- Full scenario traceability coverage of `docs/product/scenario-matrix.md` via `docs/product/scenario-coverage-map.yaml`
+- Safety-critical scenarios must be automated and enforced in CI.
+- Deferred scenarios must be explicitly marked as `deferred` in the coverage map with a rationale.
 - Explicit coverage mapping for post-install scenarios: `S-16`, `S-21`, `S-22`, `S-23`, `S-24`
 - Explicit checks for extension-upgrade sync behavior
 - Explicit checks for logging severity output (`debug`, `warning`, `error`)
@@ -53,4 +61,5 @@ Guarantee safe, deterministic extension behavior for install, remove, repair, an
 
 ## Quality Gates
 - No release without passing unit + integration + scenario gates.
+- Scenario coverage validator must pass (`scripts/validate-scenario-coverage.sh`).
 - Cross-platform regressions block release.

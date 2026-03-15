@@ -17,7 +17,7 @@ This repository is focused on:
 - Non-destructive application in consumer projects (no overwrite by default).
 
 ## Current Phase
-- Active focus: extension infrastructure and behavior implementation planning.
+- Active focus: extension infrastructure and behavior implementation/stabilization.
 - Deferred: onboarding topic content authoring.
 - Managed-file version synchronization is in scope for extension-owned assets.
 

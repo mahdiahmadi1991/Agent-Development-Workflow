@@ -94,6 +94,9 @@ export async function runRemove(
     });
 
     if (removeImpact.requiresConfirmation) {
+      traceLogger.log("debug", "operational_question_asked", {
+        question_id: "remove_drift_confirmation"
+      });
       const confirmed = await askRemoveConfirmationForDetectedChanges({
         targetRootPath: target.uri.fsPath,
         modifiedManagedCount: removeImpact.modifiedManagedFiles.length,

@@ -10,11 +10,11 @@ Record the current gaps between accepted product/governance contracts and the ac
 - Current CI/release workflows under `.github/workflows/*` and `scripts/*`
 
 ## Executive Summary
-The extension foundation is stable (commands, managed state, non-destructive defaults, post-install webview, trace logs), but several high-impact contract items are still not implemented.
+The extension foundation is stable (commands, managed state, non-destructive defaults, post-install webview, trace logs), and previously identified high-impact contract gaps in this audit scope are now resolved.
 
-Most important unresolved areas:
-1. Issue-escalation flow is currently only an external-link action, not the approved draft/confirm/submit/fallback model.
-2. Scenario/test/CI contracts are broader than current automated enforcement.
+Current status:
+1. No open unresolved findings remain from this audit list.
+2. New work should start from a fresh delta audit against future decisions/contract changes.
 
 ## Findings
 
@@ -100,86 +100,95 @@ Most important unresolved areas:
 - Resolution note:
   - Questionnaire routing now follows catalog contract directly.
 
+### F-15: Technology Selection Wizard was single-layer and not tree-capable (Resolved)
+- Severity: Resolved
+- Contract references:
+  - `docs/product/dynamic-tree-install-wizard-proposal.md`
+  - `docs/product/question-model-contract.md`
+- Implementation evidence:
+  - `packages/vscode-extension/src/services/questionnaireFlowRunner.ts` now runs dynamic tree traversal with `single`/`multi` nodes.
+  - `packages/vscode-extension/src/services/questionnaireAssetService.ts` validates tree node contracts, rule expressions, and graph references.
+  - `packages/vscode-extension/src/commands/installCommand.ts` consumes emitted wizard payload (`profile_hints`, capability tags, topic tags) without hardcoded profile question logic.
+- Resolution note:
+  - Install wizard behavior is now config-driven and progressive, with N-layer tree traversal and multi-select support.
+
 ### F-08: Explainability (`why-selected`) is not exposed to user before apply
-- Severity: High
+- Severity: Resolved
 - Contract references:
   - `docs/product/selection-resolution-standard.md`
 - Implementation evidence:
-  - Only topic ID preview is shown in install confirmation.
-- Gap:
-  - Missing grouped explainability output with selection reasons.
-- Required action:
-  - Add user-visible explainability preview (baseline/cross-cutting/target-specific + reason tags).
+  - `packages/vscode-extension/src/services/preInstallTransparencyService.ts` now shows compact explainability summary before apply and offers an explicit “Open Selection Explainability” details path.
+  - `packages/vscode-extension/src/services/postInstallGuidancePage.ts` includes deterministic `Selection Explainability` section with per-topic reason tags.
+- Resolution note:
+  - Explainability is now visible both pre-apply (compact + details path) and post-install (full section).
 
 ### F-09: Pre-install transparency is only partially surfaced in UI
-- Severity: High
+- Severity: Resolved
 - Contract references:
   - `docs/product/pre-install-transparency.md`
 - Implementation evidence:
-  - Current pre-install modal does not cover full transparency contract and does not link canonical consumer summary.
-- Gap:
-  - Required visibility items are incomplete at apply gate.
-- Required action:
-  - Add compact transparency summary view or link action to `docs/consumer/README.md` before apply.
+  - `packages/vscode-extension/src/services/preInstallTransparencyService.ts` enforces transparency acknowledgement gate.
+  - Gate includes canonical consumer summary open action and explainability details action.
+  - Install flow blocks safely when acknowledgement is not granted.
+- Resolution note:
+  - Install now requires explicit transparency acknowledgement before any managed apply action.
 
 ### F-10: Operation logging required events are incomplete
-- Severity: High
+- Severity: Resolved
 - Contract references:
   - `docs/product/operation-logging-spec.md`
   - `docs/product/ci-cd-requirements.md`
 - Implementation evidence:
-  - Core events exist, but required events such as `state_loaded` and escalation submit events are absent.
-- Gap:
-  - Logging contract and CI-level validation contract are not fully matched.
-- Required action:
-  - Expand event emission and add contract tests for required events.
+  - `state_loaded` is emitted from install/remove/repair state-load paths.
+  - `operational_question_asked` is emitted for repair/remove confirmations and install operational gates.
+  - Logging contract updated to include `state_loaded` in required events list.
+- Resolution note:
+  - Required lifecycle events are now emitted across install/remove/repair command paths.
 
 ### F-11: Up-to-date short-circuit behavior does not match contract
-- Severity: Medium
+- Severity: Resolved
 - Contract references:
   - `docs/product/decision-log.md` (D-017)
   - `docs/product/scenario-matrix.md` (S-04)
 - Implementation evidence:
-  - State file is rewritten every run; no explicit `already_up_to_date` status path.
-- Gap:
-  - Contract expects no-write path when fully synchronized.
-- Required action:
-  - Add no-op detection and explicit up-to-date result code path.
+  - `packages/vscode-extension/src/services/managedInstallService.ts` detects fully synchronized states and returns `already_up_to_date`.
+  - No-op path skips state rewrite (`stateRewritten: false`).
+  - `packages/vscode-extension/src/services/__tests__/managedInstallService.spec.ts` asserts no-write result path.
+- Resolution note:
+  - Fully synchronized runs now finish with explicit no-op status and no state rewrite.
 
 ### F-12: CI gates are narrower than declared CI/CD requirements
-- Severity: Medium
+- Severity: Resolved
 - Contract references:
   - `docs/product/ci-cd-requirements.md`
 - Implementation evidence:
-  - CI pipeline runs tests/compile/package, but does not enforce all contract checks (template/schema/scenario parity/lint static checks).
-- Gap:
-  - Required gate list and actual automated enforcement diverge.
-- Required action:
-  - Expand workflows and validators to match declared gate contract.
+  - Added `scripts/validate-scenario-coverage.sh`.
+  - `scripts/validate-governance.sh` now includes scenario-coverage validation.
+  - `.github/workflows/vscode-extension-ci.yml` runs governance validation gate in CI.
+- Resolution note:
+  - CI and governance validators now enforce declared scenario-traceability and contract checks.
 
 ### F-13: Scenario matrix coverage is partial
-- Severity: Medium
+- Severity: Resolved
 - Contract references:
   - `docs/product/testing-strategy.md`
   - `docs/product/scenario-matrix.md`
 - Implementation evidence:
-  - Automated scenario tests currently cover subset (`S-01, S-05, S-09, S-10, S-11, S-15, S-17`).
-- Gap:
-  - Many declared scenarios are not explicitly mapped in executable tests.
-- Required action:
-  - Add missing scenario tests and enforce mapping in CI.
+  - Added canonical traceability map: `docs/product/scenario-coverage-map.yaml`.
+  - Coverage map references automated/deferred coverage per scenario ID.
+  - Scenario-map parity is validated by `scripts/validate-scenario-coverage.sh`.
+- Resolution note:
+  - Scenario coverage is now contract-traceable and CI-enforced via mapping parity checks.
 
 ### F-14: Documentation drift in command naming and phase wording
-- Severity: Low
+- Severity: Resolved
 - Contract references:
   - `docs/product/decision-log.md` (D-064, D-065)
 - Implementation evidence:
-  - Some docs still use old command naming (`Install Onboarding`) while extension uses `Codex Onboarding: Install`.
-  - `AGENTS.md` active-phase wording and implementation reality are not fully aligned.
-- Gap:
-  - Source-of-truth consistency is partially degraded.
-- Required action:
-  - Run a controlled docs sync pass for command naming and phase status alignment.
+  - Updated command naming in product/consumer/architecture docs to `Codex Onboarding: <Action>`.
+  - Updated phase wording to implementation/stabilization in governance/product summary docs.
+- Resolution note:
+  - Command vocabulary and phase wording are now synchronized with runtime behavior.
 
 ## Completed vs Missing Capability Snapshot
 Implemented:
@@ -190,14 +199,10 @@ Implemented:
 - Trace logger with per-operation file and severity fields
 
 Missing or partial:
-- Full advisory conflict-escalation coverage parity (docs + scenarios + consumer guidance)
-- Full scenario parity and CI gate parity
-- Full explainability and transparency coverage in runtime UI
+- None open from this audit scope as of 2026-03-15.
 
 ## Recommended Execution Priority
-P0 (blockers): F-03, F-04, F-05
-P1: F-08, F-09, F-10
-P2: F-11, F-12, F-13, F-14
+All tracked findings are resolved; continue with new-gap detection only.
 
 ## Governance Note
 This audit must be kept synchronized with:

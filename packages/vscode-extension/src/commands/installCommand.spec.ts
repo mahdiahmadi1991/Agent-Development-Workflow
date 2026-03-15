@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { runInstall } from "./installCommand";
 import { applyGitTrackingMode, hasGitRepository } from "../services/gitTrackingService";
 import { applyManagedInstall } from "../services/managedInstallService";
-import { loadResolvedProfile } from "../services/profileAssetService";
+import { resolveProfileFromHints } from "../services/profileAssetService";
 import {
   loadQuestionnaireAssets,
   loadQuestionnaireCatalog
@@ -17,6 +17,7 @@ import {
 } from "../services/rootAgentsIntegrationService";
 import { resolveSelectionPlan } from "../services/selectionResolver";
 import { openPostInstallGuidancePage } from "../services/postInstallGuidancePage";
+import { requirePreInstallTransparencyAcknowledgement } from "../services/preInstallTransparencyService";
 import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
@@ -44,7 +45,7 @@ vi.mock("../services/questionnaireFlowRunner", () => ({
 }));
 
 vi.mock("../services/profileAssetService", () => ({
-  loadResolvedProfile: vi.fn()
+  resolveProfileFromHints: vi.fn()
 }));
 
 vi.mock("../services/selectionResolver", () => ({
@@ -66,6 +67,10 @@ vi.mock("../services/updateConsentService", () => ({
 
 vi.mock("../services/postInstallGuidancePage", () => ({
   openPostInstallGuidancePage: vi.fn()
+}));
+
+vi.mock("../services/preInstallTransparencyService", () => ({
+  requirePreInstallTransparencyAcknowledgement: vi.fn()
 }));
 
 vi.mock("../services/rootAgentsIntegrationService", () => ({
@@ -127,11 +132,19 @@ describe("runInstall", () => {
 
     vi.mocked(runDynamicQuestionFlow).mockResolvedValue({
       answers: {
-        root: "web_api_simple"
-      }
+        root: ["backend"],
+        backend_stack: ["dotnet_web_api"]
+      },
+      selected_paths: ["root:backend", "root:backend>backend_stack:dotnet_web_api"],
+      capability_tags: ["tech.backend.dotnet.webapi"],
+      profile_hints: ["dotnet-csharp-web-api-simple"],
+      topic_tags: [],
+      family_keys: [],
+      why_selected: [],
+      why_skipped: []
     });
 
-    vi.mocked(loadResolvedProfile).mockResolvedValue({
+    vi.mocked(resolveProfileFromHints).mockResolvedValue({
       version: 1,
       profile_id: "dotnet-csharp-web-api-simple",
       family: "dotnet-csharp",
@@ -142,7 +155,7 @@ describe("runInstall", () => {
 
     vi.mocked(resolveSelectionPlan).mockResolvedValue({
       profile_id: "dotnet-csharp-web-api-simple",
-      capability_tags: ["cap.base", "answer.root.web_api_simple"],
+      capability_tags: ["cap.base", "tech.backend.dotnet.webapi", "answer.backend_stack.dotnet_web_api"],
       selected_topics: [
         {
           file_id: "base-topic",
@@ -160,7 +173,9 @@ describe("runInstall", () => {
       appliedFiles: [".codex-onboarding/AGENTS.md"],
       skippedFiles: [],
       recoveredTrackedFiles: [],
-      removedStaleFiles: []
+      removedStaleFiles: [],
+      stateRewritten: true,
+      resultCode: "applied"
     });
     vi.mocked(applyGitTrackingMode).mockResolvedValue({
       mode: "track",
@@ -173,6 +188,10 @@ describe("runInstall", () => {
       updateAvailable: false,
       blocked: false,
       reason: "no_managed_state"
+    });
+    vi.mocked(requirePreInstallTransparencyAcknowledgement).mockResolvedValue({
+      acknowledged: true,
+      openedSummary: false
     });
 
     vi.mocked(inspectRootAgentsIntegration).mockResolvedValue({
@@ -257,7 +276,14 @@ describe("runInstall", () => {
       extensionVersion: "1.2.3",
       bundleId: "dotnet-csharp-web-api-simple",
       bundleVersion: "7",
-      capabilityTags: ["cap.base", "answer.root.web_api_simple"],
+      capabilityTags: ["cap.base", "tech.backend.dotnet.webapi", "answer.backend_stack.dotnet_web_api"],
+      selectedTopics: [
+        {
+          fileId: "base-topic",
+          category: "00-core",
+          reasons: ["selected_by_profile_baseline"]
+        }
+      ],
       operationId: expect.stringMatching(/^install-\d+$/),
       rootAgentsPath: "/workspace/project/AGENTS.md",
       rootAgentsStatus: "created",
@@ -312,6 +338,21 @@ describe("runInstall", () => {
     });
   });
 
+  it("blocks when pre-install transparency acknowledgement is declined", async () => {
+    vi.mocked(requirePreInstallTransparencyAcknowledgement).mockResolvedValueOnce({
+      acknowledged: false,
+      openedSummary: false
+    });
+
+    await runInstall(buildContext(), { log: vi.fn(), show: vi.fn() } as any);
+
+    expect(applyManagedInstall).not.toHaveBeenCalled();
+    expect(applyGitTrackingMode).not.toHaveBeenCalled();
+    expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+      "Install canceled at Pre-Install Transparency Check."
+    );
+  });
+
   it("blocks when profile selection questions are cancelled", async () => {
     vi.spyOn(vscode.window, "showQuickPick").mockResolvedValue({
       label: "Track managed files",
@@ -326,7 +367,7 @@ describe("runInstall", () => {
     expect(applyManagedInstall).not.toHaveBeenCalled();
     expect(applyGitTrackingMode).not.toHaveBeenCalled();
     expect(requireUpdateConsentIfNeeded).not.toHaveBeenCalled();
-    expect(hasGitRepository).not.toHaveBeenCalled();
+    expect(hasGitRepository).toHaveBeenCalledTimes(1);
     expect(inspectRootAgentsIntegration).not.toHaveBeenCalled();
     expect(applyRootAgentsIntegration).not.toHaveBeenCalled();
     expect(logger.show).not.toHaveBeenCalled();

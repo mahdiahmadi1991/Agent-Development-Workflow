@@ -14,6 +14,7 @@ required_paths=(
   "docs/product/living-spec.md"
   "docs/product/decision-log.md"
   "docs/product/question-model-contract.md"
+  "docs/product/scenario-coverage-map.yaml"
   ".codex-onboarding/core/README.md"
   ".codex-onboarding/core/AGENTS.md"
   ".codex-onboarding/core/ISSUE-REPORTING.md"
@@ -46,6 +47,13 @@ if [[ -x "scripts/validate-onboarding-assets.sh" ]]; then
   scripts/validate-onboarding-assets.sh
 else
   echo "Missing executable validator: scripts/validate-onboarding-assets.sh"
+  exit 1
+fi
+
+if [[ -x "scripts/validate-scenario-coverage.sh" ]]; then
+  scripts/validate-scenario-coverage.sh
+else
+  echo "Missing executable validator: scripts/validate-scenario-coverage.sh"
   exit 1
 fi
 

@@ -59,27 +59,72 @@ async function loadSingleProfileFile(
   return parseProfile(raw);
 }
 
-export async function loadResolvedProfile(
-  extensionPath: string,
+async function loadProfilesByFamily(
+  assetRoot: string,
+  family: string
+): Promise<Array<{ profilePath: string; profile: ProfileDefinition }>> {
+  const profileDir = path.join(assetRoot, "library", "profiles", family);
+  const files = await fs.readdir(profileDir, { withFileTypes: true });
+  const yamlFiles = files
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".yaml"))
+    .map((entry) => entry.name)
+    .sort((left, right) => left.localeCompare(right));
+
+  const loaded: Array<{ profilePath: string; profile: ProfileDefinition }> = [];
+  for (const file of yamlFiles) {
+    const profilePath = path.join(profileDir, file);
+    const raw = await fs.readFile(profilePath, "utf8");
+    const profile = parseProfile(raw);
+    if (profile.family !== family) {
+      throw new Error(
+        `Profile family mismatch for '${profile.profile_id}'. Expected '${family}', got '${profile.family}'.`
+      );
+    }
+    loaded.push({ profilePath, profile });
+  }
+
+  return loaded;
+}
+
+function dedupeStrings(items: string[]): string[] {
+  return Array.from(new Set(items));
+}
+
+function normalizeProfileHint(hint: string): string {
+  return hint.trim().replace(/_/g, "-");
+}
+
+function findProfileByHint(
+  profiles: Array<{ profilePath: string; profile: ProfileDefinition }>,
   family: string,
-  selectedProfileOptionId: string
+  hint: string
+): ProfileDefinition | undefined {
+  const normalized = normalizeProfileHint(hint);
+  const normalizedWithFamilyPrefix = normalized.startsWith(`${family}-`)
+    ? normalized
+    : `${family}-${normalized}`;
+
+  return profiles.find((item) => {
+    const profileId = item.profile.profile_id;
+    if (profileId === normalized || profileId === normalizedWithFamilyPrefix) {
+      return true;
+    }
+
+    const slug = profileId.replace(new RegExp(`^${family}-`), "");
+    return slug === normalized;
+  })?.profile;
+}
+
+async function resolveInheritedProfile(
+  assetRoot: string,
+  family: string,
+  profile: ProfileDefinition
 ): Promise<ProfileDefinition> {
-  const assetRoot = await resolveOnboardingAssetRoot(extensionPath);
-
-  const slug = normalizeOptionToProfileSlug(selectedProfileOptionId);
-  const ownProfile = await loadSingleProfileFile(assetRoot, family, slug);
-
-  if (ownProfile.family !== family) {
-    throw new Error(
-      `Profile family mismatch for '${ownProfile.profile_id}'. Expected '${family}', got '${ownProfile.family}'.`
-    );
+  if (!profile.inherits) {
+    return profile;
   }
 
-  if (!ownProfile.inherits) {
-    return ownProfile;
-  }
-
-  const inheritedSlug = ownProfile.inherits.replace(new RegExp(`^${family}-`), "");
+  const inheritedSlug = profile.inherits.replace(new RegExp(`^${family}-`), "");
   const baseProfile = await loadSingleProfileFile(assetRoot, family, inheritedSlug);
 
   if (baseProfile.family !== family) {
@@ -88,14 +133,76 @@ export async function loadResolvedProfile(
     );
   }
 
-  const baseline_topics = Array.from(new Set([...baseProfile.baseline_topics, ...ownProfile.baseline_topics]));
-  const default_capabilities = Array.from(
-    new Set([...baseProfile.default_capabilities, ...ownProfile.default_capabilities])
-  );
+  const baseline_topics = dedupeStrings([...baseProfile.baseline_topics, ...profile.baseline_topics]);
+  const default_capabilities = dedupeStrings([
+    ...baseProfile.default_capabilities,
+    ...profile.default_capabilities
+  ]);
 
   return {
-    ...ownProfile,
+    ...profile,
     baseline_topics,
     default_capabilities
   };
+}
+
+function combineProfiles(family: string, profiles: ProfileDefinition[]): ProfileDefinition {
+  const sortedProfiles = [...profiles].sort((left, right) => left.profile_id.localeCompare(right.profile_id));
+  const combinedId = sortedProfiles.length === 1
+    ? sortedProfiles[0]!.profile_id
+    : `${family}-composed-${sortedProfiles.map((profile) => profile.profile_id.replace(`${family}-`, "")).join("+")}`;
+
+  const baseline_topics = dedupeStrings(sortedProfiles.flatMap((profile) => profile.baseline_topics));
+  const default_capabilities = dedupeStrings(sortedProfiles.flatMap((profile) => profile.default_capabilities));
+
+  return {
+    version: 1,
+    profile_id: combinedId,
+    family,
+    questionnaire_ref: sortedProfiles[0]?.questionnaire_ref ?? "",
+    baseline_topics,
+    default_capabilities
+  };
+}
+
+export async function resolveProfileFromHints(
+  extensionPath: string,
+  family: string,
+  hints: string[]
+): Promise<ProfileDefinition> {
+  const assetRoot = await resolveOnboardingAssetRoot(extensionPath);
+  const loaded = await loadProfilesByFamily(assetRoot, family);
+
+  if (loaded.length === 0) {
+    throw new Error(`No profile definitions found for family '${family}'.`);
+  }
+
+  const selected = hints
+    .map((hint) => findProfileByHint(loaded, family, hint))
+    .filter((profile): profile is ProfileDefinition => profile !== undefined);
+
+  const uniqueSelected = dedupeStrings(selected.map((profile) => profile.profile_id))
+    .map((profileId) => loaded.find((item) => item.profile.profile_id === profileId)!.profile);
+
+  let effectiveProfiles = uniqueSelected;
+  if (effectiveProfiles.length === 0) {
+    const baseline = loaded.find((item) => item.profile.profile_id === `${family}-baseline`)?.profile;
+    effectiveProfiles = [baseline ?? loaded[0]!.profile];
+  }
+
+  const resolvedProfiles: ProfileDefinition[] = [];
+  for (const profile of effectiveProfiles) {
+    const resolved = await resolveInheritedProfile(assetRoot, family, profile);
+    resolvedProfiles.push(resolved);
+  }
+
+  return combineProfiles(family, resolvedProfiles);
+}
+
+export async function loadResolvedProfile(
+  extensionPath: string,
+  family: string,
+  selectedProfileOptionId: string
+): Promise<ProfileDefinition> {
+  return resolveProfileFromHints(extensionPath, family, [normalizeOptionToProfileSlug(selectedProfileOptionId)]);
 }

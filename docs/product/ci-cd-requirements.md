@@ -14,6 +14,7 @@ Define non-negotiable pipeline gates before any extension release.
 
 2. Scenario validation
 - Execute automated checks for scenario matrix cases.
+- Enforce scenario traceability map parity (`docs/product/scenario-coverage-map.yaml`) against `docs/product/scenario-matrix.md`.
 - Block release on any safety-rule regression.
 - Include conflict-escalation advisory artifact and bootstrap artifact scenarios.
 
@@ -51,3 +52,4 @@ Define non-negotiable pipeline gates before any extension release.
 
 ## Enforcement
 - No publish step can run unless all required gates pass.
+- `scripts/validate-governance.sh` is the canonical contract gate and must include scenario-coverage validation.

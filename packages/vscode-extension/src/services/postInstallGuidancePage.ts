@@ -2,6 +2,12 @@ import * as vscode from "vscode";
 
 import type { RootAgentsIntegrationStatus } from "./rootAgentsIntegrationService";
 
+interface PostInstallSelectedTopic {
+  fileId: string;
+  category: string;
+  reasons: string[];
+}
+
 export interface PostInstallGuidanceInput {
   targetRootPath: string;
   selectedProfile: string;
@@ -17,6 +23,7 @@ export interface PostInstallGuidanceInput {
   bundleId: string;
   bundleVersion: string;
   capabilityTags: string[];
+  selectedTopics: PostInstallSelectedTopic[];
   operationId: string;
   rootAgentsPath?: string;
   rootAgentsStatus?: RootAgentsIntegrationStatus;
@@ -65,6 +72,36 @@ function buildPromptPacks(onboardingRoot: string): {
     validate,
     starter: discover
   };
+}
+
+function buildExplainabilitySection(input: PostInstallGuidanceInput): string {
+  if (input.selectedTopics.length === 0) {
+    return `
+        <section class="card">
+          <h2>Selection Explainability</h2>
+          <p class="muted">No topic-level artifacts were selected for this run. Core onboarding artifacts were still applied.</p>
+        </section>
+`;
+  }
+
+  const rows = input.selectedTopics
+    .slice()
+    .sort((left, right) => left.fileId.localeCompare(right.fileId))
+    .map((topic) => {
+      const reasons = topic.reasons.length > 0 ? topic.reasons.join(", ") : "none";
+      return `<li><code>${escapeHtml(topic.fileId)}</code> <span class=\"muted\">(${escapeHtml(topic.category)})</span><br/><span class=\"muted\">reasons: ${escapeHtml(reasons)}</span></li>`;
+    })
+    .join("\n");
+
+  return `
+        <section class="card">
+          <h2>Selection Explainability</h2>
+          <p class="muted">The resolver selected these topic artifacts based on baseline, capability tags, and dependency/conflict rules.</p>
+          <ul>
+            ${rows}
+          </ul>
+        </section>
+`;
 }
 
 function buildWebviewHtml(input: PostInstallGuidanceInput): string {
@@ -337,6 +374,8 @@ ${rootAgentsManualSection}
             <li><strong>Run Remove:</strong> use when you want to remove extension-owned onboarding artifacts safely.</li>
           </ul>
         </section>
+
+${buildExplainabilitySection(input)}
 
         <section class="card">
           <h2>Change Report</h2>

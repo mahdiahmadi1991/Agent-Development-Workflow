@@ -4,4 +4,4 @@ family: dotnet-csharp
 inherits: dotnet-csharp-baseline
 questionnaire_ref: .codex-onboarding/library/questionnaires/dotnet-csharp/install-flow.yaml
 baseline_topics: []
-default_capabilities: []
+default_capabilities: [tech.backend.dotnet.webapi]

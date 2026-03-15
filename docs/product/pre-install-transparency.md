@@ -26,6 +26,7 @@ Ensure users can review extension behavior and impact before onboarding files ar
 - Advisory guidance file path for conflict escalation: `.codex-onboarding/ISSUE-REPORTING.md`.
 - Root `AGENTS.md` cleanup behavior on repair/remove for extension-managed pointer content.
 - Question model visibility: Operational questions vs Profile Selection questions.
+- Selection explainability visibility before apply (selected topics + reason tags).
 
 ## Required Documentation Artifact
 - A concise, consumer-facing summary must be maintained and synced with current behavior.
@@ -35,8 +36,9 @@ Ensure users can review extension behavior and impact before onboarding files ar
 ## UX Requirement
 Before install/apply execution:
 1. Show summary link or inline summary.
-2. Require explicit user acknowledgement.
-3. Proceed only after acknowledgement.
+2. Show selection explainability preview (at minimum: selected topic count + reason-tag visibility, with details available on demand).
+3. Require explicit user acknowledgement.
+4. Proceed only after acknowledgement.
 
 ## Governance Rule
 Any behavior-impact change must update this transparency summary in the same planning/update cycle.

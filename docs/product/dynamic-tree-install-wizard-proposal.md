@@ -1,7 +1,7 @@
 # Dynamic Tree Install Wizard Proposal (Draft)
 
 ## Status
-Draft (review required before implementation)
+Implemented (baseline contract in runtime)
 
 ## Purpose
 Define a fully data-driven install wizard for `Profile Selection Questions` that supports:
@@ -11,7 +11,7 @@ Define a fully data-driven install wizard for `Profile Selection Questions` that
 - mixed technology selection in one workspace/root
 - zero hardcoded technology/topic menu logic in extension runtime
 
-This document is implementation guidance only. No runtime implementation is approved by this document alone.
+This document is the implemented contract baseline for the current runtime behavior.
 
 ## Naming (for clear discussion)
 Use these fixed names in docs and team conversations:

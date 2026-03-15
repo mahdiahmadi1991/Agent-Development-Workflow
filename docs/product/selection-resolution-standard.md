@@ -7,40 +7,42 @@ Approved (locked standard)
 Select the minimal, correct onboarding file set for a consumer project from a large asset library.
 
 ## Input Sources
-1. Selected profile (e.g., `.NET/C# baseline`).
+1. Resolved profile set from wizard `profile_hints` (single or composed profile).
 2. Operational answers (extension behavior context).
-3. Profile Selection questionnaire answers (dynamic file-driven).
+3. Profile Selection questionnaire answers (dynamic file-driven, tree traversal output).
 4. Topics index metadata.
 5. Selector rules.
 
 ## Resolution Pipeline
 1. Resolve operation context from Operational Questions answers.
 2. Load Profile Selection Questions flow definition dynamically from questionnaire registry.
-3. Ask Profile Selection Questions questions and map answers to capability tags.
-4. Load profile baseline includes.
-5. Select candidate topics from `topics.index.yaml` by applicability and capability tags.
-6. Add required dependencies (`requires`).
-7. Remove conflicts (`conflicts_with`) according to selector rules.
-8. Apply severity/mandatory policy filters.
-9. Build deterministic final set.
-10. Produce `why-selected` explainability report before apply.
-11. Require user confirmation and then apply.
+3. Run Technology Selection Wizard traversal (`single` + `multi`, progressive branching).
+4. Build normalized selection payload:
+- `answers`
+- `selected_paths`
+- `capability_tags`
+- `profile_hints`
+- `topic_tags`
+5. Resolve profile set from `profile_hints` and merge baseline/default capability inputs.
+6. Select candidate topics from `topics.index.yaml` by applicability and capability tags.
+7. Add required dependencies (`requires`).
+8. Remove conflicts (`conflicts_with`) according to selector rules.
+9. Apply severity/mandatory policy filters.
+10. Build deterministic final set.
+11. Persist explainability reason tags for each selected topic.
 
 ## Questionnaire Source Contract
 - Registry: `.codex-onboarding/library/questionnaires/index.yaml`
 - Flow file pattern: `.codex-onboarding/library/questionnaires/<family>/install-flow.yaml`
 - Missing required questionnaire definition is a blocking error.
+- Invalid tree graph or rule contract is a blocking error.
 
 ## Explainability Requirement
-Before writing files, show a preview grouped by:
-- Baseline topics
-- Cross-cutting topics
-- Target-specific topics
-
 Each selected file must include reason tags, such as:
 - `selected_by_profile`
 - `selected_by_capability`
 - `selected_as_dependency`
+- Resolver output must be visible to the user before apply (compact summary + detailed preview path).
 
 ## Determinism Requirement
 Given the same inputs, resolver must produce the exact same ordered file set.

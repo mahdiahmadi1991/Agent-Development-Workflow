@@ -23,7 +23,9 @@ interface ResolveSelectionInput {
   profileId: string;
   baselineTopicIds: string[];
   defaultCapabilities: string[];
-  questionAnswers: Record<string, string>;
+  questionAnswers: Record<string, string[]>;
+  wizardCapabilityTags?: string[];
+  wizardTopicTags?: string[];
 }
 
 function isString(value: unknown): value is string {
@@ -120,10 +122,14 @@ function parseResolverRules(rawYaml: string): ResolverRules {
 
 function buildCapabilityTags(
   defaultCapabilities: string[],
-  questionAnswers: Record<string, string>
+  questionAnswers: Record<string, string[]>,
+  wizardCapabilityTags: string[],
+  wizardTopicTags: string[]
 ): string[] {
-  const dynamic = Object.entries(questionAnswers).map(([nodeId, answer]) => `answer.${nodeId}.${answer}`);
-  return Array.from(new Set([...defaultCapabilities, ...dynamic]));
+  const dynamic = Object.entries(questionAnswers).flatMap(([nodeId, answers]) =>
+    answers.map((answer) => `answer.${nodeId}.${answer}`)
+  );
+  return Array.from(new Set([...defaultCapabilities, ...wizardCapabilityTags, ...wizardTopicTags, ...dynamic]));
 }
 
 function matchesApplicability(topic: TopicIndexEntry, family: string): boolean {
@@ -196,7 +202,12 @@ export async function resolveSelectionPlan(
   const topicsIndex = parseTopicsIndex(topicsRaw);
   const rules = parseResolverRules(rulesRaw);
 
-  const capabilities = buildCapabilityTags(input.defaultCapabilities, input.questionAnswers);
+  const capabilities = buildCapabilityTags(
+    input.defaultCapabilities,
+    input.questionAnswers,
+    input.wizardCapabilityTags ?? [],
+    input.wizardTopicTags ?? []
+  );
   const topicMap = new Map<string, TopicIndexEntry>(topicsIndex.topics.map((topic) => [topic.file_id, topic]));
   const selectedMap = new Map<string, SelectedTopic>();
 

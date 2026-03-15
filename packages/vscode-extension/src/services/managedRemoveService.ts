@@ -170,6 +170,12 @@ export async function analyzeManagedRemoveImpact(
   const { state, corrupt } = await tryReadState(statePath);
   const hadState = Boolean(state) || corrupt;
 
+  logger.log("debug", "state_loaded", {
+    state_path: statePath,
+    state_status: state ? "loaded" : corrupt ? "corrupt" : "missing",
+    managed_file_count: state?.managed_files.length ?? 0
+  });
+
   const modifiedManagedFiles: string[] = [];
   const missingManagedFiles: string[] = [];
   const untrackedFiles: string[] = [];
@@ -251,6 +257,12 @@ export async function removeManagedOnboarding(
 
   const { state, corrupt } = await tryReadState(statePath);
   const hadState = Boolean(state) || corrupt;
+
+  logger.log("debug", "state_loaded", {
+    state_path: statePath,
+    state_status: state ? "loaded" : corrupt ? "corrupt" : "missing",
+    managed_file_count: state?.managed_files.length ?? 0
+  });
 
   if (removeWholeManagedRoot) {
     const existingFiles = await collectFilesRecursive(managedRootPath);

@@ -6,11 +6,12 @@ import { applyManagedInstall } from "../services/managedInstallService";
 import { OperationTraceLogger } from "../services/operationTraceLogger";
 import { OutputLogger } from "../services/outputLogger";
 import { openPostInstallGuidancePage } from "../services/postInstallGuidancePage";
+import { requirePreInstallTransparencyAcknowledgement } from "../services/preInstallTransparencyService";
 import {
   buildProjectOperationLogPath,
   mirrorOperationLogToProject
 } from "../services/projectOperationLogService";
-import { loadResolvedProfile } from "../services/profileAssetService";
+import { resolveProfileFromHints } from "../services/profileAssetService";
 import {
   QuestionnaireCatalogEntry,
   loadQuestionnaireAssets,
@@ -24,6 +25,7 @@ import {
 } from "../services/rootAgentsIntegrationService";
 import { resolveSelectionPlan } from "../services/selectionResolver";
 import { requireUpdateConsentIfNeeded } from "../services/updateConsentService";
+import { detectWorkspaceSignals } from "../services/workspaceSignalDetector";
 import { resolveTargetWorkspaceFolder } from "../services/workspaceRootResolver";
 
 function createOperationId(): string {
@@ -241,6 +243,15 @@ export async function runInstall(
       return;
     }
 
+    const gitRepositoryAvailable = await hasGitRepository(target.uri.fsPath);
+    const gitTrackingQuestionSkipped = !gitRepositoryAvailable;
+    const workspaceSignals = await detectWorkspaceSignals(target.uri.fsPath);
+
+    traceLogger.log("debug", "workspace_signals_detected", {
+      signal_count: workspaceSignals.signals.length,
+      signal_keys: workspaceSignals.signals.join(",")
+    });
+
     const questionnaire = await loadQuestionnaireAssets(context.extensionPath, family);
 
     traceLogger.log("debug", "dynamic_question_flow_loaded", {
@@ -252,7 +263,13 @@ export async function runInstall(
     const profileSelectionAnswers = await runDynamicQuestionFlow(
       questionnaire.flow,
       traceLogger,
-      operationId
+      operationId,
+      {
+        env: {
+          git_available: gitRepositoryAvailable
+        },
+        detect: workspaceSignals.asFacts
+      }
     );
     if (!profileSelectionAnswers) {
       traceLogger.log("warning", "operation_blocked", {
@@ -262,11 +279,10 @@ export async function runInstall(
       return;
     }
 
-    const selectedProfileOption = profileSelectionAnswers.answers.root ?? "unknown";
-    const resolvedProfile = await loadResolvedProfile(
+    const resolvedProfile = await resolveProfileFromHints(
       context.extensionPath,
       family,
-      selectedProfileOption
+      profileSelectionAnswers.profile_hints
     );
 
     const selectionPlan = await resolveSelectionPlan(
@@ -276,16 +292,42 @@ export async function runInstall(
         profileId: resolvedProfile.profile_id,
         baselineTopicIds: resolvedProfile.baseline_topics,
         defaultCapabilities: resolvedProfile.default_capabilities,
-        questionAnswers: profileSelectionAnswers.answers
+        questionAnswers: profileSelectionAnswers.answers,
+        wizardCapabilityTags: profileSelectionAnswers.capability_tags,
+        wizardTopicTags: profileSelectionAnswers.topic_tags
       },
       traceLogger
     );
 
-    const gitRepositoryAvailable = await hasGitRepository(target.uri.fsPath);
-    const gitTrackingQuestionSkipped = !gitRepositoryAvailable;
+    const repositoryUrl = resolveRepositoryUrl(context.extension.packageJSON);
+    const transparencyResult = await requirePreInstallTransparencyAcknowledgement(
+      {
+        command: "install",
+        targetRootPath: target.uri.fsPath,
+        repositoryUrl,
+        selectedTopics: selectionPlan.selected_topics.map((topic) => ({
+          fileId: topic.file_id,
+          category: topic.category,
+          reasons: topic.reasons
+        }))
+      },
+      traceLogger
+    );
+    if (!transparencyResult.acknowledged) {
+      void vscode.window.showInformationMessage(
+        transparencyResult.openedSummary
+          ? "Install paused. Review the consumer summary, then run Install again."
+          : "Install canceled at Pre-Install Transparency Check."
+      );
+      return;
+    }
+
     let gitTrackingSelection: OperationalSelections;
 
     if (gitRepositoryAvailable) {
+      traceLogger.log("debug", "operational_question_asked", {
+        question_id: "git_tracking_preference"
+      });
       const selection = await askGitTrackingSelectionAtFinalStep();
       if (!selection) {
         traceLogger.log("warning", "operation_blocked", {
@@ -311,6 +353,9 @@ export async function runInstall(
     let rootAgentsPermission: RootAgentsPermission = "auto_create";
 
     if (rootAgentsInspection.exists) {
+      traceLogger.log("debug", "operational_question_asked", {
+        question_id: "root_agents_edit_permission"
+      });
       const permission = await askRootAgentsEditPermission();
       if (!permission) {
         traceLogger.log("warning", "operation_blocked", {
@@ -332,7 +377,6 @@ export async function runInstall(
       typeof context.extension.packageJSON?.version === "string"
         ? context.extension.packageJSON.version
         : "0.0.0";
-    const repositoryUrl = resolveRepositoryUrl(context.extension.packageJSON);
 
     const updateConsentResult = await requireUpdateConsentIfNeeded(
       {
@@ -435,6 +479,11 @@ export async function runInstall(
       bundleId: resolvedProfile.profile_id,
       bundleVersion: String(questionnaire.flow.version),
       capabilityTags: selectionPlan.capability_tags,
+      selectedTopics: selectionPlan.selected_topics.map((topic) => ({
+        fileId: topic.file_id,
+        category: topic.category,
+        reasons: topic.reasons
+      })),
       operationId,
       rootAgentsPath: rootAgentsResult.rootAgentsPath,
       rootAgentsStatus: rootAgentsResult.status,
@@ -448,7 +497,7 @@ export async function runInstall(
     });
 
     traceLogger.log("debug", "operation_completed", {
-      result_code: installResult.appliedFiles.length > 0 ? "applied" : "completed_with_skips",
+      result_code: installResult.resultCode ?? (installResult.appliedFiles.length > 0 ? "applied" : "completed_with_skips"),
       target_profile: resolvedProfile.profile_id
     });
   } catch (error) {

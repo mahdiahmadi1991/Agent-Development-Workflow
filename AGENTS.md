@@ -10,7 +10,7 @@
 Create reusable, domain-agnostic onboarding structures that can be applied to any software project to guide Codex behavior safely and consistently.
 
 ## Active Phase
-- Current phase is extension infrastructure and behavior implementation planning.
+- Current phase is extension infrastructure and behavior implementation/stabilization.
 - Content authoring of onboarding topics is deferred to a separate phase/thread.
 
 ## Non-Negotiable Workflow Rules

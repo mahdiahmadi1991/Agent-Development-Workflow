@@ -362,6 +362,12 @@ export async function runRepair(
     targetRootPath = target.uri.fsPath;
 
     const stateLoad = await readManagedState(target.uri.fsPath);
+    traceLogger.log("debug", "state_loaded", {
+      state_path: path.join(target.uri.fsPath, ".codex-onboarding", ".managed", "state.json"),
+      state_status: stateLoad.status,
+      managed_file_count: stateLoad.state?.managed_files.length ?? 0
+    });
+
     let bundleId: string;
     let bundleVersion: string;
     let extensionVersion: string;
@@ -403,6 +409,9 @@ export async function runRepair(
 
     let forceResetModifiedManagedFiles = false;
     if (driftedManagedFiles.length > 0) {
+      traceLogger.log("debug", "operational_question_asked", {
+        question_id: "repair_drift_reset_confirmation"
+      });
       const confirmedReset = await askDriftResetConfirmation(driftedManagedFiles);
       if (!confirmedReset) {
         traceLogger.log("warning", "operation_blocked", {
@@ -424,6 +433,9 @@ export async function runRepair(
     let operationalSelections: OperationalSelections;
 
     if (gitRepositoryAvailable) {
+      traceLogger.log("debug", "operational_question_asked", {
+        question_id: "repair_git_tracking_preference"
+      });
       const selections = await askOperationalSelectionsForRepair();
       if (!selections) {
         traceLogger.log("warning", "operation_blocked", {
@@ -441,7 +453,7 @@ export async function runRepair(
       });
     }
 
-    traceLogger.log("debug", "operational_question_asked", {
+    traceLogger.log("debug", "git_tracking_selected", {
       git_mode: operationalSelections.gitMode
     });
 
